@@ -15,8 +15,20 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path,include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # Your custom auth app
+    path('', include('user_side.authentication.urls')),
+    path('user_profile/', include('user_side.user_profile.urls')),
+    path('wishlist/', include('user_side.wishlist.urls')),
+    # THIS IS REQUIRED FOR GOOGLE LOGIN
+    path('accounts/', include('allauth.urls')),
 ]
+from django.conf import settings
+from django.conf.urls.static import static
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
