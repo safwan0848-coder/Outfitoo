@@ -14,6 +14,8 @@ urlpatterns = [
     path('orders/', views.orders, name='orders'),
     path('logout/', views.logout_view, name='logout'),
     path('', views.wishlist, name='wishlist'),
+    path("verify-email-change/", views.verify_email_change, name="verify-email-change"),
+    path("resend-profile-otp/", views.resend_profile_otp, name="resend-profile-otp"),
     
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

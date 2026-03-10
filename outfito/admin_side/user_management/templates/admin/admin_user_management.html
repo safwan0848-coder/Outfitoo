@@ -2,11 +2,10 @@
 <html lang="en">
 
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Outfito | Admin Dashboard</title>
+<title>Outfito | User Management</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -18,70 +17,65 @@
 
 body{
 font-family:'Inter',sans-serif;
-background:#F8F7F4;
-transition:0.3s;
+background:#f6f7fb;
 }
 
-body.dark{
-background:#121212;
-color:white;
-}
+/* SIDEBAR */
 
 .sidebar{
 width:260px;
-background:#f3efe9;
 height:100vh;
 position:fixed;
-padding:30px 20px;
-border-right:1px solid #e8e3dc;
+background:white;
+border-right:1px solid #e6e6e6;
+padding:25px;
 display:flex;
 flex-direction:column;
 }
-.sidebar-menu{
-flex:1;
+
+.logo{
+font-family:'Playfair Display',serif;
+font-size:28px;
+color:#0f766e;
+font-weight:600;
+margin-bottom:30px;
 }
 
-body.dark .sidebar{
-background:#1a1a1a;
-border-color:#333;
+.sidebar a{
+display:flex;
+align-items:center;
+gap:10px;
+padding:10px 12px;
+border-radius:8px;
+text-decoration:none;
+color:#555;
+margin-bottom:5px;
+font-size:14px;
+}
+
+.sidebar a:hover{
+background:#f0fdfa;
+color:#0f766e;
+}
+
+.sidebar a.active{
+background:#ecfdf5;
+color:#10b981;
+font-weight:500;
 }
 
 .logout-btn{
 margin-top:auto;
 background:#ef4444;
-color:white !important;
-text-align:center;
+color:white!important;
+justify-content:center;
 }
 
 .logout-btn:hover{
-background:#902f2f;
+background:#b91c1c;
 }
 
-.logo{
-font-family:'Playfair Display',serif;
-font-size:30px;
-font-weight:700;
-color:#4D6A61;
-}
-
-.sidebar a{
-display:block;
-padding:12px 15px;
-margin-bottom:6px;
-text-decoration:none;
-color:#555;
-border-radius:8px;
-}
-
-.sidebar a:hover{
-background:white;
-}
-
-.sidebar a.active{
-background:white;
-color:#4D6A61;
-font-weight:600;
-}
+/* MAIN */
 
 .main{
 margin-left:260px;
@@ -90,38 +84,54 @@ padding:40px;
 
 .page-title{
 font-family:'Playfair Display',serif;
-font-size:36px;
+font-size:34px;
 font-weight:600;
 }
 
 .title-line{
-width:90px;
+width:80px;
 height:4px;
 background:#10b981;
 border-radius:10px;
+margin-top:5px;
 }
+
+/* CARD */
 
 .card-box{
 background:white;
-border-radius:20px;
+border-radius:18px;
 padding:25px;
-box-shadow:0 10px 25px rgba(0,0,0,0.08);
+box-shadow:0 5px 20px rgba(0,0,0,0.05);
 }
 
-body.dark .card-box{
-background:#1e1e1e;
+/* SEARCH */
+
+.search-input{
+border-radius:8px;
+height:40px;
 }
 
-.table td{
-vertical-align:middle;
+/* TABLE */
+
+table{
+font-size:14px;
+}
+
+thead{
+color:#888;
+font-size:12px;
+text-transform:uppercase;
 }
 
 .user-img{
-width:38px;
-height:38px;
+width:36px;
+height:36px;
 border-radius:50%;
 margin-right:10px;
 }
+
+/* STATUS */
 
 .status-active{
 background:#d1fae5;
@@ -139,20 +149,44 @@ border-radius:20px;
 font-size:12px;
 }
 
-.search-box{
-max-width:280px;
+/* ACTION BUTTONS */
+
+.btn-block{
+background:#ef4444;
+color:white;
+border:none;
+font-size:12px;
+padding:6px 12px;
 }
 
-.toggle-btn{
-position:fixed;
-bottom:25px;
-right:25px;
-width:45px;
-height:45px;
-border-radius:50%;
+.btn-block:hover{
+background:#b91c1c;
+}
+
+.btn-unblock{
+background:#10b981;
+color:white;
 border:none;
+font-size:12px;
+padding:6px 12px;
+}
+
+.btn-unblock:hover{
+background:#047857;
+}
+
+/* PAGINATION */
+
+.pagination-btn{
+padding:6px 12px;
+border-radius:6px;
+border:1px solid #ddd;
 background:white;
-box-shadow:0 5px 15px rgba(0,0,0,0.2);
+font-size:13px;
+}
+
+.pagination-btn:hover{
+background:#f0fdfa;
 }
 
 </style>
@@ -161,44 +195,46 @@ box-shadow:0 5px 15px rgba(0,0,0,0.2);
 
 <body>
 
+
+<!-- SIDEBAR -->
+
 <div class="sidebar">
 
-<div class="logo mb-4">Outfito</div>
-
-<div class="sidebar-menu">
+<div class="logo">Outfito</div>
 
 <a href="#" class="active">
-<span class="material-icons me-2">group</span>
+<span class="material-icons">group</span>
 Customers
 </a>
 
 <a href="#">
-<span class="material-icons me-2">inventory</span>
+<span class="material-icons">inventory</span>
 Products
 </a>
 
 <a href="#">
-<span class="material-icons me-2">shopping_bag</span>
+<span class="material-icons">shopping_bag</span>
 Orders
 </a>
 
 <a href="#">
-<span class="material-icons me-2">local_offer</span>
+<span class="material-icons">local_offer</span>
 Offers
 </a>
 
-</div>
-
-<a href="{% url 'admin_logout' %}" 
+<a href="{% url 'admin_logout' %}"
 class="logout-btn sidebar-link"
-onclick="return confirm('Are you sure you want to logout?')">
+onclick="return confirm('Logout?')">
 
-<span class="material-icons me-2">logout</span>
+<span class="material-icons">logout</span>
 Logout
 
 </a>
 
 </div>
+
+
+<!-- MAIN -->
 
 <div class="main">
 
@@ -209,25 +245,28 @@ Logout
 
 </div>
 
+
 <div class="card-box">
 
-<div class="d-flex justify-content-between mb-3">
+<!-- HEADER -->
 
-<h5 class="fw-semibold">Users</h5>
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-<form method="GET" class="d-flex">
+<h5 class="fw-semibold m-0">Users</h5>
+
+<form method="GET" class="d-flex gap-2">
 
 <input
 type="text"
 name="search"
-class="form-control search-box me-2"
-placeholder="Search user email"
+class="form-control search-input"
+placeholder="Search user email..."
 value="{{ request.GET.search }}"
 >
 
-<button type="submit" class="btn btn-success me-2">Search</button>
+<button class="btn btn-success btn-sm">Search</button>
 
-<a href="{% url 'admin-user-management' %}" class="btn btn-secondary">
+<a href="{% url 'admin-user-management' %}" class="btn btn-outline-secondary btn-sm">
 Clear
 </a>
 
@@ -235,23 +274,22 @@ Clear
 
 </div>
 
+
+<!-- TABLE -->
+
 <div class="table-responsive">
 
 <table class="table align-middle">
 
 <thead>
-
 <tr>
-
-<th>SL NO</th>
+<th>SL</th>
 <th>User</th>
 <th>Email</th>
 <th>Status</th>
 <th>Joined</th>
 <th>Action</th>
-
 </tr>
-
 </thead>
 
 <tbody>
@@ -296,8 +334,8 @@ class="user-img"
 {% if user.is_active %}
 
 <a href="{% url 'admin-toggle-user' user.id %}"
-class="btn btn-sm btn-danger"
-onclick="return confirm('Are you sure you want to block this user?')">
+class="btn btn-block btn-sm"
+onclick="return confirm('Block this user?')">
 
 Block
 
@@ -306,8 +344,8 @@ Block
 {% else %}
 
 <a href="{% url 'admin-toggle-user' user.id %}"
-class="btn btn-sm btn-success"
-onclick="return confirm('Are you sure you want to unblock this user?')">
+class="btn btn-unblock btn-sm"
+onclick="return confirm('Unblock this user?')">
 
 Unblock
 
@@ -327,19 +365,20 @@ Unblock
 
 </div>
 
+
+<!-- PAGINATION -->
+
 <div class="d-flex justify-content-between align-items-center mt-3">
 
 <div>
-
 Page {{ users.number }} of {{ users.paginator.num_pages }}
-
 </div>
 
-<div>
+<div class="d-flex gap-2">
 
 {% if users.has_previous %}
 
-<a class="btn btn-outline-secondary btn-sm"
+<a class="pagination-btn"
 href="?page={{ users.previous_page_number }}&search={{ request.GET.search }}">
 Previous
 </a>
@@ -348,7 +387,7 @@ Previous
 
 {% if users.has_next %}
 
-<a class="btn btn-outline-secondary btn-sm"
+<a class="pagination-btn"
 href="?page={{ users.next_page_number }}&search={{ request.GET.search }}">
 Next
 </a>
@@ -359,21 +398,10 @@ Next
 
 </div>
 
-</div>
 
 </div>
 
-<button class="toggle-btn" onclick="toggleMode()">
-<span class="material-icons">dark_mode</span>
-</button>
-
-<script>
-
-function toggleMode(){
-document.body.classList.toggle("dark")
-}
-
-</script>
+</div>
 
 </body>
 </html>

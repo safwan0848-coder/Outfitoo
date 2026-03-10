@@ -50,7 +50,6 @@ INSTALLED_APPS = [
 
     'user_side.authentication',
     'user_side.address',
-    'user_side.home',
     'user_side.user_profile',
     'user_side.wishlist',
 ]

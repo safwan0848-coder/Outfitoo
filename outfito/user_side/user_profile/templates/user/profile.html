@@ -269,6 +269,29 @@ transition:0.3s;
 background:rgba(255,255,255,0.1);
 }
 
+/* MESSAGES */
+
+.error-msg{
+font-size:13px;
+color:#ff4d4d;
+text-align:center;
+margin-bottom:10px;
+}
+
+.success-msg{
+font-size:13px;
+color:#22c55e;
+text-align:center;
+margin-bottom:10px;
+}
+
+.warning-msg{
+font-size:13px;
+color:#facc15;
+text-align:center;
+margin-bottom:10px;
+}
+
 /* RESPONSIVE */
 
 @media (max-width:768px){
@@ -360,10 +383,27 @@ Wallet
 
 </div>
 
-
 <div class="main">
 
 <div class="profile-card">
+
+{% if messages %}
+{% for message in messages %}
+{% if forloop.last %}
+<div class="
+{% if message.tags == 'error' %}
+error-msg
+{% elif message.tags == 'success' %}
+success-msg
+{% else %}
+warning-msg
+{% endif %}
+">
+{{ message }}
+</div>
+{% endif %}
+{% endfor %}
+{% endif %}
 
 <div class="profile-header">
 
@@ -388,7 +428,6 @@ Edit Profile
 
 </div>
 
-
 <div>
 
 <div class="profile-avatar">
@@ -411,7 +450,6 @@ Member Since <span style="color:#ffb82e">{{ user.date_joined|date:"M d, Y" }}</s
 
 </div>
 
-
 <div class="form-area">
 
 <div class="form-group">
@@ -425,7 +463,6 @@ Member Since <span style="color:#ffb82e">{{ user.date_joined|date:"M d, Y" }}</s
 
 </div>
 
-
 <div class="form-group">
 
 <div class="form-label-custom">Email Address</div>
@@ -436,7 +473,6 @@ Member Since <span style="color:#ffb82e">{{ user.date_joined|date:"M d, Y" }}</s
 </div>
 
 </div>
-
 
 <div class="form-group">
 
@@ -451,13 +487,14 @@ Member Since <span style="color:#ffb82e">{{ user.date_joined|date:"M d, Y" }}</s
 
 </div>
 
-
 <div class="text-center">
 
+{% if not profile.google_image %}
 <a href="{% url 'change-password' %}" class="security-btn">
 <span class="material-symbols-outlined">key</span>
 Update Security Credentials
 </a>
+{% endif %}
 
 </div>
 

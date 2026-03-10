@@ -32,7 +32,7 @@ class OTP(models.Model):
             self.code=self.generate_otp()
         
         if not self.expired_at:
-            self.expired_at=timezone.now()+timedelta(minutes=5)
+            self.expired_at=timezone.now()+timedelta(minutes=1)
         super().save(*args, **kwargs)
     def is_expired(self):
         return timezone.now()>self.expired_at

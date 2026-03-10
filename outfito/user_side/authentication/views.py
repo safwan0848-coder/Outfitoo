@@ -11,6 +11,7 @@ import re
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
+from django.conf import settings
 
 def signup_view(request):
 
@@ -113,19 +114,19 @@ from django.utils import timezone
 def otp_verify(request):
 
     email = request.session.get('email')
+
     if not email:
         return redirect('signup')
 
     user = User.objects.filter(email=email).first()
-    otp = OTP.objects.filter(user=user).last()
 
-    remaining_seconds = 0
-    if otp:
-        remaining_seconds = int((otp.expired_at - timezone.now()).total_seconds())
-        if remaining_seconds < 0:
-            remaining_seconds = 0
+    if not user:
+        return redirect('signup')
+
+    otp, remaining_seconds = get_otp_timer(user)
 
     if request.method == 'POST':
+
         code = request.POST.get('otp')
 
         if not otp:
@@ -137,7 +138,7 @@ def otp_verify(request):
             messages.error(request, "OTP expired. Please resend.")
             return redirect('otp_verify')
 
-        if otp.code != code:
+        if str(otp.code) != str(code):
             messages.error(request, "Invalid OTP")
             return redirect('otp_verify')
 
@@ -146,45 +147,109 @@ def otp_verify(request):
         user.save()
 
         otp.delete()
+
         request.session.pop('email', None)
 
         messages.success(request, "Email verified successfully")
+
         return redirect('login')
 
     return render(request, 'user/otp_verify.html', {
         'email': email,
         'remaining_seconds': remaining_seconds
     })
-        
 
-def resend_otp(request):
-    email=request.session.get('email')
+
+def get_otp_timer(user):
+
+    otp = OTP.objects.filter(user=user).last()
+
+    remaining_seconds = 0
+
+    if otp:
+        remaining_seconds = int((otp.expired_at - timezone.now()).total_seconds())
+
+        if remaining_seconds < 0:
+            remaining_seconds = 0
+
+    return otp, remaining_seconds
+
+
+def resend_signup_otp(request):
+
+    email = request.session.get("email")
+
     if not email:
-        return redirect('signup')
-    user=User.objects.filter(email=email).first()
+        return redirect("signup")
+
+    user = User.objects.filter(email=email).first()
+
     if not user:
-        return redirect('signup')
+        return redirect("signup")
+
+    otp, remaining_seconds = get_otp_timer(user)
+
+    if otp and remaining_seconds > 0:
+        messages.error(request,f"Please wait {remaining_seconds}s before requesting a new OTP.")
+        return redirect("otp_verify")
+
     OTP.objects.filter(user=user).delete()
 
-    otp=OTP.objects.create(user=user)
+    otp = OTP.objects.create(user=user)
+
     send_mail(
-        subject='Resend OTP',
-        message=f'Your new OTP is {otp.code}',
-        from_email='outfito0848@gmail.com',
+        subject="Signup OTP",
+        message=f"Your OTP is {otp.code}",
+        from_email=settings.EMAIL_HOST_USER,
         recipient_list=[user.email],
-        fail_silently=False,
+        fail_silently=False
     )
-    messages.success(request, "New OTP sent successfully")
-    return redirect('otp_verify')
+
+    messages.success(request,"New OTP sent successfully")
+
+    return redirect("otp_verify")
+
+
+def resend_reset_otp(request):
+
+    email = request.session.get("reset_email")
+
+    if not email:
+        return redirect("forgot_password")
+
+    user = User.objects.filter(email=email).first()
+
+    if not user:
+        return redirect("forgot_password")
+
+    otp, remaining_seconds = get_otp_timer(user)
+
+    if otp and remaining_seconds > 0:
+        messages.error(request,f"Please wait {remaining_seconds}s before requesting a new OTP.")
+        return redirect("reset_verify")
+
+    OTP.objects.filter(user=user).delete()
+
+    otp = OTP.objects.create(user=user)
+
+    send_mail(
+        subject="Password Reset OTP",
+        message=f"Your OTP is {otp.code}",
+        from_email=settings.EMAIL_HOST_USER,
+        recipient_list=[user.email],
+        fail_silently=False
+    )
+
+    messages.success(request,"New OTP sent successfully")
+
+    return redirect("reset_verify")
+
 
 def change_email(request):
     request.session.pop('email', None)
     messages.info(request, "Please enter new email.")
     return redirect('signup')
 
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from django.contrib import messages
 
 @never_cache
 def login_view(request):
@@ -219,36 +284,34 @@ def login_view(request):
 
 def forgot_password(request):
 
-    if request.method == 'POST':
-        email = request.POST.get('email')
+    if request.method == "POST":
+
+        email = request.POST.get("email")
 
         user = User.objects.filter(email=email).first()
 
         if not user:
-            messages.error(request, "No account found with this email.")
-            return render(request, 'user/forgot_password.html')
+            messages.error(request,"No account found with this email.")
+            return render(request,"user/forgot_password.html")
 
-        request.session['reset_email'] = email
+        # store email in session
+        request.session["reset_email"] = email
 
         OTP.objects.filter(user=user).delete()
 
-        otp = OTP.objects.create(
-            user=user,
-            code=OTP.generate_otp()
-        )
+        otp = OTP.objects.create(user=user)
 
         send_mail(
             subject="Password Reset OTP",
             message=f"Your OTP is {otp.code}",
-            from_email="outfito0848@gmail.com",
-            recipient_list=[user.email],
-            fail_silently=False,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[email],
+            fail_silently=False
         )
 
-        return redirect('reset_verify')
+        return redirect("reset_verify")
 
-    return render(request, 'user/forgot_password.html')
-
+    return render(request,"user/forgot_password.html")
 
 def back_to_login(request):
     request.session.pop('reset_email', None)
@@ -258,19 +321,19 @@ def back_to_login(request):
 def reset_verify(request):
 
     email = request.session.get('reset_email')
+
     if not email:
         return redirect('login')
 
     user = User.objects.filter(email=email).first()
-    otp = OTP.objects.filter(user=user).last()
 
-    remaining_seconds = 0
-    if otp:
-        remaining_seconds = int((otp.expired_at - timezone.now()).total_seconds())
-        if remaining_seconds < 0:
-            remaining_seconds = 0
+    if not user:
+        return redirect('login')
+
+    otp, remaining_seconds = get_otp_timer(user)
 
     if request.method == 'POST':
+
         code = request.POST.get('otp')
 
         if not otp:
@@ -282,12 +345,14 @@ def reset_verify(request):
             messages.error(request, "OTP expired. Please resend.")
             return redirect('reset_verify')
 
-        if otp.code != code:
+        if str(otp.code) != str(code):
             messages.error(request, "Invalid OTP")
             return redirect('reset_verify')
 
         otp.delete()
+
         request.session['otp_verified'] = True
+
         return redirect('set_new_password')
 
     return render(request, 'user/reset_verify.html', {

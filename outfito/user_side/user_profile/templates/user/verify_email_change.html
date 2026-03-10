@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
+
 body{
 font-family:'Manrope',sans-serif;
 background:#0a0f1a;
@@ -17,11 +18,13 @@ color:#fff;
 min-height:100vh;
 overflow:hidden;
 }
+
 .left-section{
 position:relative;
 height:100vh;
 overflow:hidden;
 }
+
 .left-section img{
 position:absolute;
 width:100%;
@@ -29,15 +32,18 @@ height:100%;
 object-fit:cover;
 transform:scale(1.05);
 }
+
 .image-overlay{
 position:absolute;
 inset:0;
 background:linear-gradient(to bottom, rgba(10,15,26,0.2), rgba(10,15,26,0.85));
 }
+
 .right-section{
 background:#0a0f1a;
 position:relative;
 }
+
 .radial-glow{
 position:absolute;
 width:600px;
@@ -49,6 +55,7 @@ left:50%;
 transform:translate(-50%,-50%);
 filter:blur(80px);
 }
+
 .glass-card{
 background: rgba(16,22,34,0.5);
 backdrop-filter: blur(14px);
@@ -58,6 +65,7 @@ padding:40px;
 width:100%;
 max-width:480px;
 }
+
 .icon-box{
 width:70px;
 height:70px;
@@ -71,6 +79,7 @@ font-size:30px;
 color:#0d59f2;
 margin-bottom:25px;
 }
+
 .otp-input{
 width:100%;
 height:75px;
@@ -81,13 +90,14 @@ background:#101622;
 border:2px solid #1f2937;
 border-radius:18px;
 color:#fff;
-transition:0.3s;
 }
+
 .otp-input:focus{
 border-color:#0d59f2;
 box-shadow:0 0 15px rgba(13,89,242,.4);
 outline:none;
 }
+
 .btn-primary{
 background:#0d59f2;
 border:none;
@@ -95,14 +105,17 @@ padding:18px;
 font-weight:700;
 border-radius:18px;
 }
+
 .btn-primary:hover{
 background:#0949c9;
 }
+
 .resend-link{
 color:#0d59f2;
 font-weight:700;
 text-decoration:none;
 }
+
 .timer-box{
 background:rgba(0,255,255,.08);
 border:1px solid rgba(0,255,255,.2);
@@ -112,6 +125,7 @@ font-weight:700;
 font-size:14px;
 color:#00e5ff;
 }
+
 </style>
 </head>
 
@@ -121,8 +135,11 @@ color:#00e5ff;
 <div class="row vh-100">
 
 <div class="col-lg-6 d-none d-lg-block left-section p-0">
+
 <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8tnIogDVt0ft5Dx8zSfXjCobTp6VzGs0UBmcEkDytMD7fgRsioRcCqCYQeOdO8egB3sqlhofhgdnBm9SV_PAP6q7vwEeHG89MTIgddtAEiTT4_ULNQtL5IDxiXrB6T9Den7Lvs43FDr5SKIbvZnkMejsp9G-G-z0Gaf-ElRE2TFZIvStGcdr4eOJ4xKvJt5HKyp06ZxSYhIsjA9i0OFvUd_FUZuDylYs-6tx6P7ANSH-0BLdp81bn6KxsWMWZJ4gyOdFAXgO0g7Hq">
+
 <div class="image-overlay"></div>
+
 </div>
 
 <div class="col-lg-6 d-flex align-items-center justify-content-center right-section">
@@ -142,33 +159,27 @@ We sent a 6-digit code to your email <br>
 
 {% if messages %}
 {% for message in messages %}
-{% if forloop.last %}
-<div class="alert
-{% if message.tags == 'error' %}
-alert-danger
-{% elif message.tags == 'success' %}
-alert-success
-{% else %}
-alert-warning
-{% endif %}
-">
+<div class="alert alert-{{ message.tags }}">
 {{ message }}
 </div>
-{% endif %}
 {% endfor %}
 {% endif %}
 
 <form method="POST">
+
 {% csrf_token %}
 
 <input type="hidden" name="otp" id="final_otp">
 
 <div class="row g-2 mb-4">
-{% for i in "123456" %}
-<div class="col-2">
-<input type="text" maxlength="1" class="otp-input otp-box">
-</div>
-{% endfor %}
+
+<div class="col-2"><input type="text" maxlength="1" class="otp-input otp-box"></div>
+<div class="col-2"><input type="text" maxlength="1" class="otp-input otp-box"></div>
+<div class="col-2"><input type="text" maxlength="1" class="otp-input otp-box"></div>
+<div class="col-2"><input type="text" maxlength="1" class="otp-input otp-box"></div>
+<div class="col-2"><input type="text" maxlength="1" class="otp-input otp-box"></div>
+<div class="col-2"><input type="text" maxlength="1" class="otp-input otp-box"></div>
+
 </div>
 
 <button type="submit" class="btn btn-primary w-100">
@@ -181,7 +192,7 @@ Verify & Proceed →
 
 <p class="text-secondary mb-0">
 Didn't receive the code?
-<a href="{% url 'resend-reset-otp' %}" class="resend-link">Resend</a>
+<a href="{% url 'resend-profile-otp' %}" class="resend-link">Resend</a>
 </p>
 
 <div class="timer-box">
@@ -197,51 +208,63 @@ Didn't receive the code?
 </div>
 
 <script>
-const inputs=document.querySelectorAll(".otp-box");
-const hiddenInput=document.getElementById("final_otp");
 
-inputs.forEach((input,index)=>{
+const inputs = document.querySelectorAll(".otp-box");
+const hiddenInput = document.getElementById("final_otp");
 
-input.addEventListener("input",()=>{
-input.value=input.value.replace(/[^0-9]/g,"");
+inputs.forEach((input, index) => {
 
-if(input.value.length===1 && index<inputs.length-1){
+input.addEventListener("input", () => {
+
+input.value = input.value.replace(/[^0-9]/g, "");
+
+if(input.value.length === 1 && index < inputs.length-1){
 inputs[index+1].focus();
 }
 
 let otp="";
-inputs.forEach(i=>otp+=i.value);
-hiddenInput.value=otp;
+inputs.forEach(i => otp += i.value);
+
+hiddenInput.value = otp;
+
 });
 
-input.addEventListener("keydown",(e)=>{
+input.addEventListener("keydown", (e)=>{
+
 if(e.key==="Backspace" && input.value==="" && index>0){
 inputs[index-1].focus();
 }
-});
+
 });
 
-let time={{ remaining_seconds|default:0 }};
-const timer=document.getElementById("timer");
+});
+
+let time = {{ remaining_seconds|default:0 }};
+const timer = document.getElementById("timer");
 
 function updateTimer(){
-if(time<=0){
+
+if(time <= 0){
 timer.textContent="00:00";
 return;
 }
 
-let minutes=Math.floor(time/60);
-let seconds=time%60;
+let minutes = Math.floor(time/60);
+let seconds = time%60;
 
-seconds=seconds<10?"0"+seconds:seconds;
-minutes=minutes<10?"0"+minutes:minutes;
+seconds = seconds<10 ? "0"+seconds : seconds;
+minutes = minutes<10 ? "0"+minutes : minutes;
 
-timer.textContent=minutes+":"+seconds;
+timer.textContent = minutes + ":" + seconds;
+
 time--;
+
 }
 
 updateTimer();
+
 setInterval(updateTimer,1000);
+
 </script>
 
 </body>

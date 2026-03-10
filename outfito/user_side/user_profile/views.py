@@ -51,10 +51,32 @@ def edit_profile(request):
         elif phone and not re.match(r'^[0-9]{10}$', phone):
             error = "Phone must be 10 digits"
 
+        # Prevent email change for Google users
+        elif profile.google_image and email != request.user.email:
+            messages.error(request, "Google users cannot change email address.")
+            return redirect("profile")
+
         else:
 
+            # If email changed → OTP verification
+            if email != request.user.email:
+
+                request.session["new_email"] = email
+
+                OTP.objects.filter(user=request.user).delete()
+                otp = OTP.objects.create(user=request.user)
+
+                send_mail(
+                    subject="Verify Email Change",
+                    message=f"Your OTP is {otp.code}",
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[email],
+                    fail_silently=False
+                )
+
+                return redirect("verify-email-change")
+
             request.user.username = username
-            request.user.email = email
             request.user.save()
 
             profile.phone = phone
@@ -76,6 +98,8 @@ def edit_profile(request):
 
     return render(request, "user/edit_profile.html", context)
 
+
+
 def logout_view(request):
    logout(request)
    return redirect('landing')
@@ -93,6 +117,13 @@ def wishlist(request):
 @login_required
 def change_password(request):
 
+    profile = Profile.objects.get(user=request.user)
+
+    # Block Google users
+    if profile.google_image:
+        messages.error(request, "Password cannot be changed for Google accounts.")
+        return redirect("profile")
+
     if request.method == "POST":
 
         old_password = request.POST.get("old_password")
@@ -101,32 +132,26 @@ def change_password(request):
 
         user = request.user
 
-        # Empty validation
         if not old_password or not new_password1 or not new_password2:
             messages.error(request, "All fields are required")
             return redirect("change-password")
 
-        # Check old password
         if not check_password(old_password, user.password):
             messages.error(request, "Current password is incorrect")
             return redirect("change-password")
 
-        # Length validation
         if len(new_password1) < 6:
             messages.error(request, "Password must be at least 6 characters")
             return redirect("change-password")
 
-        # Match validation
         if new_password1 != new_password2:
             messages.error(request, "Passwords do not match")
             return redirect("change-password")
 
-        # Prevent same password reuse
         if check_password(new_password1, user.password):
             messages.error(request, "New password cannot be the same as old password")
             return redirect("change-password")
 
-        # Optional regex
         if not re.match(r'^[A-Za-z0-9@#$%^&+=!]+$', new_password1):
             messages.error(request, "Password contains invalid characters")
             return redirect("change-password")
@@ -141,28 +166,46 @@ def change_password(request):
 
     return render(request, "user/change_password.html")
 
+
+def get_otp_timer(user):
+
+    otp = OTP.objects.filter(user=user).last()
+
+    remaining_seconds = 0
+
+    if otp:
+        remaining_seconds = int((otp.expired_at - timezone.now()).total_seconds())
+
+        if remaining_seconds < 0:
+            remaining_seconds = 0
+
+    return otp, remaining_seconds
+
+
 @login_required
 def start_password_reset(request):
-    # 1. Set the email in the session
-    request.session['reset_email'] = request.user.email
-    
-    # 2. Force Django to save the session immediately
-    request.session.modified = True 
 
     user = request.user
 
-    # 3. Clear old OTPs and generate a new one
+    otp, remaining_seconds = get_otp_timer(user)
+
+    if otp and remaining_seconds > 0:
+        messages.error(request, f"Please wait {remaining_seconds}s before requesting a new OTP.")
+        return redirect("profile-reset-verify")
+
     OTP.objects.filter(user=user).delete()
+
     otp = OTP.objects.create(user=user)
 
-    # 4. Send the email
     send_mail(
-        subject="Password Reset OTP",
+        subject="OTP Verification",
         message=f"Your OTP is {otp.code}",
-        from_email="outfito0848@gmail.com",
+        from_email=settings.EMAIL_HOST_USER,
         recipient_list=[user.email],
         fail_silently=False,
     )
+
+    messages.success(request, "A new OTP has been sent to your email.")
 
     return redirect("profile-reset-verify")
 
@@ -267,3 +310,90 @@ def profile_set_new_password(request):
         return redirect('profile')
 
     return render(request, "user/profile_set_new_password.html")
+
+
+@login_required
+def resend_profile_otp(request):
+
+    new_email = request.session.get("new_email")
+
+    if not new_email:
+        messages.error(request, "Session expired. Please try again.")
+        return redirect("profile")
+
+    user = request.user
+
+    otp, remaining_seconds = get_otp_timer(user)
+
+    if otp and remaining_seconds > 0:
+        messages.error(request, f"Please wait {remaining_seconds}s before requesting a new OTP.")
+        return redirect("verify-email-change")
+
+    OTP.objects.filter(user=user).delete()
+
+    otp = OTP.objects.create(user=user)
+
+    send_mail(
+        subject="Email Change OTP",
+        message=f"Your OTP is {otp.code}",
+        from_email=settings.EMAIL_HOST_USER,
+        recipient_list=[new_email],
+        fail_silently=False
+    )
+
+    messages.success(request, "New OTP sent successfully")
+
+    return redirect("verify-email-change")
+
+
+@login_required
+def verify_email_change(request):
+
+    new_email = request.session.get("new_email")
+
+    if not new_email:
+        messages.error(request, "Session expired. Please try again.")
+        return redirect("profile")
+
+    # prevent duplicate email
+    if User.objects.filter(email=new_email).exclude(id=request.user.id).exists():
+        messages.error(request, "This email is already in use.")
+        request.session.pop("new_email", None)
+        return redirect("edit-profile")
+
+    user = request.user
+
+    otp, remaining_seconds = get_otp_timer(user)
+
+    if request.method == "POST":
+
+        code = request.POST.get("otp")
+
+        if not otp:
+            messages.error(request, "OTP not found")
+            return redirect("verify-email-change")
+
+        if otp.is_expired():
+            otp.delete()
+            messages.error(request, "OTP expired. Please resend OTP.")
+            return redirect("verify-email-change")
+
+        if str(otp.code) != str(code):
+            messages.error(request, "Invalid OTP")
+            return redirect("verify-email-change")
+
+        # update email
+        user.email = new_email
+        user.save()
+
+        otp.delete()
+        request.session.pop("new_email", None)
+
+        messages.success(request, "Email updated successfully")
+
+        return redirect("profile")
+
+    return render(request, "user/verify_email_change.html", {
+        "email": new_email,
+        "remaining_seconds": remaining_seconds
+    })

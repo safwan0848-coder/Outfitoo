@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Address
 from django.contrib import messages
+import re
 
 @login_required
 def address_list(request):
@@ -11,6 +12,7 @@ def address_list(request):
     return render(request, "user/address.html", {
         "addresses": addresses
     })
+
 
 
 
@@ -27,8 +29,72 @@ def add_address(request):
         state = request.POST.get("state")
         pincode = request.POST.get("pincode")
         country = request.POST.get("country")
-        address_type = request.POST.get("type")   # important
+        address_type = request.POST.get("type")
         is_default = request.POST.get("is_default")
+
+        # FULL NAME VALIDATION
+        if not full_name:
+            messages.error(request, "Full name is required")
+            return redirect("add-address")
+
+        if not re.match(r'^[A-Za-z ]+$', full_name):
+            messages.error(request, "Full name can contain only letters")
+            return redirect("add-address")
+
+        # PHONE VALIDATION
+        if not phone:
+            messages.error(request, "Phone number is required")
+            return redirect("add-address")
+
+        if not re.match(r'^[0-9]{10}$', phone):
+            messages.error(request, "Phone number must be 10 digits")
+            return redirect("add-address")
+
+        # ADDRESS LINE 1
+        if not line1:
+            messages.error(request, "Address line 1 is required")
+            return redirect("add-address")
+
+        # CITY VALIDATION
+        if not city:
+            messages.error(request, "City is required")
+            return redirect("add-address")
+
+        if not re.match(r'^[A-Za-z ]+$', city):
+            messages.error(request, "City can contain only letters")
+            return redirect("add-address")
+
+        # STATE VALIDATION
+        if not state:
+            messages.error(request, "State is required")
+            return redirect("add-address")
+
+        if not re.match(r'^[A-Za-z ]+$', state):
+            messages.error(request, "State can contain only letters")
+            return redirect("add-address")
+
+        # PINCODE VALIDATION
+        if not pincode:
+            messages.error(request, "Pincode is required")
+            return redirect("add-address")
+
+        if not re.match(r'^[0-9]{6}$', pincode):
+            messages.error(request, "Pincode must be 6 digits")
+            return redirect("add-address")
+
+        # COUNTRY VALIDATION
+        if not country:
+            messages.error(request, "Country is required")
+            return redirect("add-address")
+
+        if not re.match(r'^[A-Za-z ]+$', country):
+            messages.error(request, "Country can contain only letters")
+            return redirect("add-address")
+
+        # ADDRESS TYPE VALIDATION
+        if not address_type:
+            messages.error(request, "Address type is required")
+            return redirect("add-address")
 
         # if user selects default remove old default
         if is_default:
@@ -44,9 +110,11 @@ def add_address(request):
             state=state,
             pincode=pincode,
             country=country,
-            type=address_type,   # important
+            type=address_type,
             is_default=True if is_default else False
         )
+
+        messages.success(request, "Address added successfully")
 
         return redirect("address-list")
 
