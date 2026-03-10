@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import logout
 from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
@@ -47,5 +47,9 @@ def admin_toggle_user(request, user_id):
     user.save()
 
     return redirect('admin-user-management')
+
+def admin_logout(request):
+    logout(request)
+    return redirect("admin-login")
 
 

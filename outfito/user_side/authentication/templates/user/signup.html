@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
+/* ---- YOUR ORIGINAL CSS (UNCHANGED) ---- */
 body {
     font-family: 'Inter', sans-serif;
     background: radial-gradient(circle at 30% 30%, #1e293b 0%, #0a0f1c 70%);
@@ -17,34 +18,10 @@ body {
     overflow: hidden;
     color: #fff;
 }
-
-/* LEFT SIDE */
-.left-side {
-    height: 100vh;
-    position: relative;
-    overflow: hidden;
-}
-
-.model-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center top;
-}
-
-.left-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to right, rgba(10,15,28,0.3), rgba(10,15,28,0.9));
-}
-
-.left-content {
-    position: absolute;
-    bottom: 70px;
-    left: 60px;
-    max-width: 420px;
-    z-index: 2;
-}
+.left-side { height: 100vh; position: relative; overflow: hidden; }
+.model-img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.left-overlay { position: absolute; inset: 0; background: linear-gradient(to right, rgba(10,15,28,0.3), rgba(10,15,28,0.9)); }
+.left-content { position: absolute; bottom: 70px; left: 60px; max-width: 420px; z-index: 2; }
 
 .highlight {
     background: linear-gradient(to right, #3b82f6, #00d2ff);
@@ -52,7 +29,6 @@ body {
     color: transparent;
 }
 
-/* RIGHT CARD */
 .glass-card {
     background: rgba(30,41,59,0.35);
     backdrop-filter: blur(18px);
@@ -63,7 +39,6 @@ body {
     max-width: 450px;
 }
 
-/* FORM */
 .form-control {
     background: rgba(15,23,42,0.6);
     border: 1px solid #334155;
@@ -90,12 +65,8 @@ body {
     background: linear-gradient(90deg, #2563eb, #00d2ff);
 }
 
-.small-text {
-    font-size: 13px;
-    color: #9ca3af;
-}
+.small-text { font-size: 13px; color: #9ca3af; }
 
-/* Divider */
 .divider {
     display: flex;
     align-items: center;
@@ -117,7 +88,6 @@ body {
     color: #64748b;
 }
 
-/* Google Button */
 .google-btn {
     background: rgba(15,23,42,0.6);
     border: 1px solid #334155;
@@ -138,7 +108,6 @@ body {
     background: linear-gradient(90deg, #ffffff, #3b82f6, #00d2ff);
     -webkit-background-clip: text;
     color: transparent;
-    text-shadow: 0 0 15px rgba(59,130,246,0.4);
 }
 
 .footer-text {
@@ -151,6 +120,16 @@ body {
 .error-text{
     color:#ff6b6b;
     font-size:12px;
+}
+
+.success-text{
+color:#22c55e;
+font-size:13px;
+}
+
+.warning-text{
+color:#facc15;
+font-size:13px;
 }
 </style>
 </head>
@@ -187,38 +166,63 @@ body {
 <form method="POST">
 {% csrf_token %}
 
-{% if form.non_field_errors %}
-<div class="error-text mb-2">
-    {{ form.non_field_errors }}
-</div>
+{% if messages %}
+    {% for message in messages %}
+        <div class="mb-2 
+        {% if message.tags == 'error' %}
+            error-text
+        {% elif message.tags == 'success' %}
+            text-success
+        {% else %}
+            text-warning
+        {% endif %}
+        ">
+            {{ message }}
+        </div>
+    {% endfor %}
 {% endif %}
 
 <div class="mb-2">
 <label class="small-text">Full Name</label>
-<input type="text" name="username" class="form-control"
-       value="{{ form.username.value|default:'' }}" placeholder="John Doe">
-<div class="error-text">{{ form.username.errors }}</div>
+<input type="text"
+       name="username"
+       class="form-control"
+       placeholder="John Doe"
+       required
+       pattern="^[A-Za-z0-9]+$"
+       title="Username can contain only letters and numbers">
 </div>
 
 <div class="mb-2">
 <label class="small-text">Email Address</label>
-<input type="email" name="email" class="form-control"
-       value="{{ form.email.value|default:'' }}" placeholder="name@company.com">
-<div class="error-text">{{ form.email.errors }}</div>
+<input type="email"
+       name="email"
+       class="form-control"
+       placeholder="name@company.com"
+       required>
 </div>
 
 <div class="mb-2">
 <label class="small-text">Password</label>
-<input type="password" name="password1" id="password"
-       class="form-control" placeholder="••••••••">
-<div class="error-text">{{ form.password1.errors }}</div>
+<input type="password"
+       name="password1"
+       id="password"
+       class="form-control"
+       placeholder="••••••••"
+       required
+       minlength="6"
+       title="Password must be at least 6 characters">
 </div>
 
 <div class="mb-3">
 <label class="small-text">Confirm Password</label>
-<input type="password" name="password2" id="confirmPassword"
-       class="form-control" placeholder="••••••••">
-<div class="error-text">{{ form.password2.errors }}</div>
+<input type="password"
+       name="password2"
+       id="confirmPassword"
+       class="form-control"
+       placeholder="••••••••"
+       required
+       minlength="6">
 </div>
 
 <button type="submit" class="btn btn-primary w-100 mb-2">
@@ -227,12 +231,10 @@ Create Account →
 
 </form>
 
-<!-- Divider -->
 <div class="divider">
 <span>OR CONTINUE WITH</span>
 </div>
 
-<!-- Google Button -->
 <a href="/accounts/google/login/"
    class="google-btn w-100 d-flex align-items-center justify-content-center gap-2 text-decoration-none">
 

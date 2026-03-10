@@ -1,42 +1,112 @@
 from django.shortcuts import render,redirect
-from .forms import SignupForm,ResetPasswordForm
 from .models import OTP
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 User = get_user_model()
 from django.contrib.auth import authenticate, login,logout
 from django.contrib import messages
-from django.contrib.auth.hashers import make_password
-from django.http import HttpResponse
+from django.contrib.auth.hashers import make_password,check_password
 from django.views.decorators.cache import never_cache
-
+import re
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+from django.http import HttpResponse
 
 def signup_view(request):
-    if request.method == 'POST':
-        form=SignupForm(request.POST)
-        if form.is_valid():
-            user=form.save(commit=False)
-            user.is_active=False
-            user.is_verified=False
-            user.save()
 
-            request.session['email']=user.email
+    if request.method == "POST":
 
-            OTP.objects.filter(user=user).delete()
-            otp=OTP.objects.create(user=user)
+        uname = request.POST.get('username')
+        email = request.POST.get('email')
+        pass1 = request.POST.get('password1')
+        pass2 = request.POST.get('password2')
 
-            send_mail(
-                subject='Your OTP Code',
-                message=f'Hello {user.username},\n\nYour OTP is {otp.code}\nIt expires in 5 minutes.',
-                from_email='outfito0848@gmail.com',
-                recipient_list=[user.email],
-                fail_silently=False,
+        # Username required
+        if not uname:
+            messages.error(request, "Username is required")
+            return redirect('signup')
+
+        # Username cannot be only numbers
+        if uname.isdigit():
+            messages.error(request, "Username cannot contain only numbers")
+            return redirect('signup')
+
+        # Username regex validation
+        if not re.match(r'^[A-Za-z0-9]+$', uname):
+            messages.error(
+                request,
+                "Username can contain only letters and numbers"
             )
+            return redirect('signup')
 
-            return redirect('otp_verify')
+        # Email required
+        if not email:
+            messages.error(request, "Email is required")
+            return redirect('signup')
 
-        return render(request, 'user/signup.html', {'form': form})
-    return render(request, 'user/signup.html', {'form': SignupForm()})
+        # Email validation
+        try:
+            validate_email(email)
+        except ValidationError:
+            messages.error(request, "Enter a valid email address")
+            return redirect('signup')
+
+        # Password empty check
+        if not pass1 or not pass2:
+            messages.error(request, "Password fields cannot be empty")
+            return redirect('signup')
+
+        # Password length
+        if len(pass1) < 6:
+            messages.error(request, "Password must be at least 6 characters")
+            return redirect('signup')
+
+        # Password match
+        if pass1 != pass2:
+            messages.error(request, "Password and Confirm Password are not the same")
+            return redirect('signup')
+
+        # Username exists
+        if User.objects.filter(username=uname).exists():
+            messages.error(request, "Username already exists")
+            return redirect('signup')
+
+        # Email exists
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Email already registered")
+            return redirect('signup')
+
+        # Create user
+        user = User.objects.create_user(
+            username=uname,
+            email=email,
+            password=pass1
+        )
+
+        user.is_active = False
+        user.is_verified = False
+        user.save()
+
+        # Save email in session
+        request.session['email'] = user.email
+
+        # Generate OTP
+        OTP.objects.filter(user=user).delete()
+        otp = OTP.objects.create(user=user)
+
+        # Send OTP Email
+        send_mail(
+            subject='Your OTP Code',
+            message=f'Hello {user.username},\n\nYour OTP is {otp.code}\nIt expires in 5 minutes.',
+            from_email='outfito0848@gmail.com',
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+
+        messages.success(request, "OTP sent to your email")
+        return redirect('otp_verify')
+
+    return render(request, 'user/signup.html')
 
 from django.utils import timezone
 
@@ -232,22 +302,46 @@ def set_new_password(request):
     verified = request.session.get('otp_verified')
 
     if not email or not verified:
+        messages.error(request, "Unauthorized access")
         return redirect('login')
 
-    form = ResetPasswordForm(request.POST or None)
+    if request.method == "POST":
 
-    if request.method == 'POST':
-        if form.is_valid():
-            user = User.objects.filter(email=email).first()
-            user.password = make_password(form.cleaned_data['password1'])
-            user.save()
+        pass1 = request.POST.get('password1')
+        pass2 = request.POST.get('password2')
 
-            request.session.flush()
-            messages.success(request, "Password reset successful.")
+        if not pass1 or not pass2:
+            messages.error(request, "Password fields cannot be empty")
+            return redirect('set_new_password')
+
+        if len(pass1) < 6:
+            messages.error(request, "Password must be at least 6 characters")
+            return redirect('set_new_password')
+
+        if pass1 != pass2:
+            messages.error(request, "Passwords do not match")
+            return redirect('set_new_password')
+
+        user = User.objects.filter(email=email).first()
+
+        if not user:
+            messages.error(request, "User not found")
             return redirect('login')
 
-    return render(request, 'user/set_new_password.html', {'form': form})
+        # 🔴 Prevent same password reuse
+        if check_password(pass1, user.password):
+            messages.error(request, "New password cannot be the same as the old password")
+            return redirect('set_new_password')
 
+        user.password = make_password(pass1)
+        user.save()
+
+        request.session.flush()
+
+        messages.success(request, "Password reset successful")
+        return redirect('login')
+
+    return render(request, 'user/set_new_password.html')
 
 def landing_view(request):
     return render (request,'user/landing.html')

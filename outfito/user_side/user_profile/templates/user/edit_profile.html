@@ -204,6 +204,13 @@ text-decoration:none;
 display:none;
 }
 
+.error-msg{
+font-size:12px;
+color:#ff4d4d;
+margin-bottom:10px;
+text-align:center;
+}
+
 </style>
 
 </head>
@@ -219,7 +226,6 @@ display:none;
 Profile
 </a>
 
-<!-- Change these to # if URLs not created -->
 <a href="#">
 <span class="material-symbols-outlined">shopping_bag</span>
 Orders
@@ -241,6 +247,16 @@ enctype="multipart/form-data"
 class="profile-card">
 
 {% csrf_token %}
+
+{% if error %}
+<div class="error-msg">{{ error }}</div>
+{% endif %}
+
+{% if messages %}
+{% for message in messages %}
+<div class="error-msg">{{ message }}</div>
+{% endfor %}
+{% endif %}
 
 <div class="profile-header">
 
@@ -305,7 +321,12 @@ Username
 
 <div class="glass-field">
 <span class="material-symbols-outlined">person</span>
-<input type="text" name="username" value="{{ user.username }}">
+<input type="text"
+name="username"
+value="{{ user.username }}"
+required
+pattern="^[A-Za-z0-9]+$"
+title="Username can contain only letters and numbers">
 </div>
 
 </div>
@@ -319,7 +340,11 @@ Phone
 
 <div class="glass-field">
 <span class="material-symbols-outlined">call</span>
-<input type="text" name="phone" value="{{ profile.phone }}">
+<input type="text"
+name="phone"
+value="{{ profile.phone }}"
+pattern="^[0-9]{10}$"
+title="Enter a valid 10 digit phone number">
 </div>
 
 </div>
@@ -333,7 +358,10 @@ Email Address
 
 <div class="glass-field">
 <span class="material-symbols-outlined">mail</span>
-<input type="email" name="email" value="{{ user.email }}">
+<input type="email"
+name="email"
+value="{{ user.email }}"
+required>
 </div>
 
 </div>

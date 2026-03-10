@@ -34,11 +34,27 @@ height:100vh;
 position:fixed;
 padding:30px 20px;
 border-right:1px solid #e8e3dc;
+display:flex;
+flex-direction:column;
+}
+.sidebar-menu{
+flex:1;
 }
 
 body.dark .sidebar{
 background:#1a1a1a;
 border-color:#333;
+}
+
+.logout-btn{
+margin-top:auto;
+background:#ef4444;
+color:white !important;
+text-align:center;
+}
+
+.logout-btn:hover{
+background:#902f2f;
 }
 
 .logo{
@@ -149,6 +165,8 @@ box-shadow:0 5px 15px rgba(0,0,0,0.2);
 
 <div class="logo mb-4">Outfito</div>
 
+<div class="sidebar-menu">
+
 <a href="#" class="active">
 <span class="material-icons me-2">group</span>
 Customers
@@ -167,6 +185,17 @@ Orders
 <a href="#">
 <span class="material-icons me-2">local_offer</span>
 Offers
+</a>
+
+</div>
+
+<a href="{% url 'admin_logout' %}" 
+class="logout-btn sidebar-link"
+onclick="return confirm('Are you sure you want to logout?')">
+
+<span class="material-icons me-2">logout</span>
+Logout
+
 </a>
 
 </div>

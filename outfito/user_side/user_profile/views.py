@@ -3,7 +3,6 @@ from django.contrib.auth.decorators import login_required
 from .models import Profile
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
-from .forms import ChangePasswordForm
 from django.http import HttpResponse
 from django.contrib.auth import logout
 from django.core.mail import send_mail
@@ -13,6 +12,9 @@ from django.conf import settings
 from django.contrib.auth.hashers import make_password
 User = get_user_model()
 from django.utils import timezone
+import re
+from django.contrib.auth.hashers import check_password
+from django.contrib.auth import login
 
 @login_required
 def profile(request):
@@ -25,7 +27,6 @@ def profile(request):
     }
 
     return render(request, "user/profile.html", context)
-
 
 
 @login_required
@@ -44,6 +45,12 @@ def edit_profile(request):
         if not username or not email:
             error = "Username and Email required"
 
+        elif not re.match(r'^[A-Za-z0-9]+$', username):
+            error = "Username can contain only letters and numbers"
+
+        elif phone and not re.match(r'^[0-9]{10}$', phone):
+            error = "Phone must be 10 digits"
+
         else:
 
             request.user.username = username
@@ -57,6 +64,8 @@ def edit_profile(request):
 
             profile.save()
 
+            messages.success(request, "Profile updated successfully")
+
             return redirect("profile")
 
     context = {
@@ -66,7 +75,6 @@ def edit_profile(request):
     }
 
     return render(request, "user/edit_profile.html", context)
-
 
 def logout_view(request):
    logout(request)
@@ -84,19 +92,54 @@ def wishlist(request):
 
 @login_required
 def change_password(request):
+
     if request.method == "POST":
-        form = ChangePasswordForm(request.user, request.POST)
 
-        if form.is_valid():
-            user = form.save()
-            update_session_auth_hash(request, user)
-            messages.success(request, "Password updated successfully!")
-            return redirect("profile")
-    else:
-        form = ChangePasswordForm(request.user)
+        old_password = request.POST.get("old_password")
+        new_password1 = request.POST.get("new_password1")
+        new_password2 = request.POST.get("new_password2")
 
-    return render(request, "user/change_password.html", {"form": form})
+        user = request.user
 
+        # Empty validation
+        if not old_password or not new_password1 or not new_password2:
+            messages.error(request, "All fields are required")
+            return redirect("change-password")
+
+        # Check old password
+        if not check_password(old_password, user.password):
+            messages.error(request, "Current password is incorrect")
+            return redirect("change-password")
+
+        # Length validation
+        if len(new_password1) < 6:
+            messages.error(request, "Password must be at least 6 characters")
+            return redirect("change-password")
+
+        # Match validation
+        if new_password1 != new_password2:
+            messages.error(request, "Passwords do not match")
+            return redirect("change-password")
+
+        # Prevent same password reuse
+        if check_password(new_password1, user.password):
+            messages.error(request, "New password cannot be the same as old password")
+            return redirect("change-password")
+
+        # Optional regex
+        if not re.match(r'^[A-Za-z0-9@#$%^&+=!]+$', new_password1):
+            messages.error(request, "Password contains invalid characters")
+            return redirect("change-password")
+
+        user.set_password(new_password1)
+        user.save()
+
+        update_session_auth_hash(request, user)
+
+        messages.success(request, "Password updated successfully")
+        return redirect("profile")
+
+    return render(request, "user/change_password.html")
 
 @login_required
 def start_password_reset(request):
@@ -170,7 +213,7 @@ def profile_reset_verify(request):
         "remaining_seconds": remaining_seconds
     })
 
-from django.contrib.auth import login
+
 def profile_set_new_password(request):
 
     email = request.session.get('reset_email')
@@ -185,8 +228,20 @@ def profile_set_new_password(request):
         password1 = request.POST.get("password1")
         password2 = request.POST.get("password2")
 
+        if not password1 or not password2:
+            messages.error(request, "Password fields cannot be empty.")
+            return redirect('profile-set-new-password')
+
+        if len(password1) < 6:
+            messages.error(request, "Password must be at least 6 characters.")
+            return redirect('profile-set-new-password')
+
         if password1 != password2:
             messages.error(request, "Passwords do not match.")
+            return redirect('profile-set-new-password')
+
+        if not re.match(r'^[A-Za-z0-9@#$%^&+=!]+$', password1):
+            messages.error(request, "Password contains invalid characters.")
             return redirect('profile-set-new-password')
 
         user = User.objects.filter(email=email).first()
@@ -195,14 +250,15 @@ def profile_set_new_password(request):
             messages.error(request, "User not found.")
             return redirect('change-password')
 
-        # set new password
+        if check_password(password1, user.password):
+            messages.error(request, "New password cannot be the same as the old password.")
+            return redirect('profile-set-new-password')
+
         user.set_password(password1)
         user.save()
 
-        # login user again (SPECIFY BACKEND)
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
-        # clear session
         request.session.pop('reset_email', None)
         request.session.pop('otp_verified', None)
 
