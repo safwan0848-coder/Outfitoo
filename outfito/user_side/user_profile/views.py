@@ -15,8 +15,11 @@ from django.utils import timezone
 import re
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth import login
+from django.views.decorators.cache import never_cache
 
-@login_required
+
+@never_cache
+@login_required(login_url='login')
 def profile(request):
 
     profile, created = Profile.objects.get_or_create(user=request.user)
@@ -29,7 +32,8 @@ def profile(request):
     return render(request, "user/profile.html", context)
 
 
-@login_required
+@never_cache
+@login_required(login_url='login')
 def edit_profile(request):
 
     profile, created = Profile.objects.get_or_create(user=request.user)
@@ -99,22 +103,31 @@ def edit_profile(request):
     return render(request, "user/edit_profile.html", context)
 
 
-
+@never_cache
 def logout_view(request):
    logout(request)
    return redirect('landing')
 
+@never_cache
+@login_required(login_url='login')
 def address(request):
     return HttpResponse('address')
+@never_cache
+@login_required(login_url='login')
 def wallet(request):
     return HttpResponse('wallet')
+@never_cache
+@login_required(login_url='login')
 def orders(request):
     return HttpResponse('orders')
+@never_cache
+@login_required(login_url='login')
 def wishlist(request):
     return HttpResponse('wishlist')
 
 
-@login_required
+@never_cache
+@login_required(login_url='login')
 def change_password(request):
 
     profile = Profile.objects.get(user=request.user)
@@ -182,7 +195,8 @@ def get_otp_timer(user):
     return otp, remaining_seconds
 
 
-@login_required
+@never_cache
+@login_required(login_url='login')
 def start_password_reset(request):
 
     user = request.user
@@ -210,6 +224,8 @@ def start_password_reset(request):
     return redirect("profile-reset-verify")
 
 
+@never_cache
+@login_required(login_url='login')
 def profile_reset_verify(request):
     # Retrieve the email from the session
     email = request.session.get('reset_email')
@@ -257,6 +273,8 @@ def profile_reset_verify(request):
     })
 
 
+@never_cache
+@login_required(login_url='login')
 def profile_set_new_password(request):
 
     email = request.session.get('reset_email')
@@ -312,7 +330,8 @@ def profile_set_new_password(request):
     return render(request, "user/profile_set_new_password.html")
 
 
-@login_required
+@never_cache
+@login_required(login_url='login')
 def resend_profile_otp(request):
 
     new_email = request.session.get("new_email")
@@ -346,6 +365,8 @@ def resend_profile_otp(request):
     return redirect("verify-email-change")
 
 
+@never_cache
+@login_required(login_url='login')
 @login_required
 def verify_email_change(request):
 

@@ -7,13 +7,20 @@ from django.contrib.auth import authenticate, login,logout
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password,check_password
 from django.views.decorators.cache import never_cache
+from django.contrib.auth.decorators import login_required
 import re
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.conf import settings
+from django.utils import timezone
 
+
+@never_cache
 def signup_view(request):
+
+    if request.user.is_authenticated:
+        return redirect('landing')
 
     if request.method == "POST":
 
@@ -109,8 +116,7 @@ def signup_view(request):
 
     return render(request, 'user/signup.html')
 
-from django.utils import timezone
-
+@never_cache
 def otp_verify(request):
 
     email = request.session.get('email')
@@ -175,6 +181,7 @@ def get_otp_timer(user):
     return otp, remaining_seconds
 
 
+@never_cache
 def resend_signup_otp(request):
 
     email = request.session.get("email")
@@ -210,6 +217,7 @@ def resend_signup_otp(request):
     return redirect("otp_verify")
 
 
+@never_cache
 def resend_reset_otp(request):
 
     email = request.session.get("reset_email")
@@ -244,7 +252,7 @@ def resend_reset_otp(request):
 
     return redirect("reset_verify")
 
-
+@never_cache
 def change_email(request):
     request.session.pop('email', None)
     messages.info(request, "Please enter new email.")
@@ -253,6 +261,10 @@ def change_email(request):
 
 @never_cache
 def login_view(request):
+
+    if request.user.is_authenticated:
+        return redirect('landing')
+    
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
@@ -282,7 +294,11 @@ def login_view(request):
     return render(request, 'user/login.html')
 
 
+@never_cache
 def forgot_password(request):
+    
+    if request.user.is_authenticated:
+        return redirect('landing')
 
     if request.method == "POST":
 
@@ -313,11 +329,13 @@ def forgot_password(request):
 
     return render(request,"user/forgot_password.html")
 
+@never_cache
 def back_to_login(request):
     request.session.pop('reset_email', None)
     return redirect('login')
 
 
+@never_cache
 def reset_verify(request):
 
     email = request.session.get('reset_email')
@@ -361,6 +379,7 @@ def reset_verify(request):
     })
 
 
+@never_cache
 def set_new_password(request):
 
     email = request.session.get('reset_email')
@@ -408,18 +427,26 @@ def set_new_password(request):
 
     return render(request, 'user/set_new_password.html')
 
+
+@never_cache
 def landing_view(request):
     return render (request,'user/landing.html')
-    
+
+@never_cache    
 def logout_view(request):
    logout(request)
    return redirect('landing')
 
 
-
+@never_cache
+@login_required(login_url='login')
 def address(request):
     return HttpResponse('address')
+@never_cache
+@login_required(login_url='login')
 def wallet(request):
     return HttpResponse('wallet')
+@never_cache
+@login_required(login_url='login')
 def orders(request):
     return HttpResponse('orders')

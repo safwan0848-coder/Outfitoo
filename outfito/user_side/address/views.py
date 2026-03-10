@@ -3,8 +3,11 @@ from django.contrib.auth.decorators import login_required
 from .models import Address
 from django.contrib import messages
 import re
+from django.views.decorators.cache import never_cache
 
-@login_required
+
+@never_cache
+@login_required(login_url='login')
 def address_list(request):
 
     addresses = Address.objects.filter(user=request.user)
@@ -15,8 +18,8 @@ def address_list(request):
 
 
 
-
-@login_required
+@never_cache
+@login_required(login_url='login')
 def add_address(request):
 
     if request.method == "POST":
@@ -121,7 +124,8 @@ def add_address(request):
     return render(request, "user/add_address.html")
 
 
-@login_required
+@never_cache
+@login_required(login_url='login')
 def edit_address(request, id):
 
     address = get_object_or_404(Address, id=id, user=request.user)

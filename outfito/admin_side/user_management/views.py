@@ -7,7 +7,13 @@ from django.core.paginator import Paginator
 
 User = get_user_model()
 
-@login_required
+def is_admin(user):
+    return user.is_authenticated and user.is_staff
+
+
+@never_cache
+@login_required(login_url='admin-login')
+@user_passes_test(lambda u: u.is_staff)
 def admin_user_management(request):
 
     # Search input from URL
@@ -32,9 +38,6 @@ def admin_user_management(request):
 
     return render(request, "admin/admin_user_management.html", {"users": users})
 
-def is_admin(user):
-    return user.is_authenticated and user.is_staff
-
 
 @never_cache
 @login_required(login_url='admin_login')
@@ -48,6 +51,8 @@ def admin_toggle_user(request, user_id):
 
     return redirect('admin-user-management')
 
+
+@never_cache
 def admin_logout(request):
     logout(request)
     return redirect("admin-login")
