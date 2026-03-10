@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.views.decorators.cache import never_cache
-from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -22,7 +21,7 @@ def admin_login_view(request):
         email = request.POST.get("email")
         password = request.POST.get("password")
 
-        user = authenticate(request, username=email, password=password)
+        user = authenticate(request, email=email, password=password)
 
         if user and user.is_staff:
             login(request, user)
