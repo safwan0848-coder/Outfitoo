@@ -2,4 +2,5 @@ from django.apps import AppConfig
 
 
 class WishlistConfig(AppConfig):
-    name = 'wishlist'
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'user_side.wishlist'   

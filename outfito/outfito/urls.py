@@ -24,8 +24,11 @@ urlpatterns = [
     path('', include('user_side.authentication.urls')),
     path('user_profile/', include('user_side.user_profile.urls')),
     path('wishlist/', include('user_side.wishlist.urls')),
+    path('address/', include('user_side.address.urls')),
     # THIS IS REQUIRED FOR GOOGLE LOGIN
     path('accounts/', include('allauth.urls')),
+    path('admin_side/', include('admin_side.authentication.urls')),
+    path('admin_side/', include('admin_side.user_management.urls')),
 ]
 from django.conf import settings
 from django.conf.urls.static import static

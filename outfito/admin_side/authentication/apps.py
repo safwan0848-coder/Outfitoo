@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class AddressConfig(AppConfig):
+class AuthenticationConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'user_side.address'
+    name = 'admin_side.authentication'

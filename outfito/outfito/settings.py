@@ -44,10 +44,15 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
 
-    'user_side.home',
-    'user_side.address',
+
+    'admin_side.authentication',
+    'admin_side.user_management',
+
     'user_side.authentication',
+    'user_side.address',
+    'user_side.home',
     'user_side.user_profile',
+    'user_side.wishlist',
 ]
 SITE_ID = 1
 
@@ -67,7 +72,7 @@ ROOT_URLCONF = 'outfito.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -142,7 +147,8 @@ STATICFILES_DIRS = [
 ]
 
 
-AUTH_USER_MODEL = 'authentication.User'
+
+AUTH_USER_MODEL = 'user_authentication.User'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
