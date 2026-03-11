@@ -1,18 +1,12 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.views.decorators.cache import never_cache
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
 
 @never_cache
 def admin_login_view(request):
 
     if request.user.is_authenticated and request.user.is_staff:
         return redirect('admin-user-management')
-    
-    if request.user.is_authenticated and not request.user.is_staff:
-        return redirect('landing')
 
     error = None
 
@@ -21,9 +15,10 @@ def admin_login_view(request):
         email = request.POST.get("email")
         password = request.POST.get("password")
 
-        user = authenticate(request, email=email, password=password)
+        user = authenticate(request, username=email, password=password)
 
-        if user and user.is_staff:
+
+        if user is not None and user.is_staff:
             login(request, user)
             return redirect("admin-user-management")
         else:
