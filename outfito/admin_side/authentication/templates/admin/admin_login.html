@@ -218,8 +218,7 @@ warning-text
 {% endfor %}
 {% endif %}
 
-<form method="POST">
-
+<form method="POST" action="{% url 'admin-login' %}">
 {% csrf_token %}
 
 <div class="mb-3 position-relative">
