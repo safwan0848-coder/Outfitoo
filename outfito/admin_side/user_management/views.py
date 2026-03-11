@@ -13,24 +13,19 @@ def is_admin(user):
 
 @never_cache
 @login_required(login_url='admin-login')
-@user_passes_test(lambda u: u.is_staff)
+@user_passes_test(is_admin)
 def admin_user_management(request):
 
-    # Search input from URL
     search = request.GET.get("search")
 
-    # Get all users except admin
     users = User.objects.filter(is_staff=False)
 
-    # Apply search
     if search:
         users = users.filter(email__icontains=search)
 
-    # Latest users first
     users = users.order_by("-date_joined")
 
-    # Pagination (10 users per page)
-    paginator = Paginator(users, 10)
+    paginator = Paginator(users, 5)
 
     page = request.GET.get("page")
 

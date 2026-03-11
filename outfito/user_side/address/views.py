@@ -35,7 +35,6 @@ def add_address(request):
         address_type = request.POST.get("type")
         is_default = request.POST.get("is_default")
 
-        # FULL NAME VALIDATION
         if not full_name:
             messages.error(request, "Full name is required")
             return redirect("add-address")
@@ -44,7 +43,6 @@ def add_address(request):
             messages.error(request, "Full name can contain only letters")
             return redirect("add-address")
 
-        # PHONE VALIDATION
         if not phone:
             messages.error(request, "Phone number is required")
             return redirect("add-address")
@@ -53,12 +51,10 @@ def add_address(request):
             messages.error(request, "Phone number must be 10 digits")
             return redirect("add-address")
 
-        # ADDRESS LINE 1
         if not line1:
             messages.error(request, "Address line 1 is required")
             return redirect("add-address")
 
-        # CITY VALIDATION
         if not city:
             messages.error(request, "City is required")
             return redirect("add-address")
@@ -67,7 +63,6 @@ def add_address(request):
             messages.error(request, "City can contain only letters")
             return redirect("add-address")
 
-        # STATE VALIDATION
         if not state:
             messages.error(request, "State is required")
             return redirect("add-address")
@@ -76,7 +71,6 @@ def add_address(request):
             messages.error(request, "State can contain only letters")
             return redirect("add-address")
 
-        # PINCODE VALIDATION
         if not pincode:
             messages.error(request, "Pincode is required")
             return redirect("add-address")
@@ -85,7 +79,6 @@ def add_address(request):
             messages.error(request, "Pincode must be 6 digits")
             return redirect("add-address")
 
-        # COUNTRY VALIDATION
         if not country:
             messages.error(request, "Country is required")
             return redirect("add-address")
@@ -94,12 +87,10 @@ def add_address(request):
             messages.error(request, "Country can contain only letters")
             return redirect("add-address")
 
-        # ADDRESS TYPE VALIDATION
         if not address_type:
             messages.error(request, "Address type is required")
             return redirect("add-address")
 
-        # if user selects default remove old default
         if is_default:
             Address.objects.filter(user=request.user, is_default=True).update(is_default=False)
 
@@ -161,14 +152,13 @@ def set_default_address(request, id):
 
     address = get_object_or_404(Address, id=id, user=request.user)
 
-    # remove old default
     Address.objects.filter(user=request.user, is_default=True).update(is_default=False)
 
-    # set new default
     address.is_default = True
     address.save()
 
     return redirect("address-list")
+
 
 @login_required
 def delete_address(request, id):

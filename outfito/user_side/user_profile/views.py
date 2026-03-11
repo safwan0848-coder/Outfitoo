@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Profile
 from django.contrib import messages
@@ -9,7 +9,6 @@ from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from user_side.authentication.models import OTP
 from django.conf import settings
-from django.contrib.auth.hashers import make_password
 User = get_user_model()
 from django.utils import timezone
 import re
@@ -36,7 +35,7 @@ def profile(request):
 @login_required(login_url='login')
 def edit_profile(request):
 
-    profile, created = Profile.objects.get_or_create(user=request.user)
+    profile, _ = Profile.objects.get_or_create(user=request.user)
 
     error = ""
 
@@ -49,20 +48,18 @@ def edit_profile(request):
         if not username or not email:
             error = "Username and Email required"
 
-        elif not re.match(r'^[A-Za-z0-9]+$', username):
-            error = "Username can contain only letters and numbers"
+        elif not re.match(r'^[A-Za-z]+$', username):
+            error = "Username can contain only letters"
 
         elif phone and not re.match(r'^[0-9]{10}$', phone):
             error = "Phone must be 10 digits"
 
-        # Prevent email change for Google users
         elif profile.google_image and email != request.user.email:
             messages.error(request, "Google users cannot change email address.")
             return redirect("profile")
 
         else:
 
-            # If email changed → OTP verification
             if email != request.user.email:
 
                 request.session["new_email"] = email
@@ -130,9 +127,8 @@ def wishlist(request):
 @login_required(login_url='login')
 def change_password(request):
 
-    profile = Profile.objects.get(user=request.user)
+    profile = get_object_or_404(Profile, user=request.user)
 
-    # Block Google users
     if profile.google_image:
         messages.error(request, "Password cannot be changed for Google accounts.")
         return redirect("profile")
@@ -227,14 +223,11 @@ def start_password_reset(request):
 @never_cache
 @login_required(login_url='login')
 def profile_reset_verify(request):
-    # Retrieve the email from the session
-    email = request.session.get('reset_email')
 
-    if not email:
-        messages.error(request, "Session expired. Please start the reset process again.")
-        return redirect('change-password')
+    email = request.user.email
 
-    user = User.objects.filter(email=email).first()
+    user = get_object_or_404(User, email=email)
+
     otp = OTP.objects.filter(user=user).last()
 
     remaining_seconds = 0
@@ -244,6 +237,7 @@ def profile_reset_verify(request):
             remaining_seconds = 0
 
     if request.method == "POST":
+
         code = request.POST.get("otp")
 
         if not otp:
@@ -255,15 +249,14 @@ def profile_reset_verify(request):
             messages.error(request, "OTP has expired. Please request a new one.")
             return redirect('profile-reset-verify')
 
-        # Convert both to strings just in case one is an int and one is a str
-        if str(otp.code) != str(code): 
+        if str(otp.code) != str(code):
             messages.error(request, "Invalid OTP. Please try again.")
             return redirect('profile-reset-verify')
 
-        # OTP is correct
         otp.delete()
+
         request.session['otp_verified'] = True
-        request.session.modified = True  # Force session save before redirecting
+        request.session.modified = True
 
         return redirect('profile-set-new-password')
 
@@ -376,7 +369,6 @@ def verify_email_change(request):
         messages.error(request, "Session expired. Please try again.")
         return redirect("profile")
 
-    # prevent duplicate email
     if User.objects.filter(email=new_email).exclude(id=request.user.id).exists():
         messages.error(request, "This email is already in use.")
         request.session.pop("new_email", None)
@@ -403,7 +395,6 @@ def verify_email_change(request):
             messages.error(request, "Invalid OTP")
             return redirect("verify-email-change")
 
-        # update email
         user.email = new_email
         user.save()
 

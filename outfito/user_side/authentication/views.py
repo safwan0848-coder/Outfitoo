@@ -29,62 +29,48 @@ def signup_view(request):
         pass1 = request.POST.get('password1')
         pass2 = request.POST.get('password2')
 
-        # Username required
         if not uname:
             messages.error(request, "Username is required")
             return redirect('signup')
 
-        # Username cannot be only numbers
         if uname.isdigit():
             messages.error(request, "Username cannot contain only numbers")
             return redirect('signup')
 
-        # Username regex validation
-        if not re.match(r'^[A-Za-z0-9]+$', uname):
-            messages.error(
-                request,
-                "Username can contain only letters and numbers"
-            )
+        if not re.match(r'^[A-Za-z ]+$', uname):
+            messages.error(request,"Username can contain only letters ")
             return redirect('signup')
 
-        # Email required
         if not email:
             messages.error(request, "Email is required")
             return redirect('signup')
 
-        # Email validation
         try:
             validate_email(email)
         except ValidationError:
             messages.error(request, "Enter a valid email address")
             return redirect('signup')
 
-        # Password empty check
         if not pass1 or not pass2:
             messages.error(request, "Password fields cannot be empty")
             return redirect('signup')
 
-        # Password length
         if len(pass1) < 6:
             messages.error(request, "Password must be at least 6 characters")
             return redirect('signup')
 
-        # Password match
         if pass1 != pass2:
             messages.error(request, "Password and Confirm Password are not the same")
             return redirect('signup')
 
-        # Username exists
         if User.objects.filter(username=uname).exists():
             messages.error(request, "Username already exists")
             return redirect('signup')
 
-        # Email exists
         if User.objects.filter(email=email).exists():
             messages.error(request, "Email already registered")
             return redirect('signup')
 
-        # Create user
         user = User.objects.create_user(
             username=uname,
             email=email,
@@ -95,14 +81,11 @@ def signup_view(request):
         user.is_verified = False
         user.save()
 
-        # Save email in session
         request.session['email'] = user.email
 
-        # Generate OTP
         OTP.objects.filter(user=user).delete()
         otp = OTP.objects.create(user=user)
 
-        # Send OTP Email
         send_mail(
             subject='Your OTP Code',
             message=f'Hello {user.username},\n\nYour OTP is {otp.code}\nIt expires in 5 minutes.',
@@ -256,7 +239,7 @@ def resend_reset_otp(request):
 def change_email(request):
     request.session.pop('email', None)
     messages.info(request, "Please enter new email.")
-    return redirect('signup')
+    return redirect('login')
 
 
 @never_cache
@@ -310,7 +293,6 @@ def forgot_password(request):
             messages.error(request,"No account found with this email.")
             return render(request,"user/forgot_password.html")
 
-        # store email in session
         request.session["reset_email"] = email
 
         OTP.objects.filter(user=user).delete()
@@ -412,7 +394,6 @@ def set_new_password(request):
             messages.error(request, "User not found")
             return redirect('login')
 
-        # 🔴 Prevent same password reuse
         if check_password(pass1, user.password):
             messages.error(request, "New password cannot be the same as the old password")
             return redirect('set_new_password')
