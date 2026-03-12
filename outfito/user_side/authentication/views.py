@@ -256,19 +256,19 @@ def login_view(request):
 
         if user is None:
             messages.error(request, "Invalid email or password")
-            return render(request, 'user/login.html')
+            return redirect('login')
 
         if user.is_blocked:
             messages.error(request, "Your account is blocked. Contact support.")
-            return render(request, 'user/login.html')
+            return redirect('login')
 
         if not user.is_verified:
             messages.warning(request, "Please verify your email first.")
-            return render(request, 'user/login.html')
+            return redirect('login')
 
         if not user.is_active:
             messages.error(request, "Your account is not active.")
-            return render(request, 'user/login.html')
+            return redirect('login')
 
         login(request, user)
         messages.success(request, "Login successful!")

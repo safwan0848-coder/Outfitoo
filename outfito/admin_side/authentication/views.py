@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.views.decorators.cache import never_cache
 from django.contrib.auth import get_user_model
+from django.contrib import messages
+
 
 User = get_user_model()
 
@@ -14,7 +16,6 @@ def admin_login_view(request):
     if request.user.is_authenticated and not request.user.is_staff:
         return redirect('landing')
 
-    error = None
 
     if request.method == "POST":
 
@@ -27,6 +28,7 @@ def admin_login_view(request):
             login(request, user)
             return redirect("admin-user-management")
         else:
-            error = "Invalid admin credentials"
+            messages.error(request, "Invalid admin credentials")
+            return redirect('admin-login')
 
-    return render(request, "admin/admin_login.html", {"error": error})
+    return render(request, "admin/admin_login.html")

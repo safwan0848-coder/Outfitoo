@@ -37,7 +37,6 @@ def edit_profile(request):
 
     profile, _ = Profile.objects.get_or_create(user=request.user)
 
-    error = ""
 
     if request.method == "POST":
 
@@ -46,13 +45,21 @@ def edit_profile(request):
         phone = request.POST.get("phone")
 
         if not username or not email:
-            error = "Username and Email required"
+            messages.error(request, "Username and Email required")
+            return redirect("edit-profile")
 
         elif not re.match(r'^[A-Za-z]+$', username):
-            error = "Username can contain only letters"
+            messages.error(request, "Username can contain only letters")
+            return redirect("edit-profile")
+        
+        elif User.objects.filter(username=username).exclude(id=request.user.id).exists():
+            messages.error(request, "user name already exists")
+            return redirect("edit-profile")
 
         elif phone and not re.match(r'^[0-9]{10}$', phone):
-            error = "Phone must be 10 digits"
+            messages.error(request, "Phone must be 10 digits")
+            return redirect("edit-profile")
+      
 
         elif profile.google_image and email != request.user.email:
             messages.error(request, "Google users cannot change email address.")
@@ -94,7 +101,6 @@ def edit_profile(request):
     context = {
         "user": request.user,
         "profile": profile,
-        "error": error
     }
 
     return render(request, "user/edit_profile.html", context)
@@ -254,7 +260,7 @@ def profile_reset_verify(request):
             return redirect('profile-reset-verify')
 
         otp.delete()
-
+        request.session['reset_email'] = user.email
         request.session['otp_verified'] = True
         request.session.modified = True
 

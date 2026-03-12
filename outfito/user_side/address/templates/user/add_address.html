@@ -283,9 +283,11 @@ Please enter your details for worldwide premium delivery.
 
 {% if messages %}
 {% for message in messages %}
+{% if forloop.last %}
 <div class="alert alert-{{ message.tags }}">
 {{ message }}
 </div>
+{% endif %}
 {% endfor %}
 {% endif %}
 

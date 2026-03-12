@@ -202,7 +202,6 @@ Secure access for authorized personnel
 
 {% if messages %}
 {% for message in messages %}
-{% if forloop.last %}
 <div class="
 {% if message.tags == 'error' %}
 error-text
@@ -214,7 +213,6 @@ warning-text
 ">
 {{ message }}
 </div>
-{% endif %}
 {% endfor %}
 {% endif %}
 
