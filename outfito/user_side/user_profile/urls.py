@@ -11,7 +11,6 @@ urlpatterns = [
     path('profile-set-new-password/', views.profile_set_new_password, name='profile-set-new-password'),
     path('address/', views.address, name='address'),
     path('wallet/', views.wallet, name='wallet'),
-    path('orders/', views.orders, name='orders'),
     path('logout/', views.logout_view, name='logout'),
     path('', views.wishlist, name='wishlist'),
     path("verify-email-change/", views.verify_email_change, name="verify-email-change"),

@@ -218,7 +218,7 @@ Modify your details for continued worldwide premium delivery.
 {% endfor %}
 {% endif %}
 
-<form method="POST" action="{% url 'edit-address' address.id %}">
+<form method="POST">
 {% csrf_token %}
 
 <label class="label">Full Name</label>

@@ -1,0 +1,1062 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order {{ order.order_number }} – OUTFITO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+    :root {
+      --bg: #070d1a; --surface: #0c1424; --surface2: #101b30; --surface3: #162035;
+      --border: rgba(255,255,255,0.07); --accent: #00e5ff; --accent2: #3bdfb0;
+      --blue: #2563eb; --text: #dde6f5; --muted: #556680;
+      --danger: #f87171; --warn: #fbbf24; --success: #4ade80;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
+
+    /* ── NAVBAR ── */
+    .navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: rgba(7,13,26,0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); height: 60px; display: flex; align-items: center; padding: 0 28px; }
+    .nav-inner { max-width: 1440px; width: 100%; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; color: var(--text); flex-shrink: 0; }
+    .nav-logo-box { width: 30px; height: 30px; background: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .nav-logo-box img { width: 22px; height: 22px; object-fit: contain; }
+    .nav-wordmark { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2.5px; }
+    .nav-links { display: flex; align-items: center; gap: 32px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; }
+    .nav-links a { text-decoration: none; color: inherit; transition: color .2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--text); }
+    .nav-right { display: flex; align-items: center; gap: 18px; }
+    .nav-search { display: flex; align-items: center; gap: 8px; background: rgba(16,27,48,0.9); border: 1px solid var(--border); border-radius: 100px; padding: 6px 14px; }
+    .nav-search i { font-size: 11px; color: var(--muted); }
+    .nav-search input { background: transparent; border: none; outline: none; font-size: 12px; color: var(--text); font-family: 'DM Sans', sans-serif; width: 130px; }
+    .nav-search input::placeholder { color: var(--muted); }
+    .nav-icon-btn { position: relative; color: #7a8faf; font-size: 16px; cursor: pointer; transition: color .2s; text-decoration: none; display: inline-flex; align-items: center; }
+    .nav-icon-btn:hover { color: var(--text); }
+    .nav-badge { position: absolute; top: -7px; right: -8px; background: var(--accent2); color: #000; font-size: 8px; font-weight: 800; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--bg); }
+    .nav-user-wrap { position: relative; }
+    #userDropdown { position: absolute; right: 0; top: calc(100% + 10px); width: 180px; background: #0c1424; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); z-index: 500; }
+    #userDropdown a { display: block; padding: 10px 16px; font-size: 13px; color: var(--text); text-decoration: none; transition: background .15s; }
+    #userDropdown a:hover { background: rgba(255,255,255,0.05); }
+    #userDropdown a.accent-link { color: var(--accent); }
+    #userDropdown hr { border: none; border-top: 1px solid rgba(255,255,255,0.08); }
+    #userDropdown a.logout { color: #f87171; }
+    .glow-line { position: fixed; top: 60px; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent 10%, rgba(0,229,255,0.07) 50%, transparent 90%); pointer-events: none; z-index: 199; }
+
+    /* ── PAGE ── */
+    .page-wrap { flex: 1; max-width: 1200px; width: 100%; margin: 0 auto; padding: 80px 24px 60px; }
+    .back-link { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); text-decoration: none; margin-bottom: 20px; transition: color .2s; font-weight: 500; }
+    .back-link:hover { color: var(--text); }
+
+    /* ── ORDER HEADER ── */
+    .order-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; animation: fadeUp .4s ease both; }
+    .order-title-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+    .order-number { font-family: 'Bebas Neue', sans-serif; font-size: 30px; letter-spacing: 2px; }
+    .order-placed { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .view-all-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--text); text-decoration: none; transition: all .2s; white-space: nowrap; }
+    .view-all-btn:hover { border-color: rgba(0,229,255,0.25); background: var(--surface2); }
+    .view-all-btn i { font-size: 11px; color: var(--muted); }
+
+    /* ── STATUS BADGE ── */
+    .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 100px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; white-space: nowrap; }
+    .status-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .badge-placed    { background: rgba(37,99,235,0.14);   color: #60a5fa; }
+    .badge-confirmed { background: rgba(59,223,176,0.12);  color: #3bdfb0; }
+    .badge-shipped   { background: rgba(251,191,36,0.13);  color: #fbbf24; }
+    .badge-delivered { background: rgba(74,222,128,0.12);  color: #4ade80; }
+    .badge-returned  { background: rgba(248,113,113,0.13); color: #f87171; }
+    .badge-cancelled { background: rgba(248,113,113,0.13); color: #f87171; }
+    .badge-pending   { background: rgba(156,163,175,0.12); color: #9ca3af; }
+    .badge-paid      { background: rgba(74,222,128,0.12);  color: #4ade80; }
+    .badge-success   { background: rgba(74,222,128,0.12);  color: #4ade80; }
+    .badge-failed    { background: rgba(248,113,113,0.13); color: #f87171; }
+    .badge-free      { background: rgba(59,223,176,0.12);  color: #3bdfb0; }
+
+    /* ── LAYOUT ── */
+    .content-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+    @media (max-width: 900px) { .content-grid { grid-template-columns: 1fr; } }
+
+    /* ── CARD ── */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .card + .card { margin-top: 16px; }
+    .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+    .card-header i { color: var(--accent); font-size: 13px; }
+    .card-body { padding: 20px; }
+
+    /* ── ORDER ITEMS ── */
+    .order-item { display: flex; gap: 16px; align-items: flex-start; padding: 18px 20px; border-bottom: 1px solid var(--border); transition: background .2s; animation: fadeUp .4s ease both; }
+    .order-item:last-child { border-bottom: none; }
+    .order-item:hover { background: rgba(255,255,255,0.015); }
+    .item-img { width: 90px; height: 90px; border-radius: 12px; object-fit: cover; background: var(--surface3); border: 1px solid var(--border); flex-shrink: 0; }
+    .item-img-placeholder { width: 90px; height: 90px; border-radius: 12px; background: var(--surface3); border: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 28px; }
+    .item-info { flex: 1; min-width: 0; }
+    .item-name { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+    .item-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .item-tag { display: inline-flex; align-items: center; gap: 5px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+    .item-tag span { color: var(--text); }
+    .item-qty-price { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+    .item-qty-label { font-size: 12px; color: var(--muted); }
+    .item-price { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+
+    /* ── ITEM ACTION BUTTONS ── */
+    .item-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .item-action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; font-family: 'DM Sans', sans-serif; border: none; transition: all .2s; }
+    .item-action-btn.cancel { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: var(--danger); }
+    .item-action-btn.cancel:hover { background: rgba(248,113,113,0.18); }
+    .item-action-btn.return-item { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+    .item-action-btn.return-item:hover { border-color: rgba(0,229,255,0.3); color: var(--accent); }
+
+    /* ── TRACKER ── */
+    .tracker-wrap { padding: 24px 20px 20px; border-top: 1px solid var(--border); }
+    .tracker { display: flex; align-items: flex-start; justify-content: space-between; position: relative; }
+    .tracker::before { content: ''; position: absolute; top: 18px; left: 18px; right: 18px; height: 2px; background: var(--border); z-index: 0; }
+    .tracker::after { content: ''; position: absolute; top: 18px; left: 18px; height: 2px; width: var(--progress, 0%); background: linear-gradient(90deg, var(--accent2), var(--accent)); z-index: 1; transition: width 1s ease; }
+    .tracker-step { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; z-index: 2; flex: 1; }
+    .step-circle { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--muted); transition: all .3s; }
+    .step-circle.done { background: linear-gradient(135deg, var(--accent2), var(--accent)); border-color: transparent; color: #000; box-shadow: 0 0 12px rgba(0,229,255,0.3); }
+    .step-circle.active { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 3px rgba(0,229,255,0.12); }
+    .step-label { font-size: 10px; font-weight: 700; text-align: center; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    .step-label.done { color: var(--accent2); }
+    .step-label.active { color: var(--accent); }
+    .step-date { font-size: 9px; color: var(--muted); text-align: center; opacity: .75; }
+
+    /* ── ADDRESS ── */
+    .address-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .address-grid { grid-template-columns: 1fr; } }
+    .address-user { display: flex; align-items: flex-start; gap: 10px; }
+    .address-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--muted); flex-shrink: 0; }
+    .address-name { font-weight: 700; font-size: 14px; margin-bottom: 3px; display: flex; align-items: center; gap: 8px; }
+    .addr-type-tag { background: var(--surface3); border: 1px solid var(--border); border-radius: 4px; padding: 1px 7px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+    .address-phone, .address-street { font-size: 12px; color: var(--muted); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+    .address-right { text-align: right; font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+    /* ── RIGHT COL ── */
+    .right-col > * + * { margin-top: 16px; }
+    .price-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); padding: 6px 0; }
+    .price-row span:last-child { color: var(--text); font-weight: 500; }
+    .price-row.discount span:last-child { color: #4ade80; font-weight: 600; }
+    .price-row.total { padding-top: 14px; margin-top: 6px; border-top: 1px solid var(--border); font-size: 15px; font-weight: 700; }
+    .price-row.total span:last-child { font-size: 18px; }
+    .payment-row { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; margin-top: 16px; }
+    .payment-icon { width: 36px; height: 36px; border-radius: 8px; background: var(--surface3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+    .payment-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 2px; font-weight: 700; }
+    .payment-method { font-size: 13px; font-weight: 600; }
+
+    /* ── ACTION CARD ── */
+    .action-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .action-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px 20px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; border: none; background: transparent; transition: all .2s; border-bottom: 1px solid var(--border); color: var(--muted); text-decoration: none; }
+    .action-btn:last-child { border-bottom: none; }
+    .action-btn:hover { background: rgba(255,255,255,0.03); }
+    .action-btn.return-btn { color: var(--muted); }
+    .action-btn.return-btn:hover { color: var(--text); }
+    .action-btn.cancel-btn { color: var(--danger); }
+    .action-btn.cancel-btn:hover { background: rgba(248,113,113,0.05); }
+    .action-btn.invoice-btn { color: var(--accent2); }
+    .action-btn.invoice-btn:hover { background: rgba(59,223,176,0.05); }
+    .action-btn.disabled { opacity: .38; cursor: not-allowed; pointer-events: none; }
+
+    /* ── FOOTER ── */
+    footer { background: var(--surface); border-top: 1px solid var(--border); margin-top: 60px; padding: 40px 28px 24px; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; }
+    .footer-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 32px; margin-bottom: 32px; }
+    @media (max-width: 768px) { .footer-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-col-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 14px; }
+    .footer-link { display: block; font-size: 13px; color: var(--muted); text-decoration: none; margin-bottom: 8px; transition: color .2s; }
+    .footer-link:hover { color: var(--text); }
+    .footer-social { display: flex; gap: 10px; }
+    .footer-social a { width: 32px; height: 32px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--muted); text-decoration: none; font-size: 14px; transition: all .2s; }
+    .footer-social a:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+    .newsletter-row { display: flex; gap: 8px; }
+    .newsletter-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; font-size: 12px; color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; transition: border-color .2s; }
+    .newsletter-input:focus { border-color: rgba(0,229,255,0.3); }
+    .newsletter-input::placeholder { color: var(--muted); }
+    .newsletter-btn { width: 36px; height: 36px; border-radius: 8px; background: var(--blue); border: none; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; cursor: pointer; transition: background .2s; flex-shrink: 0; }
+    .newsletter-btn:hover { background: #1d4ed8; }
+    .footer-bottom { display: flex; align-items: center; justify-content: space-between; padding-top: 20px; border-top: 1px solid var(--border); gap: 12px; flex-wrap: wrap; }
+    .footer-copy { font-size: 12px; color: var(--muted); }
+    .footer-pay-icons { display: flex; gap: 8px; }
+    .footer-pay-icons i { font-size: 20px; color: var(--muted); }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+    /* ════════════════════════════
+       MODAL — single unified modal
+       handles cancel + return
+       for both item and full order
+    ════════════════════════════ */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(6px); z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .25s ease;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+    .modal-box {
+      background: var(--surface); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px; width: 92%; max-width: 440px; padding: 0;
+      transform: translateY(24px) scale(0.97);
+      transition: transform .28s cubic-bezier(.34,1.56,.64,1);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+      overflow: hidden;
+    }
+    .modal-overlay.active .modal-box { transform: translateY(0) scale(1); }
+
+    /* coloured top strip — changes based on action type */
+    .modal-strip { height: 4px; width: 100%; }
+    .modal-strip.cancel-strip { background: linear-gradient(90deg, #f87171, #ef4444); }
+    .modal-strip.return-strip { background: linear-gradient(90deg, var(--accent2), var(--accent)); }
+
+    .modal-inner { padding: 22px 24px 24px; }
+
+    .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .modal-head-left { display: flex; align-items: center; gap: 12px; }
+    .modal-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .modal-icon.cancel-icon { background: rgba(248,113,113,0.12); color: var(--danger); }
+    .modal-icon.return-icon { background: rgba(59,223,176,0.12); color: var(--accent2); }
+    .modal-title { font-size: 16px; font-weight: 700; }
+    .modal-subtitle { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .modal-close { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; transition: color .2s; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+    .modal-close:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+    /* qty stepper */
+    .modal-section { margin-bottom: 18px; }
+    .modal-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 10px; }
+
+    .qty-stepper { display: inline-flex; align-items: center; gap: 0; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .qty-stepper-btn { width: 36px; height: 36px; border: none; background: transparent; color: var(--text); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .2s; }
+    .qty-stepper-btn:hover { background: rgba(255,255,255,0.06); }
+    .qty-stepper-btn:disabled { opacity: .3; cursor: not-allowed; }
+    .qty-stepper-val { min-width: 44px; text-align: center; font-size: 15px; font-weight: 700; padding: 0 4px; border-left: 1px solid var(--border); border-right: 1px solid var(--border); height: 36px; display: flex; align-items: center; justify-content: center; }
+    .qty-max-hint { display: inline-block; margin-left: 10px; font-size: 11px; color: var(--muted); vertical-align: middle; }
+
+    /* reason radio pills */
+    .reason-pills { display: flex; flex-direction: column; gap: 6px; }
+    .reason-pill { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); cursor: pointer; transition: all .18s; font-size: 13px; color: var(--muted); }
+    .reason-pill:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
+    .reason-pill input[type="radio"] { display: none; }
+    .reason-pill-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all .18s; }
+    .reason-pill-dot::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: transparent; transition: background .18s; }
+    .reason-pill.selected { border-color: var(--accent); color: var(--text); background: rgba(0,229,255,0.05); }
+    .reason-pill.selected .reason-pill-dot { border-color: var(--accent); }
+    .reason-pill.selected .reason-pill-dot::after { background: var(--accent); }
+
+    /* custom reason textarea */
+    .custom-reason-wrap { margin-top: 10px; display: none; }
+    .custom-reason-wrap.show { display: block; }
+    .custom-reason-wrap textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; resize: none; outline: none; transition: border-color .2s; line-height: 1.5; }
+    .custom-reason-wrap textarea:focus { border-color: rgba(0,229,255,0.35); }
+    .custom-reason-wrap textarea::placeholder { color: var(--muted); }
+
+    /* error */
+    .modal-error { font-size: 12px; color: var(--danger); margin-top: 8px; display: none; }
+    .modal-error.show { display: flex; align-items: center; gap: 5px; }
+
+    /* footer buttons */
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    .btn-modal-close { padding: 10px 18px; border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; background: transparent; border: 1px solid var(--border); color: var(--text); transition: all .2s; }
+    .btn-modal-close:hover { background: var(--surface2); }
+    .btn-modal-confirm { padding: 10px 22px; border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; border: none; color: #fff; transition: all .2s; }
+    .btn-modal-confirm.cancel-confirm { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .btn-modal-confirm.cancel-confirm:hover { background: linear-gradient(135deg, #f87171, #ef4444); }
+    .btn-modal-confirm.return-confirm { background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #000; }
+    .btn-modal-confirm.return-confirm:hover { opacity: .9; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════ NAVBAR ══════════ -->
+<header class="navbar">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-box">
+        <img src="{% static 'images/outfito.png' %}" alt="Outfito">
+      </div>
+      <span class="nav-wordmark">OUTFITO</span>
+    </a>
+    <div class="nav-links hidden lg:flex">
+      <a href="#" class="active">Home</a>
+      <a href="{% url 'categories_page' %}">Categories</a>
+      <a href="{% url 'user_product_list' %}">New Arrivals</a>
+      <a href="#">About</a>
+    </div>
+    <div class="nav-right">
+      <div class="nav-search hidden md:flex">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Search outfits...">
+      </div>
+      {% if request.user.is_authenticated %}
+      <a href="{% url 'wishlist_view' %}" class="nav-icon-btn">
+        <i class="fa-regular fa-heart"></i>
+        {% if wishlist_count > 0 %}<span class="nav-badge">{{ wishlist_count }}</span>{% endif %}
+      </a>
+      {% else %}
+      <a href="{% url 'login' %}?next={{ request.path }}" class="nav-icon-btn"><i class="fa-regular fa-heart"></i></a>
+      {% endif %}
+      <a href="{% url 'cart_view' %}" class="nav-icon-btn">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span class="nav-badge">{{ cart_count|default:0 }}</span>
+      </a>
+      <div class="nav-user-wrap">
+        {% if request.user.is_authenticated %}
+        <span id="userMenuBtn" class="nav-icon-btn"><i class="fa-regular fa-user"></i></span>
+        <div id="userDropdown" class="hidden">
+          <a href="{% url 'profile' %}">Profile</a>
+          <a href="{% url 'order_list' %}" class="accent-link">Orders</a>
+          <a href="{% url 'wallet' %}">Wallet</a>
+          <hr>
+          <a href="{% url 'logout' %}" class="logout">Logout</a>
+        </div>
+        {% else %}
+        <a href="{% url 'login' %}" class="nav-icon-btn"><i class="fa-regular fa-user"></i></a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</header>
+<div class="glow-line"></div>
+
+<!-- ══════════ PAGE ══════════ -->
+<div class="page-wrap">
+
+  <a href="{% url 'order_list' %}" class="back-link">
+    <i class="fa-solid fa-arrow-left"></i> Back to Orders
+  </a>
+
+  <!-- ORDER HEADER -->
+  <div class="order-header">
+    <div>
+      <div class="order-title-row">
+        <div class="order-number">Order #{{ order.order_number }}</div>
+        {% with p=order.payment_status|lower %}
+        <span class="status-badge {% if p == 'paid' or p == 'success' %}badge-paid{% elif p == 'pending' %}badge-pending{% elif p == 'failed' %}badge-failed{% else %}badge-placed{% endif %}">
+          {{ order.payment_status }}
+        </span>
+        {% endwith %}
+      </div>
+      <div class="order-placed">
+        <i class="fa-regular fa-calendar"></i>
+        Placed on {{ order.created_at|date:"M d, Y" }} at {{ order.created_at|date:"g:i A" }}
+      </div>
+    </div>
+    <a href="{% url 'order_list' %}" class="view-all-btn">
+      View All Orders <i class="fa-solid fa-arrow-right"></i>
+    </a>
+  </div>
+
+  <div class="content-grid">
+
+    <!-- ══ LEFT ══ -->
+    <div class="left-col">
+
+      <!-- ITEMS CARD -->
+      <div class="card" style="animation: fadeUp .4s .05s ease both;">
+
+        {% for item in order.items.all %}
+        <div class="order-item" style="animation-delay: {{ forloop.counter0 }}00ms;">
+
+          {% if item.variant.image %}
+          <img class="item-img" src="{{ item.variant.image.url }}" alt="{{ item.variant.product.name }}">
+          {% else %}
+          <div class="item-img-placeholder"><i class="fa-solid fa-shirt"></i></div>
+          {% endif %}
+
+          <div class="item-info">
+            <div class="item-name">{{ item.variant.product.name }}</div>
+            <div class="item-tags">
+              {% if item.variant.size %}<div class="item-tag">Size <span>{{ item.variant.size }}</span></div>{% endif %}
+              {% if item.variant.color %}<div class="item-tag">Color <span>{{ item.variant.color }}</span></div>{% endif %}
+            </div>
+
+            <div class="item-qty-price">
+              {# item.item_status — correct per-item field #}
+              {% with s=item.item_status|lower %}
+              <span class="status-badge {% if s == 'placed' %}badge-placed{% elif s == 'confirmed' %}badge-confirmed{% elif s == 'shipped' %}badge-shipped{% elif s == 'delivered' %}badge-delivered{% elif 'return' in s %}badge-returned{% elif s == 'cancelled' %}badge-cancelled{% else %}badge-pending{% endif %}">
+                {% if s == 'return_requested' %}Return Requested
+                {% elif s == 'returned' %}Returned
+                {% else %}{{ item.get_item_status_display|default:item.item_status }}{% endif %}
+              </span>
+              {% endwith %}
+              <div class="item-qty-label">Qty: {{ item.quantity }}</div>
+              <div class="item-price">₹{{ item.price }}</div>
+            </div>
+            
+            {% if item.latest_return %}
+            <div style="font-size: 11px; margin-top: 5px; margin-bottom: 10px; color: {% if item.latest_return.status == 'Pending' %}#fbbf24{% elif item.latest_return.status == 'Approved' %}#4ade80{% else %}#f87171{% endif %}; font-weight: bold;">
+              Return Request: {{ item.latest_return.status }}
+              {% if item.latest_return.status == 'Rejected' %}
+                <span style="color:var(--muted); font-weight:normal; margin-left:5px;">(Item cannot be returned)</span>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            <!--
+              Hidden forms submitted by JS after modal collects reason + qty.
+              field name: cancellation_reason  ← matches views.py cancel_order
+              field name: return_reason        ← matches views.py return_order
+            -->
+
+            {# CANCEL form — placed/processing/confirmed only #}
+            {% if item.item_status|lower == 'placed' or item.item_status|lower == 'processing' or item.item_status|lower == 'confirmed' %}
+            <form id="cancelForm-{{ item.id }}" method="POST" action="{% url 'cancel_order' order.id %}" style="display:none;">
+              {% csrf_token %}
+              <input type="hidden" name="item_id"              value="{{ item.id }}">
+              <input type="hidden" name="cancellation_reason"  id="cancelReason-{{ item.id }}" value="">
+              <input type="hidden" name="custom_reason"        id="cancelCustom-{{ item.id }}"  value="">
+              <input type="hidden" name="qty"                  id="cancelQty-{{ item.id }}"    value="{{ item.quantity }}">
+            </form>
+            {% endif %}
+
+            {# RETURN form — delivered only #}
+            {% if item.item_status == 'delivered' %}
+            <form id="returnForm-{{ item.id }}" method="POST" action="{% url 'return_order' order.id %}" style="display:none;">
+              {% csrf_token %}
+              <input type="hidden" name="item_id"       value="{{ item.id }}">
+              <input type="hidden" name="return_reason" id="returnReason-{{ item.id }}" value="">
+              <input type="hidden" name="custom_reason" id="returnCustom-{{ item.id }}"  value="">
+              <input type="hidden" name="qty"           id="returnQty-{{ item.id }}"    value="{{ item.quantity }}">
+            </form>
+            {% endif %}
+
+              <!-- Visible action buttons -->
+            <div class="item-actions">
+              {% if item.item_status|lower == 'placed' or item.item_status|lower == 'processing' or item.item_status|lower == 'confirmed' %}
+              <button type="button"
+                      class="item-action-btn cancel"
+                      onclick="openModal('cancel','item','{{ item.id }}',{{ item.quantity }})">
+                <i class="fa-solid fa-xmark"></i> Cancel Item
+              </button>
+              {% endif %}
+
+              {% if item.item_status == 'delivered' and not item.latest_return %}
+              <button type="button"
+                      class="item-action-btn return-item"
+                      onclick="openModal('return','item','{{ item.id }}',{{ item.quantity }})">
+                <i class="fa-solid fa-rotate-left"></i> Return Item
+              </button>
+              {% endif %}
+            </div>
+
+          </div>
+        </div>
+        {% empty %}
+        <div style="padding:30px;text-align:center;color:var(--muted);font-size:14px;">
+          <i class="fa-solid fa-box-open" style="font-size:28px;display:block;margin-bottom:10px;"></i>
+          No items found for this order.
+        </div>
+        {% endfor %}
+
+        <!-- ORDER TRACKER — uses order.order_status -->
+        {% with s=order.order_status|lower %}
+        {% if s == 'cancelled' %}
+        <div class="tracker-wrap" style="text-align: center; padding: 30px;">
+          <i class="fa-solid fa-ban" style="font-size: 24px; margin-bottom: 10px; display: block; color: var(--danger);"></i>
+          <span style="color: var(--danger); font-weight: bold; font-size: 14px;">Order Cancelled</span>
+        </div>
+        {% else %}
+        
+        <div class="tracker-wrap" style="position: relative;">
+          <!-- RETURN TRACKER (Overlaid or separated if a return exists) -->
+          {% if order.return_requests.all %}
+          {% with req=order.return_requests.last %}
+          <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border);">
+              <h4 style="margin: 0 0 10px 0; font-size: 14px; text-transform: uppercase; color: var(--accent2); text-align: center;">Return Tracking</h4>
+              {% if req.status == 'Rejected' %}
+              <div style="text-align: center; padding: 10px;">
+                <i class="fa-solid fa-xmark-circle" style="font-size: 24px; margin-bottom: 10px; display: block; color: var(--danger);"></i>
+                <span style="color: var(--danger); font-weight: bold; font-size: 14px;">Return Request Rejected</span>
+              </div>
+              {% else %}
+              <div class="tracker" style="--progress: {% if req.status == 'Approved' %}50%{% elif req.status == 'Picked Up' %}100%{% else %}25%{% endif %}; padding:0;">
+                
+                <div class="tracker-step">
+                  <div class="step-circle done"><i class="fa-solid fa-check"></i></div>
+                  <div class="step-label done" style="font-size: 11px;">Requested</div>
+                </div>
+
+                <div class="tracker-step">
+                  <div class="step-circle {% if req.status == 'Approved' or req.status == 'Picked Up' %}done{% else %}active{% endif %}">
+                    <i class="fa-solid {% if req.status == 'Approved' or req.status == 'Picked Up' %}fa-check{% else %}fa-rotate-left{% endif %}"></i>
+                  </div>
+                  <div class="step-label {% if req.status == 'Approved' or req.status == 'Picked Up' %}done{% endif %}" style="font-size: 11px;">Approved</div>
+                </div>
+
+                <div class="tracker-step">
+                  <div class="step-circle {% if req.status == 'Picked Up' %}done{% elif req.status == 'Approved' %}active{% endif %}">
+                    <i class="fa-solid {% if req.status == 'Picked Up' %}fa-box-open{% else %}fa-truck-ramp-box{% endif %}"></i>
+                  </div>
+                  <div class="step-label {% if req.status == 'Picked Up' %}done{% endif %}" style="font-size: 11px;">
+                    {% if req.status == 'Picked Up' %}Picked Up{% else %}Pending Pickup{% endif %}
+                  </div>
+                </div>
+
+              </div>
+              {% endif %}
+          </div>
+          {% endwith %}
+          {% endif %}
+
+          <div class="tracker" style="--progress: {% if s == 'delivered' %}100%{% elif s == 'out for delivery' %}75%{% elif s == 'shipped' %}50%{% elif s == 'pending' %}25%{% else %}10%{% endif %}">
+
+            <div class="tracker-step">
+              <div class="step-circle done"><i class="fa-solid fa-check"></i></div>
+              <div class="step-label done">Order Placed</div>
+              <div class="step-date">{{ order.created_at|date:"M d, g:i A" }}</div>
+            </div>
+
+            <div class="tracker-step">
+              <div class="step-circle {% if s == 'shipped' or s == 'out for delivery' or s == 'delivered' %}done{% elif s == 'pending' %}active{% endif %}">
+                <i class="fa-solid {% if s == 'shipped' or s == 'out for delivery' or s == 'delivered' %}fa-check{% else %}fa-gear{% endif %}"></i>
+              </div>
+              <div class="step-label {% if s == 'shipped' or s == 'out for delivery' or s == 'delivered' %}done{% endif %}">Processing</div>
+              <div class="step-date">{% if s == 'shipped' or s == 'out for delivery' or s == 'delivered' %}{{ order.updated_at|date:"M d, g:i A" }}{% else %}—{% endif %}</div>
+            </div>
+
+            <div class="tracker-step">
+              <div class="step-circle {% if s == 'out for delivery' or s == 'delivered' %}done{% elif s == 'shipped' %}active{% endif %}">
+                <i class="fa-solid {% if s == 'out for delivery' or s == 'delivered' %}fa-check{% else %}fa-truck-fast{% endif %}"></i>
+              </div>
+              <div class="step-label {% if s == 'out for delivery' or s == 'delivered' %}done{% endif %}">Shipped</div>
+              <div class="step-date">{% if s == 'out for delivery' or s == 'delivered' %}{{ order.updated_at|date:"M d, g:i A" }}{% else %}—{% endif %}</div>
+            </div>
+            
+            <div class="tracker-step">
+              <div class="step-circle {% if s == 'delivered' %}done{% elif s == 'out for delivery' %}active{% endif %}">
+                <i class="fa-solid {% if s == 'delivered' %}fa-check{% else %}fa-motorcycle{% endif %}"></i>
+              </div>
+              <div class="step-label {% if s == 'delivered' %}done{% endif %}">Out for Delivery</div>
+              <div class="step-date">{% if s == 'delivered' %}{{ order.updated_at|date:"M d, g:i A" }}{% else %}—{% endif %}</div>
+            </div>
+
+            <div class="tracker-step">
+              <div class="step-circle {% if s == 'delivered' %}done{% endif %}">
+                <i class="fa-solid {% if s == 'delivered' %}fa-check{% else %}fa-house{% endif %}"></i>
+              </div>
+              <div class="step-label {% if s == 'delivered' %}done{% endif %}">Delivered</div>
+              <div class="step-date">{% if s == 'delivered' %}{{ order.updated_at|date:"M d, g:i A" }}{% else %}—{% endif %}</div>
+            </div>
+
+          </div>
+        </div>
+        {% endif %}
+        {% endwith %}
+
+      </div><!-- /items card -->
+
+
+      <!-- SHIPPING ADDRESS -->
+<div class="card" style="animation: fadeUp .4s .15s ease both;">
+  <div class="card-header">
+    <i class="fa-solid fa-location-dot"></i> Shipping Address
+  </div>
+
+  <div class="card-body">
+    {% if order.shipping_address %}
+      {% with addr=order.shipping_address %}
+
+      <div class="address-grid">
+
+        <!-- LEFT -->
+        <div>
+          <div class="address-user">
+            <div class="address-icon">
+              <i class="fa-regular fa-user"></i>
+            </div>
+
+            <div>
+              <div class="address-name">
+                {{ addr.full_name }}
+
+                <!-- ✅ FIXED -->
+                <span class="addr-type-tag">
+                  {{ addr.get_type_display }}
+                </span>
+              </div>
+
+              <div class="address-phone">
+                <i class="fa-solid fa-phone" style="font-size:10px;"></i>
+                +91 {{ addr.phone_number }}
+              </div>
+
+              <div class="address-street" style="margin-top:6px;">
+                <i class="fa-solid fa-map-pin" style="font-size:10px;"></i>
+
+                {{ addr.address_line1 }}
+
+                {% if addr.address_line2 %}
+                  , {{ addr.address_line2 }}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="address-right">
+          {{ addr.city }},<br>
+          {{ addr.state }},<br>
+          {{ addr.country|default:"India" }}<br>
+          {{ addr.pincode }}
+        </div>
+
+      </div>
+
+      {% endwith %}
+    {% else %}
+      <p style="color:var(--muted);font-size:13px;">
+        No shipping address found.
+      </p>
+    {% endif %}
+  </div>
+</div>
+
+    </div><!-- /left-col -->
+
+
+    <!-- ══ RIGHT ══ -->
+    <div class="right-col">
+
+      <!-- PRICE DETAILS -->
+      <div class="card" style="animation: fadeUp .4s .1s ease both;">
+        <div class="card-header"><i class="fa-solid fa-receipt"></i> Price Details</div>
+        <div class="card-body">
+          <div class="price-row">
+            <span>Subtotal ({{ order.items.count }} item{% if order.items.count != 1 %}s{% endif %})</span>
+            <span>₹{{ order.subtotal|default:order.total_amount }}</span>
+          </div>
+          {% if order.discount_amount %}
+          <div class="price-row discount"><span>Discount</span><span>-₹{{ order.discount_amount }}</span></div>
+          {% endif %}
+          <div class="price-row">
+            <span>Delivery Charges</span>
+            {% if order.delivery_charge == 0 or order.delivery_charge == None %}
+            <span class="status-badge badge-free" style="font-size:9px;padding:2px 8px;">FREE</span>
+            {% else %}<span>₹{{ order.delivery_charge }}</span>{% endif %}
+          </div>
+          <div class="price-row"><span>Tax (GST)</span><span>₹{{ order.tax_amount|default:"0.00" }}</span></div>
+          <div class="price-row total"><span>Total Amount</span><span>₹{{ order.total_amount }}</span></div>
+
+          <div class="payment-row">
+            <div class="payment-icon">
+              {% with pm=order.payment_method|lower %}
+              {% if 'razorpay' in pm or 'upi' in pm or 'card' in pm %}<i class="fa-solid fa-bolt" style="color:#60a5fa;"></i>
+              {% elif 'wallet' in pm %}<i class="fa-solid fa-wallet" style="color:#a78bfa;"></i>
+              {% elif 'cod' in pm or 'cash' in pm %}<i class="fa-solid fa-money-bill-wave" style="color:#4ade80;"></i>
+              {% else %}<i class="fa-solid fa-credit-card" style="color:#60a5fa;"></i>{% endif %}
+              {% endwith %}
+            </div>
+            <div style="flex:1;">
+              <div class="payment-label">Payment</div>
+              <div class="payment-method">{% if order.payment_method %}Via {{ order.payment_method }}{% else %}—{% endif %}</div>
+            </div>
+            {% with p=order.payment_status|lower %}
+            <span class="status-badge {% if p == 'paid' or p == 'success' %}badge-paid{% elif p == 'pending' %}badge-pending{% elif p == 'failed' %}badge-failed{% else %}badge-placed{% endif %}">
+              {{ order.payment_status }}
+            </span>
+            {% endwith %}
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDER-LEVEL ACTIONS -->
+      <!--
+        Full cancel + return also use hidden forms.
+        No item_id → view treats as full-order action.
+        order.order_status drives which buttons are active.
+      -->
+      <div class="action-card" style="animation: fadeUp .4s .18s ease both;">
+
+        {% with s=order.order_status|lower %}
+
+        {# RETURN — only when entire order is delivered #}
+        {% if s == 'delivered' and order.can_return_order %}
+        <form id="fullReturnForm" method="POST" action="{% url 'return_order' order.id %}" style="display:none;">
+          {% csrf_token %}
+          {# No item_id → full order return #}
+          <input type="hidden" name="return_reason"  id="fullReturnReason" value="">
+          <input type="hidden" name="custom_reason"  id="fullReturnCustom" value="">
+          <input type="hidden" name="qty"            value="0">
+        </form>
+        <button type="button" class="action-btn return-btn" onclick="openModal('return','order',null,0)">
+          <i class="fa-solid fa-rotate-left"></i> Return Entire Order
+        </button>
+        {% else %}
+        <span class="action-btn return-btn disabled" title="Return already requested or processed">
+          <i class="fa-solid fa-rotate-left"></i> Return Order
+        </span>
+        {% endif %}
+
+        {# CANCEL — only when placed / processing / confirmed #}
+        {% if s == 'pending' %}
+<form id="fullCancelForm" method="POST" action="{% url 'cancel_order' order.id %}" style="display:none;">
+  {% csrf_token %}
+  <input type="hidden" name="cancellation_reason" id="fullCancelReason">
+  <input type="hidden" name="custom_reason" id="fullCancelCustom">
+  <input type="hidden" name="qty" value="0">  <!-- IMPORTANT -->
+</form>
+        <button type="button" class="action-btn cancel-btn" onclick="openModal('cancel','order',null,0)">
+          <i class="fa-solid fa-xmark"></i> Cancel Entire Order
+        </button>
+        {% else %}
+        <span class="action-btn cancel-btn disabled">
+          <i class="fa-solid fa-xmark"></i> Cancel Order
+        </span>
+        {% endif %}
+
+        <a href="{% url 'download_invoice' order.id %}" class="action-btn invoice-btn">
+          <i class="fa-solid fa-file-arrow-down"></i> Download Invoice
+        </a>
+
+        {% endwith %}
+      </div>
+
+    </div><!-- /right-col -->
+
+  </div><!-- /content-grid -->
+
+</div><!-- /page-wrap -->
+
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-col-title">Quick Links</div>
+        <a href="#" class="footer-link">About Us</a>
+        <a href="#" class="footer-link">Contact Us</a>
+        <a href="#" class="footer-link">Terms &amp; Conditions</a>
+      </div>
+      <div>
+        <div class="footer-col-title">Support</div>
+        <a href="#" class="footer-link">FAQs</a>
+        <a href="#" class="footer-link">Shipping Policy</a>
+        <a href="#" class="footer-link">Return Policy</a>
+      </div>
+      <div>
+        <div class="footer-col-title">Social</div>
+        <div class="footer-social">
+          <a href="#"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="#"><i class="fa-brands fa-youtube"></i></a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Newsletter</div>
+        <div class="newsletter-row">
+          <input class="newsletter-input" type="email" placeholder="Email">
+          <button class="newsletter-btn"><i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2023 Zyrax Outfito. All rights reserved.</div>
+      <div class="footer-pay-icons">
+        <i class="fa-brands fa-google-pay"></i>
+        <i class="fa-brands fa-cc-visa"></i>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ══════════════════════════════════════════════
+     UNIFIED MODAL
+     openModal(type, scope, itemId, maxQty)
+       type  : 'cancel' | 'return'
+       scope : 'item'   | 'order'
+       itemId: Django item pk string, or null for full-order
+       maxQty: item.quantity, or 0 for full-order
+══════════════════════════════════════════════ -->
+<div id="actionModal" class="modal-overlay">
+  <div class="modal-box">
+
+    <!-- coloured top strip changes per type -->
+    <div id="modalStrip" class="modal-strip cancel-strip"></div>
+
+    <div class="modal-inner">
+
+      <!-- HEADER -->
+      <div class="modal-head">
+        <div class="modal-head-left">
+          <div id="modalIcon" class="modal-icon cancel-icon">
+            <i id="modalIconFA" class="fa-solid fa-xmark"></i>
+          </div>
+          <div>
+            <div id="modalTitle" class="modal-title">Cancel Item</div>
+            <div id="modalSubtitle" class="modal-subtitle">This action cannot be undone</div>
+          </div>
+        </div>
+        <button class="modal-close" id="modalCloseBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- QTY STEPPER (hidden for full-order actions) -->
+      <div id="qtySection" class="modal-section">
+        <div class="modal-section-title">Quantity to {{ '' }}</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div class="qty-stepper">
+            <button type="button" class="qty-stepper-btn" id="qtyMinus"><i class="fa-solid fa-minus"></i></button>
+            <span class="qty-stepper-val" id="qtyDisplay">1</span>
+            <button type="button" class="qty-stepper-btn" id="qtyPlus"><i class="fa-solid fa-plus"></i></button>
+          </div>
+          <span class="qty-max-hint" id="qtyMaxHint"></span>
+        </div>
+      </div>
+
+      <!-- REASON PILLS -->
+      <div class="modal-section">
+        <div class="modal-section-title" id="reasonSectionTitle">Reason for cancellation</div>
+        <div class="reason-pills" id="reasonPills">
+          <!-- pills injected by JS based on cancel vs return -->
+        </div>
+
+        <!-- Custom reason (shown when "Other" selected) -->
+        <div class="custom-reason-wrap" id="customReasonWrap">
+          <textarea id="customReasonTA" rows="3" placeholder="Describe your reason…"></textarea>
+        </div>
+
+        <div class="modal-error" id="modalError">
+          <i class="fa-solid fa-circle-exclamation"></i> Please select or enter a reason.
+        </div>
+      </div>
+
+      <!-- FOOTER BUTTONS -->
+      <div class="modal-footer">
+        <button class="btn-modal-close" id="modalCancelBtn">Close</button>
+        <button class="btn-modal-confirm cancel-confirm" id="modalConfirmBtn">Confirm Cancellation</button>
+      </div>
+
+    </div><!-- /modal-inner -->
+  </div><!-- /modal-box -->
+</div><!-- /modal-overlay -->
+
+
+<script>
+/* ── NAVBAR DROPDOWN ── */
+const uBtn = document.getElementById('userMenuBtn');
+const uMenu = document.getElementById('userDropdown');
+if (uBtn && uMenu) {
+  uBtn.addEventListener('click', e => { e.stopPropagation(); uMenu.classList.toggle('hidden'); });
+  document.addEventListener('click', () => uMenu.classList.add('hidden'));
+  uMenu.addEventListener('click', e => e.stopPropagation());
+}
+
+/* ── TRACKER ANIMATION ── */
+document.addEventListener('DOMContentLoaded', () => {
+  const t = document.querySelector('.tracker');
+  if (t) {
+    const target = t.style.getPropertyValue('--progress') || '0%';
+    t.style.setProperty('--progress', '0%');
+    requestAnimationFrame(() => setTimeout(() => t.style.setProperty('--progress', target), 200));
+  }
+});
+
+/* ══════════════════════════════════════════════
+   MODAL ENGINE
+══════════════════════════════════════════════ */
+
+/* Preset reason lists */
+const CANCEL_REASONS = [
+  'Changed my mind',
+  'Found a better price elsewhere',
+  'Ordered by mistake',
+  'Delivery time too long',
+  'Other',
+];
+const RETURN_REASONS = [
+  'Damaged / defective product',
+  'Wrong item received',
+  'Size or colour mismatch',
+  'Quality not as expected',
+  'Other',
+];
+
+/* Modal DOM refs */
+const modal           = document.getElementById('actionModal');
+const modalStrip      = document.getElementById('modalStrip');
+const modalIcon       = document.getElementById('modalIcon');
+const modalIconFA     = document.getElementById('modalIconFA');
+const modalTitle      = document.getElementById('modalTitle');
+const modalSubtitle   = document.getElementById('modalSubtitle');
+const qtySection      = document.getElementById('qtySection');
+const qtyDisplay      = document.getElementById('qtyDisplay');
+const qtyMinus        = document.getElementById('qtyMinus');
+const qtyPlus         = document.getElementById('qtyPlus');
+const qtyMaxHint      = document.getElementById('qtyMaxHint');
+const reasonPills     = document.getElementById('reasonPills');
+const reasonTitle     = document.getElementById('reasonSectionTitle');
+const customWrap      = document.getElementById('customReasonWrap');
+const customTA        = document.getElementById('customReasonTA');
+const modalError      = document.getElementById('modalError');
+const confirmBtn      = document.getElementById('modalConfirmBtn');
+const closeBtn        = document.getElementById('modalCloseBtn');
+const closeBtnX       = document.getElementById('modalCloseBtn');
+
+/* State */
+let _type   = 'cancel'; // 'cancel' | 'return'
+let _scope  = 'item';   // 'item'   | 'order'
+let _itemId = null;
+let _maxQty = 1;
+let _qty    = 1;
+let _mandatory = false; // return reason is always mandatory
+
+/**
+ * openModal — called from Django template buttons
+ * @param {string}      type   'cancel' | 'return'
+ * @param {string}      scope  'item'   | 'order'
+ * @param {string|null} itemId Django pk or null
+ * @param {number}      maxQty item.quantity or 0
+ */
+function openModal(type, scope, itemId, maxQty) {
+  _type   = type;
+  _scope  = scope;
+  _itemId = itemId;
+  _maxQty = maxQty;
+  _qty    = maxQty > 0 ? maxQty : 0;
+  _mandatory = (type === 'return'); // return always needs reason; cancel optional
+
+  /* ── Style strip + icon ── */
+  if (type === 'cancel') {
+    modalStrip.className  = 'modal-strip cancel-strip';
+    modalIcon.className   = 'modal-icon cancel-icon';
+    modalIconFA.className = 'fa-solid fa-xmark';
+    confirmBtn.className  = 'btn-modal-confirm cancel-confirm';
+  } else {
+    modalStrip.className  = 'modal-strip return-strip';
+    modalIcon.className   = 'modal-icon return-icon';
+    modalIconFA.className = 'fa-solid fa-rotate-left';
+    confirmBtn.className  = 'btn-modal-confirm return-confirm';
+  }
+
+  /* ── Title ── */
+  const scopeLabel = scope === 'order' ? 'Entire Order' : 'Item';
+  modalTitle.textContent = type === 'cancel'
+    ? `Cancel ${scopeLabel}`
+    : `Return ${scopeLabel}`;
+  modalSubtitle.textContent = type === 'cancel'
+    ? 'Cancelled items cannot be uncancelled.'
+    : 'We will review your request within 2–3 days.';
+  confirmBtn.textContent = type === 'cancel' ? 'Confirm Cancellation' : 'Submit Return Request';
+
+  /* ── Qty stepper ── */
+  if (scope === 'item' && maxQty > 0) {
+    qtySection.style.display = 'block';
+    qtyDisplay.textContent   = _qty;
+    qtyMaxHint.textContent   = `max ${maxQty}`;
+    qtyMinus.disabled = (_qty <= 1);
+    qtyPlus.disabled  = (_qty >= maxQty);
+  } else {
+    qtySection.style.display = 'none';
+  }
+
+  /* ── Reason pills ── */
+  const reasons = type === 'cancel' ? CANCEL_REASONS : RETURN_REASONS;
+  reasonTitle.textContent = type === 'cancel'
+    ? 'Reason for cancellation (optional)'
+    : 'Reason for return (required)';
+
+  reasonPills.innerHTML = reasons.map(r => `
+    <label class="reason-pill" onclick="selectPill(this,'${r.replace(/'/g,"\\'")}')">
+      <input type="radio" name="modal_reason" value="${r.replace(/"/g,'&quot;')}">
+      <span class="reason-pill-dot"></span>
+      <span>${r}</span>
+    </label>
+  `).join('');
+
+  customWrap.classList.remove('show');
+  customTA.value = '';
+  modalError.classList.remove('show');
+
+  modal.classList.add('active');
+}
+
+/* Select a pill */
+function selectPill(label, value) {
+  document.querySelectorAll('.reason-pill').forEach(p => p.classList.remove('selected'));
+  label.classList.add('selected');
+  label.querySelector('input').checked = true;
+
+  if (value === 'Other') {
+    customWrap.classList.add('show');
+    customTA.focus();
+  } else {
+    customWrap.classList.remove('show');
+    customTA.value = '';
+  }
+  modalError.classList.remove('show');
+}
+
+/* Qty stepper */
+qtyMinus.addEventListener('click', () => {
+  if (_qty > 1) { _qty--; qtyDisplay.textContent = _qty; qtyMinus.disabled = (_qty <= 1); qtyPlus.disabled = false; }
+});
+qtyPlus.addEventListener('click', () => {
+  if (_qty < _maxQty) { _qty++; qtyDisplay.textContent = _qty; qtyPlus.disabled = (_qty >= _maxQty); qtyMinus.disabled = false; }
+});
+
+/* Confirm */
+document.getElementById('modalConfirmBtn').addEventListener('click', () => {
+  /* Determine selected reason */
+  const selected = document.querySelector('.reason-pill.selected input');
+  const selectedVal = selected ? selected.value : '';
+  const customVal   = customTA.value.trim();
+
+  let finalReason = selectedVal === 'Other' ? customVal : selectedVal;
+
+  /* Validate */
+  if (_mandatory && !finalReason) {
+    modalError.classList.add('show');
+    return;
+  }
+  if (selectedVal === 'Other' && !customVal) {
+    modalError.classList.add('show');
+    return;
+  }
+
+  /* Fill the correct hidden form and submit */
+  if (_scope === 'item' && _itemId) {
+    if (_type === 'cancel') {
+      document.getElementById(`cancelReason-${_itemId}`).value = finalReason;
+      document.getElementById(`cancelCustom-${_itemId}`).value  = customVal;
+      document.getElementById(`cancelQty-${_itemId}`).value    = _qty || _maxQty;
+      document.getElementById(`cancelForm-${_itemId}`).submit();
+    } else {
+      document.getElementById(`returnReason-${_itemId}`).value = finalReason;
+      document.getElementById(`returnCustom-${_itemId}`).value  = customVal;
+      document.getElementById(`returnQty-${_itemId}`).value    = _qty || _maxQty;
+      document.getElementById(`returnForm-${_itemId}`).submit();
+    }
+  } else {
+    /* Full order */
+    if (_type === 'cancel') {
+      document.getElementById('fullCancelReason').value = finalReason;
+      document.getElementById('fullCancelCustom').value  = customVal;
+      document.getElementById('fullCancelForm').submit();
+    } else {
+      document.getElementById('fullReturnReason').value = finalReason;
+      document.getElementById('fullReturnCustom').value  = customVal;
+      document.getElementById('fullReturnForm').submit();
+    }
+  }
+
+  closeModal();
+});
+
+/* Close */
+function closeModal() { modal.classList.remove('active'); }
+document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,840 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Outfito Admin – Category Management</title>
+
+  <!-- Bootstrap 5 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* ── CSS Variables ── */
+    :root {
+      --primary:             #064e3b;
+      --primary-hover:       #043d2e;
+      --primary-light:       #d1fae5;
+      --accent:              #10b981;
+      --bg:                  #fdfcf8;
+      --sidebar-bg:          #f5f1e8;
+      --card-bg:             #ffffff;
+      --border:              #e5e1d8;
+      --text:                #1c1917;
+      --text-muted:          #78716c;
+      --table-hover:         #faf9f6;
+      --badge-active-bg:     #d1fae5;
+      --badge-active-fg:     #065f46;
+      --badge-inactive-bg:   #fee2e2;
+      --badge-inactive-fg:   #991b1b;
+      --danger-hover-bg:     #fee2e2;
+      --danger-hover-fg:     #dc2626;
+      --shadow-sm:           0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md:           0 4px 16px rgba(0,0,0,.08);
+      --shadow-lg:           0 10px 40px rgba(0,0,0,.12);
+      --radius:              0.625rem;
+      --radius-xl:           1.25rem;
+      --sidebar-width:       260px;
+      --font-display:        'Cormorant Garamond', serif;
+      --font-body:           'DM Sans', sans-serif;
+      --tr:                  .22s ease;
+    }
+    [data-theme="dark"] {
+      --bg:                  #121212;
+      --sidebar-bg:          #1e1e1e;
+      --card-bg:             #1e1e1e;
+      --border:              #2e2e2e;
+      --text:                #e7e5e4;
+      --text-muted:          #a8a29e;
+      --table-hover:         #252525;
+      --badge-active-bg:     rgba(16,185,129,.15);
+      --badge-active-fg:     #6ee7b7;
+      --badge-inactive-bg:   rgba(239,68,68,.15);
+      --badge-inactive-fg:   #fca5a5;
+      --shadow-sm:           0 1px 3px rgba(0,0,0,.3);
+      --shadow-md:           0 4px 16px rgba(0,0,0,.4);
+      --shadow-lg:           0 10px 40px rgba(0,0,0,.5);
+      --primary-light:       rgba(6,78,59,.25);
+      --danger-hover-bg:     rgba(220,38,38,.15);
+      --danger-hover-fg:     #fca5a5;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      transition: background var(--tr), color var(--tr);
+    }
+
+    /* ─── Layout ─── */
+    .app-wrapper { display: flex; min-height: 100vh; }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; height: 100vh;
+      transition: background var(--tr), border-color var(--tr);
+      z-index: 100;
+    }
+    .sidebar-brand {
+      padding: 2rem 1.75rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-brand h1 {
+      font-family: var(--font-display);
+      font-size: 2rem; font-weight: 700;
+      color: var(--primary);
+      letter-spacing: -.02em; margin: 0; line-height: 1;
+    }
+    [data-theme="dark"] .sidebar-brand h1 { color: #6ee7b7; }
+
+    .sidebar-nav { flex: 1; padding: .75rem; overflow-y: auto; }
+    .nav-label {
+      font-size: .65rem; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--text-muted); padding: .6rem 1rem .4rem;
+      display: block; margin-top: .5rem;
+    }
+    .nav-link-item {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .65rem 1rem; border-radius: var(--radius);
+      font-size: .85rem; font-weight: 500;
+      color: var(--text-muted); text-decoration: none;
+      transition: background var(--tr), color var(--tr);
+      margin-bottom: 2px;
+    }
+    .nav-link-item:hover {
+      background: rgba(6,78,59,.08); color: var(--primary);
+    }
+    [data-theme="dark"] .nav-link-item:hover {
+      background: rgba(110,231,183,.08); color: #6ee7b7;
+    }
+    .nav-link-item.active {
+      background: var(--primary); color: #fff;
+      box-shadow: 0 4px 12px rgba(6,78,59,.35);
+    }
+    .nav-link-item .material-icons-outlined { font-size: 1.1rem; }
+
+    .sidebar-footer { padding: 1rem .75rem; border-top: 1px solid var(--border); }
+    .user-card {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .6rem .85rem; border-radius: var(--radius);
+      background: rgba(255,255,255,.55);
+    }
+    [data-theme="dark"] .user-card { background: rgba(0,0,0,.25); }
+    .user-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      object-fit: cover; border: 2px solid var(--border);
+    }
+    .user-name  { font-size: .8rem; font-weight: 600; line-height: 1.2; }
+    .user-email { font-size: .7rem; color: var(--text-muted); }
+
+    /* ─── Main ─── */
+    .main-content {
+      margin-left: var(--sidebar-width); flex: 1;
+      padding: 2.5rem 2.5rem 3rem; min-height: 100vh;
+    }
+
+    /* ─── Page Header ─── */
+    .page-header {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; margin-bottom: 2.5rem;
+    }
+    .page-title {
+      font-family: var(--font-display); font-size: 2.6rem;
+      font-weight: 700; color: var(--text); line-height: 1;
+      margin-bottom: .5rem; letter-spacing: -.02em;
+    }
+    .title-underline {
+      width: 52px; height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 99px;
+    }
+    .header-actions { display: flex; align-items: center; gap: .75rem; }
+
+    .btn-add {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .6rem 1.4rem; background: var(--primary); color: #fff;
+      border: none; border-radius: var(--radius);
+      font-size: .85rem; font-weight: 600; font-family: var(--font-body);
+      cursor: pointer; text-decoration: none;
+      box-shadow: 0 4px 14px rgba(6,78,59,.35);
+      transition: background var(--tr), transform var(--tr), box-shadow var(--tr);
+    }
+    .btn-add:hover {
+      background: var(--primary-hover); color: #fff;
+      transform: translateY(-2px); box-shadow: 0 6px 20px rgba(6,78,59,.4);
+    }
+    .btn-add:active { transform: translateY(0); }
+    .btn-add .material-icons-outlined { font-size: 1rem; }
+
+    /* ─── Stat Cards ─── */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 2rem; }
+    .stat-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); padding: 1.5rem 1.75rem;
+      box-shadow: var(--shadow-sm);
+      transition: background var(--tr), border-color var(--tr), box-shadow var(--tr);
+    }
+    .stat-card:hover { box-shadow: var(--shadow-md); }
+    .stat-label { font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: .6rem; }
+    .stat-number { font-family: var(--font-display); font-size: 2.4rem; font-weight: 700; color: var(--text); line-height: 1; }
+    .stat-card.active .stat-number  { color: var(--badge-active-fg); }
+    .stat-card.inactive .stat-number { color: var(--badge-inactive-fg); }
+
+    /* ─── Django Messages ─── */
+    .django-messages { margin-bottom: 1.25rem; }
+    .msg-item {
+      display: flex; align-items: center; gap: .6rem;
+      padding: .75rem 1rem; border-radius: var(--radius);
+      font-size: .83rem; font-weight: 500; margin-bottom: .5rem;
+      animation: fadeIn .3s ease;
+    }
+    .msg-success { background: var(--badge-active-bg); color: var(--badge-active-fg); border: 1px solid rgba(16,185,129,.2); }
+    .msg-error   { background: var(--badge-inactive-bg); color: var(--badge-inactive-fg); border: 1px solid rgba(239,68,68,.2); }
+    .msg-warning { background: #fef9c3; color: #854d0e; border: 1px solid rgba(234,179,8,.2); }
+    [data-theme="dark"] .msg-warning { background: rgba(234,179,8,.1); color: #fde047; }
+    .msg-close {
+      margin-left: auto; background: none; border: none;
+      cursor: pointer; color: inherit; opacity: .6; font-size: 1rem;
+      display: flex; align-items: center;
+    }
+    .msg-close:hover { opacity: 1; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ─── Card ─── */
+    .pdt-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+      overflow: hidden; transition: background var(--tr), border-color var(--tr);
+    }
+    .card-top {
+      padding: 1.5rem 1.75rem; border-bottom: 1px solid var(--border);
+      display: flex; flex-wrap: wrap;
+      justify-content: space-between; align-items: center; gap: 1rem;
+    }
+    .card-title {
+      font-family: var(--font-display); font-size: 1.4rem;
+      font-weight: 600; color: var(--text); margin: 0;
+    }
+    .controls { display: flex; flex-wrap: wrap; gap: .65rem; align-items: center; }
+
+    /* ─── Form Controls ─── */
+    .search-wrap { position: relative; }
+    .search-wrap .material-icons-outlined {
+      position: absolute; left: .7rem;
+      top: 50%; transform: translateY(-50%);
+      font-size: .95rem; color: var(--text-muted); pointer-events: none;
+    }
+    .form-control-custom {
+      padding: .5rem 1rem .5rem 2.4rem;
+      background: var(--sidebar-bg); border: 1px solid var(--border);
+      border-radius: var(--radius); font-size: .82rem;
+      font-family: var(--font-body); color: var(--text);
+      width: 230px; outline: none;
+      transition: border-color var(--tr), box-shadow var(--tr), background var(--tr);
+    }
+    .form-control-custom:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(6,78,59,.15);
+    }
+    .btn-search {
+      padding: .5rem 1.1rem; background: var(--primary); color: #fff;
+      border: none; border-radius: var(--radius);
+      font-size: .82rem; font-family: var(--font-body); font-weight: 600;
+      cursor: pointer; transition: background var(--tr);
+    }
+    .btn-search:hover { background: var(--primary-hover); }
+    .btn-clear {
+      padding: .5rem 1.1rem; background: var(--sidebar-bg); color: var(--text-muted);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      font-size: .82rem; font-family: var(--font-body); font-weight: 500;
+      cursor: pointer; text-decoration: none;
+      transition: background var(--tr), color var(--tr);
+    }
+    .btn-clear:hover { background: var(--border); color: var(--text); }
+
+    /* ─── Table ─── */
+    .table-wrap { overflow-x: auto; }
+    table.pdt-table { width: 100%; border-collapse: collapse; }
+    .pdt-table thead tr { background: var(--sidebar-bg); }
+    .pdt-table thead th {
+      padding: 1rem 1.25rem; font-size: .68rem;
+      font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text-muted); white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+    }
+    .pdt-table tbody tr { border-bottom: 1px solid var(--border); transition: background var(--tr); }
+    .pdt-table tbody tr:last-child { border-bottom: none; }
+    .pdt-table tbody tr:hover { background: var(--table-hover); }
+    .pdt-table td { padding: 1rem 1.25rem; font-size: .85rem; color: var(--text); vertical-align: middle; }
+
+    /* Category image */
+    .cat-img-wrap {
+      width: 48px; height: 48px;
+      border-radius: calc(var(--radius) - 2px);
+      overflow: hidden; background: var(--sidebar-bg);
+      box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+    }
+    .cat-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cat-no-img {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted);
+    }
+    .cat-no-img .material-icons-outlined { font-size: 1.4rem; }
+
+    .cat-name { font-weight: 600; font-size: .87rem; }
+    .cat-id   { font-size: .72rem; color: var(--text-muted); margin-top: 2px; font-family: 'Courier New', monospace; letter-spacing: .03em; }
+
+    /* Product count badge */
+    .count-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--primary); color: #fff;
+      border-radius: 99px; padding: .18rem .65rem;
+      font-size: .75rem; font-weight: 700;
+      min-width: 28px;
+    }
+
+    /* Status Badges */
+    .badge-status {
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .28rem .75rem; border-radius: 99px;
+      font-size: .72rem; font-weight: 600; letter-spacing: .02em;
+    }
+    .badge-status::before {
+      content: ''; width: 6px; height: 6px;
+      border-radius: 50%; display: inline-block;
+    }
+    .badge-active   { background: var(--badge-active-bg); color: var(--badge-active-fg); }
+    .badge-active::before { background: var(--badge-active-fg); }
+    .badge-inactive { background: var(--badge-inactive-bg); color: var(--badge-inactive-fg); }
+    .badge-inactive::before { background: var(--badge-inactive-fg); }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative; width: 40px; height: 22px;
+      display: inline-block; cursor: pointer;
+    }
+    .toggle-switch input { display: none; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: var(--border); border-radius: 99px;
+      transition: background var(--tr);
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #fff; top: 3px; left: 3px;
+      transition: transform var(--tr);
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+    /* Action Buttons */
+    .action-btns { display: flex; align-items: center; gap: .25rem; }
+    .action-btn {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: transparent; border-radius: var(--radius);
+      cursor: pointer; color: var(--text-muted);
+      transition: background var(--tr), color var(--tr), transform .15s;
+      text-decoration: none;
+    }
+    .action-btn:hover { transform: scale(1.12); }
+    .action-btn .material-icons-outlined { font-size: 1.1rem; }
+    .action-btn.del:hover  { background: var(--danger-hover-bg); color: var(--danger-hover-fg); }
+    .action-btn.edit:hover { background: var(--primary-light); color: var(--primary); }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center; padding: 4rem 2rem; color: var(--text-muted);
+    }
+    .empty-state .material-icons-outlined { font-size: 3rem; opacity: .4; display: block; margin-bottom: .75rem; }
+    .empty-state p { font-size: .9rem; margin: 0; }
+
+    /* ─── Footer / Pagination ─── */
+    .card-footer-pdt {
+      padding: 1.1rem 1.75rem; border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: .75rem;
+    }
+    .showing-text { font-size: .75rem; color: var(--text-muted); }
+
+    .pagination-wrap { display: flex; align-items: center; gap: .3rem; }
+    .pg-btn {
+      height: 34px; padding: 0 .9rem;
+      border: 1px solid var(--border); background: var(--card-bg);
+      color: var(--text-muted); border-radius: var(--radius);
+      font-size: .8rem; font-family: var(--font-body); font-weight: 500;
+      cursor: pointer; display: inline-flex; align-items: center; gap: .2rem;
+      text-decoration: none;
+      transition: background var(--tr), color var(--tr), border-color var(--tr);
+    }
+    .pg-btn:hover { background: var(--sidebar-bg); color: var(--text); }
+    .pg-btn.disabled { opacity: .4; pointer-events: none; cursor: default; }
+    .pg-btn .material-icons-outlined { font-size: .95rem; }
+
+    .pg-num {
+      width: 34px; height: 34px; border: 1px solid var(--border);
+      background: var(--card-bg); color: var(--text-muted);
+      border-radius: var(--radius); font-size: .82rem;
+      font-family: var(--font-body); font-weight: 500;
+      cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+      text-decoration: none;
+      transition: background var(--tr), color var(--tr), border-color var(--tr), box-shadow var(--tr);
+    }
+    .pg-num:hover { background: var(--sidebar-bg); color: var(--text); }
+    .pg-num.active {
+      background: var(--primary); color: #fff; border-color: var(--primary);
+      box-shadow: 0 2px 10px rgba(6,78,59,.3); pointer-events: none;
+    }
+    .pg-dots { color: var(--text-muted); font-size: .85rem; padding: 0 .2rem; }
+
+    /* ─── Delete Confirm Modal ─── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.5); backdrop-filter: blur(4px);
+      z-index: 1000; align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); padding: 2rem; width: min(96%, 420px);
+      box-shadow: var(--shadow-lg); animation: slideUp .25s ease;
+    }
+    .modal-icon-circle {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: var(--badge-inactive-bg);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.25rem;
+    }
+    .modal-icon-circle .material-icons-outlined { font-size: 1.8rem; color: #dc2626; }
+    .modal-box h4 {
+      font-family: var(--font-display); font-size: 1.4rem;
+      font-weight: 700; margin: 0 0 .5rem; text-align: center;
+    }
+    .modal-box p { font-size: .85rem; color: var(--text-muted); margin: 0 0 1.5rem; text-align: center; }
+    .modal-footer { display: flex; gap: .75rem; justify-content: center; }
+    .btn-cancel {
+      padding: .6rem 1.3rem; border: 1px solid var(--border);
+      background: var(--sidebar-bg); color: var(--text);
+      border-radius: var(--radius); font-family: var(--font-body);
+      font-size: .85rem; font-weight: 500; cursor: pointer;
+    }
+    .btn-danger {
+      padding: .6rem 1.3rem; border: none;
+      background: #dc2626; color: #fff;
+      border-radius: var(--radius); font-family: var(--font-body);
+      font-size: .85rem; font-weight: 600; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(220,38,38,.3);
+      transition: background var(--tr);
+      display: inline-flex; align-items: center; gap: .35rem;
+    }
+    .btn-danger:hover { background: #b91c1c; }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    /* ─── Theme Toggle ─── */
+    .theme-toggle {
+      position: fixed; bottom: 1.75rem; right: 1.75rem;
+      width: 46px; height: 46px; border-radius: 50%;
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--text); color: var(--bg);
+      box-shadow: var(--shadow-lg); z-index: 999;
+      transition: background var(--tr), color var(--tr), transform .2s;
+    }
+    .theme-toggle:hover { transform: scale(1.1); }
+    .theme-toggle .material-icons-outlined { font-size: 1.2rem; }
+    .icon-dark  { display: block; }
+    .icon-light { display: none;  }
+    [data-theme="dark"] .icon-dark  { display: none;  }
+    [data-theme="dark"] .icon-light { display: block; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 900px) {
+      .sidebar { width: 60px; }
+      .sidebar-brand h1, .nav-label,
+      .nav-link-item span:not(.material-icons-outlined),
+      .user-name, .user-email { display: none; }
+      .main-content { margin-left: 60px; padding: 1.5rem; }
+      .stats-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .main-content { padding: 1rem; }
+      .page-header { flex-direction: column; gap: 1rem; }
+      .card-top { flex-direction: column; align-items: flex-start; }
+      .controls { flex-direction: column; align-items: flex-start; }
+      .form-control-custom { width: 100%; }
+      .stats-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+
+  <!-- ════════════ SIDEBAR ════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1>Outfito</h1>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="nav-label">Management</span>
+
+      <a class="nav-link-item" href="#">
+        <span class="material-icons-outlined">dashboard</span>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-link-item" href="{% url 'admin_order_list' %}">
+        <span class="material-icons-outlined">shopping_bag</span>
+        <span>Orders</span>
+      </a>
+      <a class="nav-link-item" href="{% url 'product_list' %}">
+        <span class="material-icons-outlined">inventory_2</span>
+        <span>Products</span>
+      </a>
+      <a class="nav-link-item active" href="{% url 'category_list' %}">
+        <span class="material-icons-outlined">category</span>
+        <span>Categories</span>
+      </a>
+      <a class="nav-link-item" href="#">
+        <span class="material-icons-outlined">confirmation_number</span>
+        <span>Coupons</span>
+      </a>
+      <a class="nav-link-item" href="#">
+        <span class="material-icons-outlined">sell</span>
+        <span>Offers</span>
+      </a>
+      <a class="nav-link-item" href="{% url 'admin-user-management' %}">
+        <span class="material-icons-outlined">people</span>
+        <span>Customers</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <img class="user-avatar"
+             src="{% if request.user.profile_image %}{{ request.user.profile_image.url }}{% else %}https://ui-avatars.com/api/?name={{ request.user.get_full_name|urlencode }}&background=064e3b&color=fff{% endif %}"
+             alt="{{ request.user.get_full_name }}"/>
+        <div>
+          <div class="user-name">{{ request.user.get_full_name }}</div>
+          <div class="user-email">{{ request.user.email }}</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ════════════ MAIN CONTENT ════════════ -->
+  <main class="main-content">
+
+    <!-- Page Header -->
+    <header class="page-header">
+      <div>
+        <h2 class="page-title">Category Management</h2>
+        <div class="title-underline"></div>
+      </div>
+      <div class="header-actions">
+        <a class="btn-add" href="{% url 'add_category' %}">
+          <span class="material-icons-outlined">add</span>
+          Add Category
+        </a>
+      </div>
+    </header>
+
+    <!-- ── Django Messages ── -->
+    {% if messages %}
+    <div class="django-messages">
+      {% for message in messages %}
+      <div class="msg-item msg-{{ message.tags }}">
+        <span class="material-icons-outlined" style="font-size:1rem;">
+          {% if message.tags == 'success' %}check_circle
+          {% elif message.tags == 'error' %}error
+          {% else %}info{% endif %}
+        </span>
+        {{ message }}
+        <button class="msg-close" onclick="this.parentElement.remove()">
+          <span class="material-icons-outlined" style="font-size:1rem;">close</span>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ── Stat Cards ── -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Categories</div>
+        <div class="stat-number">{{ total_categories }}</div>
+      </div>
+      <div class="stat-card active">
+        <div class="stat-label">Active Categories</div>
+        <div class="stat-number">{{ active_categories }}</div>
+      </div>
+      <div class="stat-card inactive">
+        <div class="stat-label">Inactive Categories</div>
+        <div class="stat-number">{{ inactive_categories }}</div>
+      </div>
+    </div>
+
+    <!-- ── Category Card ── -->
+    <div class="pdt-card">
+
+      <!-- Card Top: title + search -->
+      <div class="card-top">
+        <h3 class="card-title">All Categories</h3>
+        <div class="controls">
+          <form method="GET" action="{% url 'category_list' %}" style="display:contents;">
+            <div class="search-wrap">
+              <span class="material-icons-outlined">search</span>
+              <input
+                class="form-control-custom"
+                type="text" name="search"
+                value="{{ search_query }}"
+                placeholder="Search categories…"
+              />
+            </div>
+            <button type="submit" class="btn-search">Search</button>
+            <a href="{% url 'category_list' %}" class="btn-clear">Clear</a>
+          </form>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap">
+        <table class="pdt-table">
+          <thead>
+            <tr>
+              <th>Sl No</th>
+              <th>Category ID</th>
+              <th>Image</th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Products</th>
+              <th>Status</th>
+              <th>Active</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for category in categories %}
+            <tr>
+
+              <!-- Serial Number -->
+              <td style="font-weight:600;">{{ categories.start_index|add:forloop.counter0 }}</td>
+
+              <!-- Category ID -->
+              <td><span style="font-family:'Courier New',monospace;font-size:.75rem;color:var(--text-muted);">CT-{{ category.id }}</span></td>
+
+              <!-- Image -->
+              <td>
+                <div class="cat-img-wrap">
+                  {% if category.image %}
+                    <img src="{{ category.image.url }}" alt="{{ category.category_name }}" loading="lazy">
+                  {% else %}
+                    <div class="cat-no-img">
+                      <span class="material-icons-outlined">image_not_supported</span>
+                    </div>
+                  {% endif %}
+                </div>
+              </td>
+
+              <!-- Name -->
+              <td>
+                <div class="cat-name">{{ category.category_name }}</div>
+              </td>
+
+              <!-- Description -->
+              <td style="color:var(--text-muted); max-width:200px; font-size:.8rem;">
+                {{ category.description|truncatechars:60 }}
+              </td>
+
+              <!-- Products Count -->
+              <td>
+                <span class="count-badge">{{ category.product_count|default:0 }}</span>
+              </td>
+
+              <!-- Status Badge -->
+              <td>
+                {% if category.is_active %}
+                  <span class="badge-status badge-active">Active</span>
+                {% else %}
+                  <span class="badge-status badge-inactive">Inactive</span>
+                {% endif %}
+              </td>
+
+              <!-- Toggle -->
+              <td>
+                <form method="POST" action="{% url 'toggle_category_status' category.id %}">
+                  {% csrf_token %}
+                  <label class="toggle-switch" title="Toggle status">
+                    <input type="checkbox" onchange="this.form.submit()"
+                      {% if category.is_active %}checked{% endif %}>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </form>
+              </td>
+
+              <!-- Actions -->
+              <td>
+                <div class="action-btns">
+                  <!-- Edit -->
+                  <a class="action-btn edit" href="{% url 'edit_category' category.id %}" title="Edit">
+                    <span class="material-icons-outlined">edit</span>
+                  </a>
+                  <!-- Delete -->
+                  <button
+                    class="action-btn del"
+                    title="Delete"
+                    onclick="confirmDelete('{% url 'delete_category' category.id %}', '{{ category.category_name|escapejs }}')">
+                    <span class="material-icons-outlined">delete</span>
+                  </button>
+                </div>
+              </td>
+
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="9">
+                <div class="empty-state">
+                  <span class="material-icons-outlined">category</span>
+                  <p>No categories found</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ── Pagination ── -->
+      {% if categories.has_other_pages %}
+      <div class="card-footer-pdt">
+        <p class="showing-text">
+          Showing
+          {{ categories.start_index }}–{{ categories.end_index }}
+          of {{ categories.paginator.count }} categor{{ categories.paginator.count|pluralize:"y,ies" }}
+        </p>
+
+        <nav class="pagination-wrap">
+          <!-- Previous -->
+          {% if categories.has_previous %}
+          <a class="pg-btn" href="?page={{ categories.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+            <span class="material-icons-outlined">chevron_left</span> Previous
+          </a>
+          {% else %}
+          <span class="pg-btn disabled">
+            <span class="material-icons-outlined">chevron_left</span> Previous
+          </span>
+          {% endif %}
+
+          <!-- Page numbers -->
+          {% for num in categories.paginator.page_range %}
+            {% if num == categories.number %}
+              <span class="pg-num active">{{ num }}</span>
+            {% elif num == 1 or num == categories.paginator.num_pages or num >= categories.number|add:"-2" and num <= categories.number|add:"2" %}
+              <a class="pg-num" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+            {% elif num == categories.number|add:"-3" or num == categories.number|add:"3" %}
+              <span class="pg-dots">···</span>
+            {% endif %}
+          {% endfor %}
+
+          <!-- Next -->
+          {% if categories.has_next %}
+          <a class="pg-btn" href="?page={{ categories.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+            Next <span class="material-icons-outlined">chevron_right</span>
+          </a>
+          {% else %}
+          <span class="pg-btn disabled">
+            Next <span class="material-icons-outlined">chevron_right</span>
+          </span>
+          {% endif %}
+        </nav>
+      </div>
+      {% endif %}
+
+    </div><!-- /pdt-card -->
+  </main>
+</div><!-- /app-wrapper -->
+
+<!-- ════════ Theme Toggle ════════ -->
+<button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+  <span class="material-icons-outlined icon-dark">dark_mode</span>
+  <span class="material-icons-outlined icon-light">light_mode</span>
+</button>
+
+<!-- ════════ Delete Confirm Modal ════════ -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-icon-circle">
+      <span class="material-icons-outlined">delete_outline</span>
+    </div>
+    <h4>Delete Category?</h4>
+    <p id="deleteModalMsg">This action cannot be undone.</p>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <form method="POST" id="deleteForm" style="margin:0;">
+        {% csrf_token %}
+        <button type="submit" class="btn-danger">
+          <span class="material-icons-outlined" style="font-size:.95rem;">delete</span>
+          Yes, Delete
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  /* ── Delete Modal ── */
+  function confirmDelete(url, categoryName) {
+    document.getElementById('deleteForm').action = url;
+    document.getElementById('deleteModalMsg').innerHTML =
+      `You are about to delete <strong>${categoryName}</strong>. This action cannot be undone.`;
+    document.getElementById('deleteModal').classList.add('show');
+  }
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('show');
+  }
+  document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
+  });
+
+  /* ── Theme ── */
+  function toggleTheme() {
+    const root = document.documentElement;
+    const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    root.dataset.theme = next;
+    localStorage.setItem('outfito-theme', next);
+  }
+  (function() {
+    const saved = localStorage.getItem('outfito-theme');
+    if (saved) document.documentElement.dataset.theme = saved;
+  })();
+
+  /* ── Auto-dismiss messages ── */
+  setTimeout(() => {
+    document.querySelectorAll('.msg-item').forEach(el => {
+      el.style.transition = 'opacity .4s';
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 400);
+    });
+  }, 4000);
+</script>
+</body>
+</html>

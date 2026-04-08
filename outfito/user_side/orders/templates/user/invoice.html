@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice - OUTFITO</title>
+    <!-- Importing elegant fonts for a premium fashion brand look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            color: #1f2937;
+            margin: 0;
+            padding: 40px 20px;
+            background: #f4f5f7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .invoice-wrapper {
+            max-width: 850px;
+            margin: auto;
+            background: #ffffff;
+            padding: 50px 60px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Top Accent Line */
+        .invoice-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: #0f172a;
+        }
+
+        /* Header Section */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 50px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .brand-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .brand-tagline {
+            font-size: 11px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .invoice-title-block {
+            text-align: right;
+        }
+
+        .invoice-title {
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: 4px;
+            color: #6b7280;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .invoice-meta {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .invoice-meta strong {
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        /* Two Column Grid for Details */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .section h4 {
+            margin: 0 0 12px 0;
+            font-size: 11px;
+            font-weight: 700;
+            color: #0f172a;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 8px;
+        }
+
+        .info-content {
+            color: #1f2937;
+            line-height: 1.7;
+            font-size: 13px;
+        }
+
+        .info-content span.label {
+            display: inline-block;
+            width: 95px;
+            color: #6b7280;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* Status Colors */
+        .status-delivered {
+            color: #059669;
+            background: #ecfdf5;
+            border-color: #34d399;
+        }
+
+        .status-cancelled {
+            color: #dc2626;
+            background: #fef2f2;
+            border-color: #f87171;
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background: #0f172a;
+            color: #ffffff;
+            text-align: left;
+            padding: 14px 15px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        th:first-child { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
+        th:last-child { border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
+
+        td {
+            padding: 16px 15px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: middle;
+        }
+
+        .product-name {
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .product-variant {
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        /* Totals Section */
+        .totals-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .totals-table {
+            width: 350px;
+            border-collapse: collapse;
+        }
+
+        .totals-table td {
+            padding: 10px 15px;
+            border-bottom: none;
+        }
+
+        .totals-table tr {
+            border-bottom: 1px solid #f8fafc;
+        }
+
+        .totals-table .label {
+            color: #6b7280;
+        }
+
+        .totals-table .amount {
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .totals-table .grand-total td {
+            padding-top: 15px;
+            padding-bottom: 15px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            border-top: 2px solid #0f172a;
+            border-bottom: 2px solid #0f172a;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 12px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+        }
+
+        .footer p {
+            margin: 4px 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .invoice-wrapper {
+                padding: 30px 20px;
+            }
+            .header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            .invoice-title-block {
+                text-align: left;
+            }
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+            .totals-table {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="invoice-wrapper">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="brand-container">
+            <div class="brand">OUTFITO</div>
+            <div class="brand-tagline">Premium Apparel & Accessories</div>
+        </div>
+        <div class="invoice-title-block">
+            <div class="invoice-title">Invoice</div>
+            <div class="invoice-meta">
+                Date: <strong>{{ order.created_at|date:"M d, Y H:i" }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- TWO COLUMN GRID FOR DETAILS -->
+    <div class="info-grid">
+        
+        <!-- ORDER DETAILS -->
+        <div class="section">
+            <h4>Order Information</h4>
+            <div class="info-content">
+                <div><span class="label">Order No:</span> <strong>#{{ order.order_number }}</strong></div>
+                
+                <div style="margin-top: 8px;">
+                    <span class="label">Order Status:</span> 
+                    {% if order.order_status == "Delivered" %}
+                        <span class="status-badge status-delivered">Delivered</span>
+                    {% elif order.order_status == "Cancelled" %}
+                        <span class="status-badge status-cancelled">Cancelled</span>
+                    {% else %}
+                        <span class="status-badge">{{ order.order_status }}</span>
+                    {% endif %}
+                </div>
+
+
+                <div style="margin-top: 8px;">
+                    <span class="label">Payment:</span> {{ order.get_payment_method_display }}
+                </div>
+            </div>
+        </div>
+
+        <!-- SHIPPING ADDRESS -->
+        <div class="section">
+            <h4>Shipping Address</h4>
+            <div class="info-content">
+                {% if order.shipping_address %}
+                    {% with addr=order.shipping_address %}
+                    <strong style="color: #0f172a; display: block; margin-bottom: 4px; font-size: 14px;">{{ addr.full_name }}</strong>
+                    {{ addr.address_line1 }}
+                    {% if addr.address_line2 %}, {{ addr.address_line2 }}{% endif %}<br>
+                    {{ addr.city }}, {{ addr.state }} - {{ addr.pincode }}<br>
+                    {{ addr.country|default:"India" }}<br>
+                    <div style="margin-top: 6px;">Phone: {{ addr.phone_number }}</div>
+                    {% endwith %}
+                {% else %}
+                    <div style="color: #6b7280; font-style: italic;">No address available</div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ITEMS TABLE -->
+    <table>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th class="right">Price</th>
+                <th class="right">Qty</th>
+                <th class="right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.items.all %}
+            <tr>
+                <td>
+                    <span class="product-name">{{ item.variant.product.name }}</span>
+                    <span class="product-variant">{{ item.variant.size }} / {{ item.variant.color }}</span>
+                </td>
+                <td class="right">Rs. {{ item.price }}</td>
+                <td class="right">{{ item.quantity }}</td>
+                <td class="right" style="font-weight: 500; color: #0f172a;">
+                    Rs. {{ item.price|floatformat:2 }} × {{ item.quantity }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- TOTALS SECTION -->
+    <div class="totals-wrapper">
+        <table class="totals-table">
+            <tr>
+                <td class="label">Subtotal</td>
+                <td class="amount">Rs. {{ order.subtotal }}</td>
+            </tr>
+            <tr>
+                <td class="label">Delivery</td>
+                <td class="amount">Rs. {{ order.delivery_charge }}</td>
+            </tr>
+            <tr>
+                <td class="label">Tax</td>
+                <td class="amount">Rs. {{ order.tax_amount }}</td>
+            </tr>
+            <tr>
+                <td class="label">Discount</td>
+                <td class="amount" style="color: #10b981;">- Rs. {{ order.discount_amount }}</td>
+            </tr>
+            <tr class="grand-total">
+                <td>Total</td>
+                <td class="amount">Rs. {{ order.total_amount }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <p><strong>Thank you for shopping with Outfito!</strong></p>
+        <p>Support: support@outfito.com</p>
+    </div>
+
+</div>
+
+</body>
+</html>

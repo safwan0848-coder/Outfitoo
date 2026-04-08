@@ -1,0 +1,778 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>My Orders – OUTFITO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+    :root {
+      --bg: #070d1a;
+      --surface: #0c1424;
+      --surface2: #101b30;
+      --surface3: #162035;
+      --border: rgba(255, 255, 255, 0.06);
+      --accent: #00e5ff;
+      --accent2: #3bdfb0;
+      --blue: #2563eb;
+      --text: #dde6f5;
+      --muted: #556680;
+      --danger: #f87171;
+      --warn: #fbbf24;
+      --success: #4ade80;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─────────── NAVBAR ─────────── */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      background: rgba(7, 13, 26, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      height: 60px; display: flex; align-items: center; padding: 0 28px;
+    }
+    .nav-inner {
+      max-width: 1440px; width: 100%; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 9px;
+      text-decoration: none; color: var(--text); flex-shrink: 0;
+    }
+    .nav-logo-box {
+      width: 30px; height: 30px; background: #fff; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .nav-logo-box img { width: 22px; height: 22px; object-fit: contain; }
+    .nav-wordmark { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2.5px; color: var(--text); }
+    .nav-links {
+      display: flex; align-items: center; gap: 32px;
+      font-size: 11px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.12em;
+    }
+    .nav-links a { text-decoration: none; color: inherit; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--text); border-bottom: 2px solid var(--accent); padding-bottom: 2px; }
+    .nav-right { display: flex; align-items: center; gap: 18px; }
+    .nav-search {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(16, 27, 48, 0.9); border: 1px solid var(--border);
+      border-radius: 100px; padding: 6px 14px;
+    }
+    .nav-search i { font-size: 11px; color: var(--muted); }
+    .nav-search input {
+      background: transparent; border: none; outline: none;
+      font-size: 12px; color: var(--text); font-family: 'DM Sans', sans-serif; width: 130px;
+    }
+    .nav-search input::placeholder { color: var(--muted); }
+    .nav-icon-btn {
+      position: relative; color: #7a8faf; font-size: 16px;
+      cursor: pointer; transition: color 0.2s; text-decoration: none;
+      display: inline-flex; align-items: center;
+    }
+    .nav-icon-btn:hover { color: var(--text); }
+    .nav-badge {
+      position: absolute; top: -7px; right: -8px;
+      background: var(--accent2); color: #000; font-size: 8px; font-weight: 800;
+      width: 16px; height: 16px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: 1.5px solid var(--bg);
+    }
+    .nav-user-wrap { position: relative; }
+    #userDropdown {
+      position: absolute; right: 0; top: calc(100% + 10px); width: 180px;
+      background: #0c1424; border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5); z-index: 500;
+    }
+    #userDropdown a {
+      display: block; padding: 10px 16px; font-size: 13px;
+      color: var(--text); text-decoration: none; transition: background 0.15s;
+    }
+    #userDropdown a:hover { background: rgba(255,255,255,0.05); }
+    #userDropdown a.active-link { color: var(--accent); }
+    #userDropdown hr { border: none; border-top: 1px solid rgba(255,255,255,0.08); }
+    #userDropdown a.logout { color: #f87171; }
+
+    /* ─────────── LAYOUT ─────────── */
+    .layout { display: flex; flex: 1; padding-top: 60px; min-height: calc(100vh - 60px); }
+
+    /* ─────────── SIDEBAR ─────────── */
+    .sidebar {
+      width: 220px; flex-shrink: 0;
+      background: var(--surface); border-right: 1px solid var(--border);
+      padding: 28px 0; position: sticky; top: 60px;
+      height: calc(100vh - 60px); overflow-y: auto;
+      border-left: 2px solid rgba(0,229,255,0.08);
+    }
+    .sidebar-back {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--muted); text-decoration: none;
+      padding: 0 20px 22px; transition: color 0.2s; font-weight: 500;
+    }
+    .sidebar-back:hover { color: var(--text); }
+    .sidebar-back i { font-size: 11px; }
+    .sidebar-nav { display: flex; flex-direction: column; gap: 3px; padding: 0 10px; }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 11px; padding: 10px 13px;
+      border-radius: 10px; font-size: 13px; font-weight: 500;
+      color: var(--muted); text-decoration: none; transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+    .sidebar-item i { width: 17px; text-align: center; font-size: 13px; flex-shrink: 0; }
+    .sidebar-item:hover { background: var(--surface2); color: var(--text); }
+    .sidebar-item.active { background: rgba(0,229,255,0.07); color: var(--accent); border-color: rgba(0,229,255,0.15); }
+    .sidebar-item.active i { color: var(--accent); }
+
+    /* ─────────── MAIN ─────────── */
+    .main { flex: 1; padding: 36px 36px 60px; min-width: 0; overflow-x: hidden; }
+
+    .page-header { margin-bottom: 28px; animation: fadeUp 0.45s ease both; }
+    .page-title {
+      font-family: 'Bebas Neue', sans-serif; font-size: 42px;
+      letter-spacing: 3px; line-height: 1; margin-bottom: 5px;
+      background: linear-gradient(110deg, #fff 40%, var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .page-subtitle { font-size: 13px; color: var(--muted); }
+
+    /* TOOLBAR */
+    .toolbar {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 20px; flex-wrap: wrap;
+      animation: fadeUp 0.45s 0.08s ease both;
+    }
+    .search-bar {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 9px 16px; flex: 1; min-width: 200px;
+      transition: border-color 0.2s;
+    }
+    .search-bar:focus-within { border-color: rgba(0,229,255,0.35); }
+    .search-bar i { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+    .search-bar input {
+      background: transparent; border: none; outline: none;
+      font-size: 13px; color: var(--text); font-family: 'DM Sans', sans-serif; width: 100%;
+    }
+    .search-bar input::placeholder { color: var(--muted); }
+    .filter-btn {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 9px 18px; font-size: 13px; font-weight: 600;
+      color: var(--muted); cursor: pointer; font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    .filter-btn:hover { border-color: rgba(0,229,255,0.25); color: var(--text); }
+    .filter-btn i { font-size: 12px; }
+
+    /* active filter pill shown in toolbar */
+    .active-filter-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 13px; border-radius: 100px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      background: rgba(0,229,255,0.09); border: 1px solid rgba(0,229,255,0.25);
+      color: var(--accent); flex-shrink: 0;
+    }
+    .active-filter-pill a {
+      color: var(--accent); text-decoration: none; opacity: 0.6;
+      transition: opacity 0.15s; font-size: 13px; line-height: 1;
+    }
+    .active-filter-pill a:hover { opacity: 1; }
+
+    /* TABLE HEAD */
+    .table-head, .order-card {
+      display: grid;
+      grid-template-columns: 3fr 1.4fr 1.2fr 1.1fr 100px;
+      gap: 12px; align-items: center;
+    }
+    .table-head {
+      padding: 0 18px 10px; font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.13em; color: var(--muted);
+      border-bottom: 1px solid var(--border); margin-bottom: 10px;
+      animation: fadeUp 0.45s 0.12s ease both;
+    }
+
+    /* ORDER CARD */
+    .order-card {
+      padding: 15px 18px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; margin-bottom: 9px; transition: all 0.22s;
+      animation: fadeUp 0.45s ease both; position: relative; overflow: hidden;
+    }
+    .order-card::before {
+      content: ''; position: absolute; left: 0; top: 10%; bottom: 10%;
+      width: 3px; border-radius: 0 3px 3px 0;
+      background: transparent; transition: background 0.22s;
+    }
+    .order-card:hover { border-color: rgba(0,229,255,0.18); background: var(--surface2); transform: translateX(3px); }
+    .order-card:hover::before { background: var(--accent); }
+    .order-card:nth-child(1) { animation-delay: 0.06s; }
+    .order-card:nth-child(2) { animation-delay: 0.12s; }
+    .order-card:nth-child(3) { animation-delay: 0.18s; }
+    .order-card:nth-child(4) { animation-delay: 0.24s; }
+    .order-card:nth-child(5) { animation-delay: 0.30s; }
+    .order-card:nth-child(6) { animation-delay: 0.36s; }
+    .order-card:nth-child(7) { animation-delay: 0.40s; }
+    .order-card:nth-child(8) { animation-delay: 0.44s; }
+
+    /* PRODUCT COLUMN */
+    .prod-col { display: flex; align-items: center; gap: 13px; min-width: 0; }
+    .thumb-stack { position: relative; flex-shrink: 0; width: 52px; height: 52px; }
+    .thumb-main {
+      width: 52px; height: 52px; border-radius: 10px; object-fit: cover;
+      background: var(--surface3); border: 1.5px solid var(--border);
+      display: block; position: relative; z-index: 2;
+    }
+    .thumb-placeholder {
+      width: 52px; height: 52px; border-radius: 10px;
+      background: var(--surface3); border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 20px; position: relative; z-index: 2;
+    }
+    .thumb-more {
+      position: absolute; bottom: -5px; right: -6px; z-index: 3;
+      background: var(--surface3); border: 1.5px solid var(--border);
+      color: var(--text); font-size: 9px; font-weight: 800;
+      border-radius: 100px; padding: 2px 6px; white-space: nowrap;
+      letter-spacing: 0.03em; line-height: 1.4;
+    }
+    .thumb-shadow {
+      position: absolute; top: 5px; left: 4px; width: 52px; height: 52px;
+      border-radius: 10px; background: var(--surface3);
+      border: 1.5px solid var(--border); z-index: 1;
+    }
+    .prod-info { min-width: 0; flex: 1; }
+    .prod-name {
+      font-weight: 600; font-size: 14px; margin-bottom: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text);
+    }
+    .prod-meta {
+      font-size: 11px; color: var(--muted); margin-bottom: 5px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* STATUS BADGE */
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 9px; border-radius: 100px; font-size: 9.5px;
+      font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap;
+    }
+    .status-badge::before {
+      content: ''; width: 5px; height: 5px; border-radius: 50%;
+      background: currentColor; flex-shrink: 0;
+    }
+    .badge-placed    { background: rgba(37,99,235,0.14);   color: #60a5fa; }
+    .badge-confirmed { background: rgba(59,223,176,0.12);  color: #3bdfb0; }
+    .badge-shipped   { background: rgba(251,191,36,0.13);  color: #fbbf24; }
+    .badge-delivered { background: rgba(74,222,128,0.12);  color: #4ade80; }
+    .badge-returned  { background: rgba(248,113,113,0.13); color: #f87171; }
+    .badge-cancelled { background: rgba(248,113,113,0.13); color: #f87171; }
+    .badge-pending   { background: rgba(156,163,175,0.12); color: #9ca3af; }
+    .badge-success   { background: rgba(74,222,128,0.12);  color: #4ade80; }
+    .badge-paid      { background: rgba(74,222,128,0.12);  color: #4ade80; }
+    .badge-failed    { background: rgba(248,113,113,0.13); color: #f87171; }
+
+    /* ORDER ID + AMOUNT */
+    .order-id-col {
+      font-size: 12px; color: var(--muted);
+      font-family: 'Courier New', monospace; letter-spacing: 0.03em; word-break: break-all;
+    }
+    .order-date { font-size: 10.5px; color: var(--muted); margin-top: 4px; opacity: 0.75; }
+    .amount-col {
+      font-weight: 700; font-size: 15px;
+      font-variant-numeric: tabular-nums; color: var(--text); letter-spacing: -0.02em;
+    }
+
+    /* VIEW BUTTON */
+    .view-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px 18px; background: var(--blue); color: #fff;
+      border: none; border-radius: 8px; font-size: 12px; font-weight: 700;
+      cursor: pointer; text-decoration: none; font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s; letter-spacing: 0.02em; white-space: nowrap;
+    }
+    .view-btn:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 5px 18px rgba(37,99,235,0.4); }
+    .view-btn i { font-size: 9px; }
+
+    /* EMPTY STATE */
+    .empty-state { text-align: center; padding: 80px 20px; animation: fadeUp 0.45s ease both; }
+    .empty-icon {
+      width: 78px; height: 78px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 18px; font-size: 30px; color: var(--muted);
+    }
+    .empty-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 2px; margin-bottom: 8px; }
+    .empty-sub { font-size: 13px; color: var(--muted); margin-bottom: 22px; line-height: 1.6; }
+    .shop-btn {
+      display: inline-flex; align-items: center; gap: 8px; padding: 12px 26px;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      color: #000; border-radius: 10px; font-weight: 800; font-size: 14px;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .shop-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,229,255,0.25); }
+
+    /* FILTER DROPDOWN */
+    .filter-dropdown {
+      position: absolute; right: 0; top: calc(100% + 8px); width: 230px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5); z-index: 300; display: none;
+    }
+    .filter-dropdown.open { display: block; animation: fadeUp 0.2s ease both; }
+    .filter-label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--muted); margin-bottom: 10px;
+    }
+    .filter-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 11px; border-radius: 100px; font-size: 11px; font-weight: 600;
+      border: 1px solid var(--border); background: var(--surface2); color: var(--muted);
+      cursor: pointer; margin: 3px; transition: all 0.15s;
+    }
+    .filter-chip:hover, .filter-chip.active {
+      border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.06);
+    }
+
+    /* ─────────── PAGINATION ─────────── */
+    .pagination-wrap {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+      margin-top: 32px; padding-top: 22px;
+      border-top: 1px solid var(--border);
+      animation: fadeUp 0.45s 0.3s ease both;
+    }
+    .pag-info { font-size: 12px; color: var(--muted); }
+    .pag-controls { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+    .pag-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 34px; height: 34px; padding: 0 10px;
+      border-radius: 8px; font-size: 12px; font-weight: 600;
+      color: var(--muted); background: var(--surface);
+      border: 1px solid var(--border); text-decoration: none;
+      transition: all 0.2s; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    }
+    .pag-btn:hover:not(.disabled):not(.pag-current):not(.pag-ellipsis) {
+      border-color: rgba(0,229,255,0.3); color: var(--accent);
+    }
+    .pag-btn.pag-current {
+      background: rgba(0,229,255,0.1); border-color: rgba(0,229,255,0.35); color: var(--accent);
+    }
+    .pag-btn.disabled, .pag-btn.pag-ellipsis { opacity: 0.35; cursor: default; pointer-events: none; }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+    /* GLOW LINE */
+    .glow-line {
+      position: fixed; top: 60px; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent 10%, rgba(0,229,255,0.07) 50%, transparent 90%);
+      pointer-events: none; z-index: 199;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .table-head, .order-card { grid-template-columns: 3fr 1.3fr 1.1fr 90px; }
+      .col-payment { display: none; }
+    }
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { padding: 20px 16px 48px; }
+      .table-head { display: none; }
+      .order-card {
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto auto;
+        gap: 8px;
+      }
+      .order-card > .col-orderid,
+      .order-card > .col-amount,
+      .order-card > .col-payment { grid-column: 1; }
+      .order-card > .col-action { grid-column: 2; grid-row: 1 / span 3; align-self: center; }
+      .order-card::before { display: none; }
+      .pagination-wrap { justify-content: center; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══════════ NAVBAR ══════════ -->
+  <header class="navbar">
+    <div class="nav-inner">
+
+      <a href="#" class="nav-logo">
+        <div class="nav-logo-box">
+          <img src="{% static 'images/outfito.png' %}" alt="Outfito">
+        </div>
+        <span class="nav-wordmark">OUTFITO</span>
+      </a>
+
+      <div class="nav-links hidden lg:flex">
+        <a href="#" class="active">Home</a>
+        <a href="{% url 'categories_page' %}">Categories</a>
+        <a href="{% url 'user_product_list' %}">New Arrivals</a>
+        <a href="#">About</a>
+      </div>
+
+      <div class="nav-right">
+        <div class="nav-search hidden md:flex">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Search outfits...">
+        </div>
+
+        {% if request.user.is_authenticated %}
+        <a href="{% url 'wishlist_view' %}" class="nav-icon-btn">
+          <i class="fa-regular fa-heart"></i>
+          {% if wishlist_count > 0 %}<span class="nav-badge">{{ wishlist_count }}</span>{% endif %}
+        </a>
+        {% else %}
+        <a href="{% url 'login' %}?next={{ request.path }}" class="nav-icon-btn">
+          <i class="fa-regular fa-heart"></i>
+        </a>
+        {% endif %}
+
+        <a href="{% url 'cart_view' %}" class="nav-icon-btn">
+          <i class="fa-solid fa-cart-shopping"></i>
+          <span class="nav-badge">{{ cart_count|default:0 }}</span>
+        </a>
+
+        <div class="nav-user-wrap">
+          {% if request.user.is_authenticated %}
+          <span id="userMenuBtn" class="nav-icon-btn">
+            <i class="fa-regular fa-user"></i>
+          </span>
+          <div id="userDropdown" class="hidden">
+            <a href="{% url 'profile' %}">Profile</a>
+            <a href="{% url 'order_list' %}" class="active-link">Orders</a>
+            <a href="{% url 'wallet' %}">Wallet</a>
+            <hr>
+            <a href="{% url 'logout' %}" class="logout">Logout</a>
+          </div>
+          {% else %}
+          <a href="{% url 'login' %}" class="nav-icon-btn">
+            <i class="fa-regular fa-user"></i>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="glow-line"></div>
+
+  <!-- ══════════ LAYOUT ══════════ -->
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <a href="javascript:history.back()" class="sidebar-back">
+        <i class="fa-solid fa-chevron-left"></i> Go Back
+      </a>
+      <nav class="sidebar-nav">
+        <a href="{% url 'profile' %}" class="sidebar-item"><i class="fa-regular fa-user"></i> Profile</a>
+        <a href="{% url 'address-list' %}" class="sidebar-item"><i class="fa-regular fa-map"></i> Address</a>
+        <a href="{% url 'order_list' %}" class="sidebar-item active"><i class="fa-solid fa-box"></i> My Orders</a>
+        <a href="{% url 'wishlist_view' %}" class="sidebar-item"><i class="fa-regular fa-heart"></i> Wishlist</a>
+        <a href="{% url 'wallet' %}" class="sidebar-item"><i class="fa-solid fa-wallet"></i> Wallet</a>
+      </nav>
+    </aside>
+
+    <!-- ══════════ MAIN CONTENT ══════════ -->
+    <main class="main">
+
+      <!-- PAGE HEADER -->
+      <div class="page-header">
+        <div class="page-title">My Orders</div>
+        <div class="page-subtitle">Track and manage your recent purchases and returns</div>
+      </div>
+
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+
+        <!-- Search form — carries status filter as hidden field -->
+        <form action="{% url 'order_list' %}" method="GET" class="search-bar" id="searchForm">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" name="q" value="{{ search_query }}"
+                 placeholder="Search by Order ID or Product..." autocomplete="off">
+          <input type="hidden" name="status" id="hiddenStatus" value="{{ status_filter }}">
+          <button type="submit" style="display:none;"></button>
+        </form>
+
+        <!-- Active filter pill (shown when a filter is applied) -->
+        {% if status_filter %}
+        <div class="active-filter-pill">
+          <i class="fa-solid fa-tag" style="font-size:9px;"></i>
+          {{ status_filter|capfirst }}
+          <a href="{% url 'order_list' %}{% if search_query %}?q={{ search_query }}{% endif %}"
+             title="Clear filter">×</a>
+        </div>
+        {% endif %}
+
+        <!-- Filter button + dropdown -->
+        <div style="position:relative;">
+          <button class="filter-btn" id="filterBtn" type="button">
+            <i class="fa-solid fa-sliders"></i> Filter
+          </button>
+          <div class="filter-dropdown" id="filterDropdown">
+            <div class="filter-label">Order Status</div>
+            <div>
+              <span class="filter-chip {% if not status_filter %}active{% endif %}"
+                    onclick="applyFilter('')">All</span>
+              <span class="filter-chip {% if status_filter == 'placed' %}active{% endif %}"
+                    onclick="applyFilter('placed')">Placed</span>
+              <span class="filter-chip {% if status_filter == 'confirmed' %}active{% endif %}"
+                    onclick="applyFilter('confirmed')">Confirmed</span>
+              <span class="filter-chip {% if status_filter == 'shipped' %}active{% endif %}"
+                    onclick="applyFilter('shipped')">Shipped</span>
+              <span class="filter-chip {% if status_filter == 'delivered' %}active{% endif %}"
+                    onclick="applyFilter('delivered')">Delivered</span>
+              <span class="filter-chip {% if status_filter == 'returned' %}active{% endif %}"
+                    onclick="applyFilter('returned')">Returned</span>
+              <span class="filter-chip {% if status_filter == 'cancelled' %}active{% endif %}"
+                    onclick="applyFilter('cancelled')">Cancelled</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE HEAD -->
+      <div class="table-head">
+        <span>Products</span>
+        <span>Order ID</span>
+        <span>Total Amount</span>
+        <span class="col-payment">Status</span>
+        <span></span>
+      </div>
+
+      <!-- ══════════ ORDER LIST ══════════ -->
+      <div id="orderList">
+
+        {% if orders %}
+          {% for order in orders %}
+            {% with first_item=order.items.all|first item_count=order.items.count %}
+
+            <div class="order-card">
+
+              <!-- ① PRODUCT COLUMN -->
+              <div class="prod-col">
+                <div class="thumb-stack">
+                  {% if item_count > 1 %}<div class="thumb-shadow"></div>{% endif %}
+
+                  {% if first_item and first_item.variant.image %}
+                  <img class="thumb-main" src="{{ first_item.variant.image.url }}"
+                       alt="{{ first_item.variant.product.name }}">
+                  {% else %}
+                  <div class="thumb-placeholder"><i class="fa-solid fa-shirt"></i></div>
+                  {% endif %}
+
+                  {% if item_count > 1 %}
+                  <span class="thumb-more">+{{ item_count|add:"-1" }}</span>
+                  {% endif %}
+                </div>
+
+                <div class="prod-info">
+                  <div class="prod-name">
+                    {% if first_item %}{{ first_item.variant.product.name }}{% else %}—{% endif %}
+                  </div>
+                  <div class="prod-meta">
+                    {% if first_item %}
+                      {{ first_item.variant.color }}
+                      {% if first_item.variant.size %} · {{ first_item.variant.size }}{% endif %}
+                      {% if item_count > 1 %} &amp; {{ item_count|add:"-1" }} more{% endif %}
+                    {% endif %}
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- ② ORDER ID + DATE -->
+              <div class="col-orderid">
+                <div class="order-id-col">{{ order.order_number }}</div>
+                <div class="order-date">{{ order.created_at|date:"M d, Y" }}, {{ order.created_at|date:"g:i A" }}</div>
+              </div>
+
+              <!-- ③ TOTAL AMOUNT -->
+              <div class="col-amount">
+                <div class="amount-col">₹{{ order.total_amount }}</div>
+              </div>
+
+              <!-- ④ PAYMENT STATUS -->
+<div class="col-payment">
+{% with s=order.order_status|lower %}
+<span class="status-badge
+  {% if s == 'placed' %}badge-placed
+  {% elif s == 'confirmed' %}badge-confirmed
+  {% elif s == 'processing' %}badge-confirmed
+  {% elif s == 'shipped' %}badge-shipped
+  {% elif s == 'out for delivery' %}badge-shipped
+  {% elif s == 'delivered' %}badge-delivered
+  {% elif s == 'cancelled' %}badge-cancelled
+  {% elif 'return' in s %}badge-returned
+  {% else %}badge-pending{% endif %}">
+  
+  {{ order.order_status|default:"Placed" }}
+  
+</span>
+{% endwith %}
+</div>
+
+              <!-- ⑤ VIEW BUTTON -->
+              <div class="col-action">
+                <a href="{% url 'order_detail' order.id %}" class="view-btn">
+                  View <i class="fa-solid fa-arrow-right"></i>
+                </a>
+              </div>
+
+            </div>
+            {% endwith %}
+          {% endfor %}
+
+        {% else %}
+        <!-- EMPTY STATE -->
+        <div class="empty-state">
+          <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+          <div class="empty-title">
+            {% if search_query or status_filter %}No Results{% else %}No Orders Yet{% endif %}
+          </div>
+          <p class="empty-sub">
+            {% if search_query or status_filter %}
+              No orders match your search or filter.<br>
+              <a href="{% url 'order_list' %}" style="color:var(--accent);text-decoration:none;">Clear filters</a>
+            {% else %}
+              Looks like you haven't placed any orders.<br>Start shopping to see them here!
+            {% endif %}
+          </p>
+          {% if not search_query and not status_filter %}
+          <a href="{% url 'user_product_list' %}" class="shop-btn">
+            <i class="fa-solid fa-bag-shopping"></i> Shop Now
+          </a>
+          {% endif %}
+        </div>
+        {% endif %}
+
+      </div>
+      <!-- /orderList -->
+
+      <!-- ══════════ PAGINATION ══════════ -->
+      {% if page_obj.paginator.num_pages > 1 %}
+      <div class="pagination-wrap">
+
+        <div class="pag-info">
+          Showing {{ page_obj.start_index }}–{{ page_obj.end_index }}
+          of {{ page_obj.paginator.count }} order{{ page_obj.paginator.count|pluralize }}
+        </div>
+
+        <div class="pag-controls">
+
+          <!-- Previous -->
+          {% if page_obj.has_previous %}
+          <a class="pag-btn"
+             href="?q={{ search_query }}&status={{ status_filter }}&page={{ page_obj.previous_page_number }}">
+            <i class="fa-solid fa-chevron-left"></i>
+          </a>
+          {% else %}
+          <span class="pag-btn disabled"><i class="fa-solid fa-chevron-left"></i></span>
+          {% endif %}
+
+          <!-- Page numbers (windowed: always show first, last, and ±2 around current) -->
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <span class="pag-btn pag-current">{{ num }}</span>
+
+            {% elif num == 1 or num == page_obj.paginator.num_pages %}
+              <a class="pag-btn"
+                 href="?q={{ search_query }}&status={{ status_filter }}&page={{ num }}">{{ num }}</a>
+
+            {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+              <a class="pag-btn"
+                 href="?q={{ search_query }}&status={{ status_filter }}&page={{ num }}">{{ num }}</a>
+
+            {% elif num == page_obj.number|add:"-3" or num == page_obj.number|add:"3" %}
+              <span class="pag-btn pag-ellipsis">…</span>
+            {% endif %}
+          {% endfor %}
+
+          <!-- Next -->
+          {% if page_obj.has_next %}
+          <a class="pag-btn"
+             href="?q={{ search_query }}&status={{ status_filter }}&page={{ page_obj.next_page_number }}">
+            <i class="fa-solid fa-chevron-right"></i>
+          </a>
+          {% else %}
+          <span class="pag-btn disabled"><i class="fa-solid fa-chevron-right"></i></span>
+          {% endif %}
+
+        </div>
+      </div>
+      {% endif %}
+      <!-- /pagination -->
+
+    </main>
+  </div>
+  <!-- /layout -->
+
+
+  <script>
+    /* ══ USER DROPDOWN ══ */
+    const uBtn  = document.getElementById('userMenuBtn');
+const uMenu = document.getElementById('userDropdown');
+
+if (uBtn && uMenu) {
+
+  let isOpen = false;
+
+  uBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+
+    if (isOpen) {
+      uMenu.classList.add('hidden');
+    } else {
+      uMenu.classList.remove('hidden');
+    }
+
+    isOpen = !isOpen;
+  });
+
+  document.addEventListener('click', function () {
+    uMenu.classList.add('hidden');
+    isOpen = false;
+  });
+
+  uMenu.addEventListener('click', function (e) {
+    e.stopPropagation();
+  });
+}
+
+    /* ══ APPLY FILTER — sets hidden field and submits to backend ══ */
+    function applyFilter(status) {
+      document.getElementById('hiddenStatus').value = status;
+      document.getElementById('searchForm').submit();
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,358 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Collections | Outfito</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:           #0a0f1a;
+      --bg-card:      #111827;
+      --bg-soft:      #0d1424;
+      --bg-input:     #161f2e;
+      --border:       rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.14);
+      --text:         #f8fafc;
+      --text-muted:   #94a3b8;
+      --text-sub:     #4b5563;
+      --primary:      #7c3aed;
+      --accent:       #10b981;
+      --font-display: 'Cormorant Garamond', serif;
+      --font-body:    'DM Sans', sans-serif;
+      --radius:       0.5rem;
+      --radius-lg:    0.875rem;
+      --radius-xl:    1.5rem;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: var(--font-body); font-size: 14px;
+      line-height: 1.6; min-height: 100vh;
+    }
+    a { text-decoration: none; color: inherit; }
+    img { display: block; max-width: 100%; }
+    button { font-family: var(--font-body); cursor: pointer; }
+
+    /* ── HERO SECTION ── */
+    .hero {
+      position: relative; overflow: hidden;
+      padding: 7rem 2.5rem 4rem;
+      text-align: center;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% -10%, rgba(124,58,237,0.18) 0%, transparent 70%),
+        var(--bg);
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 50%, rgba(124,58,237,.06) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(16,185,129,.04) 0%, transparent 40%);
+      pointer-events: none;
+    }
+    .hero-eyebrow {
+      font-size: .65rem; font-weight: 700; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--primary);
+      margin-bottom: 1rem; display: block;
+      animation: fadeUp .6s ease both;
+    }
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 700; line-height: 1.05;
+      color: var(--text); letter-spacing: -.02em;
+      margin-bottom: 1.25rem;
+      animation: fadeUp .6s .1s ease both;
+    }
+    .hero-title em { font-style: italic; color: rgba(248,250,252,.65); }
+    .hero-sub {
+      font-size: .9rem; color: var(--text-muted);
+      max-width: 480px; margin: 0 auto;
+      line-height: 1.8;
+      animation: fadeUp .6s .2s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── CATEGORIES GRID ── */
+    .categories-section {
+      max-width: 1200px; margin: 0 auto;
+      padding: 3rem 2.5rem 5rem;
+    }
+.cat-grid {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scroll-snap-type: x mandatory;
+}
+
+/* smooth scroll */
+.cat-grid::-webkit-scrollbar {
+  height: 6px;
+}
+.cat-grid::-webkit-scrollbar-thumb {
+  background: #222;
+  border-radius: 10px;
+}: 1.25rem;
+    }
+
+    .cat-card:first-child {
+      grid-column: 1 / -1;
+      aspect-ratio: 21 / 9;
+    }
+
+    .cat-card {
+      position: relative;
+      aspect-ratio: 3 / 4;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      cursor: pointer;
+      display: block;
+      border: 1px solid var(--border);
+      transition: transform .3s ease, border-color .3s ease;
+        min-width: 360px;
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+    }
+    .cat-card:hover { transform: translateY(-6px); border-color: rgba(124,58,237,.4); }
+
+    .cat-bg {
+      position: absolute; inset: 0;
+      background: var(--bg-card);
+      transition: transform .5s cubic-bezier(.25,.46,.45,.94);
+    }
+    .cat-card:hover .cat-bg { transform: scale(1.06); }
+    .cat-bg img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center;
+    }
+    .cat-card:hover .cat-bg img { opacity: .7; }
+
+    .cat-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(10,15,26,0.92) 0%,
+        rgba(10,15,26,0.5) 40%,
+        rgba(10,15,26,0.1) 100%
+      );
+    }
+
+    .cat-content {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      justify-content: flex-end;
+      padding: 1.75rem 2rem;
+      z-index: 2;
+    }
+    .cat-eyebrow {
+      font-size: .58rem; font-weight: 700; letter-spacing: .16em;
+      text-transform: uppercase; color: var(--accent);
+      margin-bottom: .4rem; opacity: .85;
+    }
+    .cat-name {
+      font-family: var(--font-display);
+      font-size: 2rem; font-weight: 700;
+      color: var(--text); line-height: 1.1;
+      letter-spacing: -.01em;
+      transform: translateY(4px);
+      transition: transform .3s ease;
+    }
+    .cat-card:hover .cat-name { transform: translateY(0); }
+
+    .cat-meta {
+      display: flex; align-items: center; gap: .6rem;
+      margin-top: .6rem;
+      transform: translateY(8px); opacity: 0;
+      transition: transform .3s .05s ease, opacity .3s .05s ease;
+    }
+    .cat-card:hover .cat-meta { transform: translateY(0); opacity: 1; }
+    .cat-count { font-size: .72rem; color: var(--text-muted); }
+    .cat-arrow {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(124,58,237,.25); border: 1px solid rgba(124,58,237,.4);
+      display: flex; align-items: center; justify-content: center;
+      margin-left: auto;
+    }
+    .cat-arrow i { font-size: .75rem; color: #a78bfa; }
+
+    .cat-badge {
+      position: absolute; top: 1.1rem; right: 1.1rem; z-index: 3;
+      background: rgba(10,15,26,.7); backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      font-size: .62rem; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--text-muted);
+      padding: 4px 10px; border-radius: 99px;
+    }
+
+    .grad-1 { background: linear-gradient(135deg, #1a0a3d 0%, #0a0f1a 100%); }
+    .grad-2 { background: linear-gradient(135deg, #0a1f1a 0%, #0a0f1a 100%); }
+    .grad-3 { background: linear-gradient(135deg, #1f0a0a 0%, #0a0f1a 100%); }
+    .grad-4 { background: linear-gradient(135deg, #0a1020 0%, #1a1a2e 100%); }
+    .grad-5 { background: linear-gradient(135deg, #1a1500 0%, #0a0f1a 100%); }
+
+    /* ── FOOTER ── */
+    .footer { background: var(--bg-soft); border-top: 1px solid var(--border); padding: 1.5rem 2.5rem; text-align: center; font-size: .72rem; color: var(--text-sub); }
+
+    @media (max-width: 768px) {
+      .cat-grid { grid-template-columns: 1fr; }
+      .cat-card { height: 180px; }
+      .categories-section { padding: 2rem 1.25rem 3rem; }
+      .hero { padding: 5rem 1.25rem 2.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ======= NAVBAR ======= -->
+<nav class="fixed top-0 w-full z-50 bg-[#0a0e1a]/90 backdrop-blur-md border-b border-white/5 py-3 px-6">
+<div class="max-w-[1440px] mx-auto flex justify-between items-center">
+    <!-- LOGO -->
+    <a href="#" class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-white rounded flex items-center justify-center">
+            <img src="{% static 'images/outfito.png' %}" alt="logo">
+        </div>
+        <span class="text-xl font-black italic tracking-tighter uppercase">OUTFITO</span>
+    </a>
+    <!-- CENTER MENU -->
+    <div class="hidden lg:flex items-center gap-8 text-xs font-bold text-gray-400 uppercase tracking-widest">
+        <a href="#" class="hover:text-white transition">Home</a>
+        <a href="{% url 'categories_page' %}" class="text-white border-b-2 border-emerald-500 pb-1">Categories</a>
+        <a href="{% url 'user_product_list' %}" class="hover:text-white transition">Shop</a>
+    </div>
+    <!-- RIGHT -->
+    <div class="flex items-center gap-6 text-white">
+        <!-- SEARCH -->
+        <div class="hidden md:flex bg-[#161b29] border border-white/10 px-3 py-1.5 rounded-full items-center gap-2">
+            <i class="fa-solid fa-magnifying-glass text-gray-500 text-xs"></i>
+            <input type="text" placeholder="Search outfits..." class="bg-transparent text-xs focus:outline-none text-white w-36 font-bold placeholder-gray-600">
+        </div>
+        <!-- WISHLIST -->
+        {% if request.user.is_authenticated %}
+        <a href="{% url 'wishlist_view' %}">
+        {% else %}
+        <a href="{% url 'login' %}?next={{ request.path }}">
+        {% endif %}
+            <div class="relative">
+                <i class="fa-regular fa-heart cursor-pointer hover:text-emerald-500 transition"></i>
+                {% if wishlist_count > 0 %}
+                <span class="absolute -top-2 -right-2 bg-emerald-500 text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                    {{ wishlist_count }}
+                </span>
+                {% endif %}
+            </div>
+        </a>
+        <!-- CART -->
+        <a href="{% url 'cart_view' %}">
+            <div class="relative">
+                <i class="fa-solid fa-cart-shopping cursor-pointer hover:text-emerald-500 transition"></i>
+                <span class="absolute -top-2 -right-2 bg-emerald-500 text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                    {{ cart_count|default:0 }}
+                </span>
+            </div>
+        </a>
+        <!-- USER -->
+        <div class="relative">
+        {% if request.user.is_authenticated %}
+            <i id="userMenuBtn" class="fa-regular fa-user cursor-pointer hover:text-emerald-500 transition"></i>
+            <div id="userDropdown"
+                 class="absolute right-0 mt-3 w-48 bg-[#161b29] border border-white/10 rounded-lg shadow-lg hidden">
+                <a href="{% url 'profile' %}" class="block px-4 py-3 text-sm hover:bg-white/5">Profile</a>
+                <a href="{% url 'address-list' %}" class="block px-4 py-3 text-sm hover:bg-white/5">Address</a>
+                <a href="{% url 'wallet' %}" class="block px-4 py-3 text-sm hover:bg-white/5">Wallet</a>
+                <a href="{% url 'order_list' %}" class="block px-4 py-3 text-sm hover:bg-white/5">Orders</a>
+                <hr class="border-white/10">
+                <a href="{% url 'logout' %}" class="block px-4 py-3 text-sm text-red-400 hover:bg-white/5">Logout</a>
+            </div>
+        {% else %}
+            <a href="{% url 'login' %}">
+                <i class="fa-regular fa-user cursor-pointer hover:text-emerald-500 transition"></i>
+            </a>
+        {% endif %}
+        </div>
+    </div>
+</div>
+</nav>
+<!-- ======= END NAVBAR ======= -->
+
+<!-- HERO -->
+<section class="hero">
+  <span class="hero-eyebrow">Our Collections</span>
+  <h1 class="hero-title">Find Your <em>Identity</em></h1>
+  <p class="hero-sub">
+    Curated drops across every style. From old money classics to retro jerseys —
+    discover the collection that speaks your language.
+  </p>
+</section>
+
+<!-- CATEGORY GRID -->
+<section class="categories-section">
+  <div class="cat-grid">
+
+    {% for category in categories %}
+    <a href="{% url 'user_product_list' %}?category={{ category.id }}"
+       class="cat-card">
+
+      <!-- Background image or gradient -->
+      <div class="cat-bg {% if not category.image %}grad-{{ forloop.counter|add:0 }}{% endif %}">
+        {% if category.image %}
+          <img src="{{ category.image.url }}" alt="{{ category.category_name }}" loading="lazy"/>
+        {% endif %}
+      </div>
+
+      <!-- Overlay -->
+      <div class="cat-overlay"></div>
+
+      <!-- Product count badge -->
+      {% if category.product_count %}
+      <div class="cat-badge">{{ category.product_count }} styles</div>
+      {% endif %}
+
+      <!-- Content -->
+      <div class="cat-content">
+        <div class="cat-eyebrow">Collection</div>
+        <div class="cat-name">{{ category.category_name }}</div>
+        <div class="cat-meta">
+          {% if category.product_count %}
+          <span class="cat-count">{{ category.product_count }} products</span>
+          {% endif %}
+          <div class="cat-arrow">
+            <span class="material-icons-outlined">arrow_forward</span>
+          </div>
+        </div>
+      </div>
+
+    </a>
+    {% empty %}
+    <div style="grid-column:1/-1;text-align:center;padding:4rem;color:var(--text-muted);">
+      <span class="material-icons-outlined" style="font-size:2.5rem;display:block;margin-bottom:.75rem;color:var(--text-sub);">category</span>
+      No collections available yet.
+    </div>
+    {% endfor %}
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  © 2024 Outfito. All Rights Reserved. &nbsp;·&nbsp; Made with ♥ in India
+</footer>
+
+<script>
+const btn = document.getElementById("userMenuBtn");
+const menu = document.getElementById("userDropdown");
+if(btn && menu){
+    btn.onclick = (e) => { e.stopPropagation(); menu.classList.toggle("hidden"); };
+    document.onclick = () => { menu.classList.add("hidden"); };
+}
+</script>
+</body>
+</html>

@@ -15,7 +15,6 @@ urlpatterns = [
     path('back-login/',views.back_to_login, name='back_to_login'),
     path('address/', views.address, name='address'),
     path('wallet/', views.wallet, name='wallet'),
-    path('orders/', views.orders, name='orders'),
     path('logout/', views.logout_view, name='logout'),
     
 ]
