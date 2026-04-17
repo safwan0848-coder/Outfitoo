@@ -7,6 +7,7 @@ from django.db.models import Q, Min, Max,Count,Avg
 from admin_side.categories_management.models import Category
 from user_side.cart.models import Cart
 from django.views.decorators.cache import never_cache
+from django.http import JsonResponse
 
 @never_cache
 def product_list(request):
@@ -141,7 +142,7 @@ def product_list(request):
         )
 
     categories = Category.objects.filter(
-        is_active=True
+        is_active=True,is_deleted=False,
     ).order_by('category_name')
 
     price_bounds = Product.objects.filter(
@@ -190,6 +191,45 @@ def product_list(request):
 
 def is_user(user):
     return user.is_authenticated and not user.is_staff
+
+def search_products_ajax(request):
+    query = request.GET.get('q', '').strip()
+    if not query:
+        return JsonResponse({'products': []})
+
+    products = Product.objects.filter(
+        is_deleted=False,
+        is_listed=True,
+        category__is_active=True
+    ).filter(
+        Q(name__icontains=query) |
+        Q(description__icontains=query) |
+        Q(category__category_name__icontains=query)
+    ).prefetch_related('variants').distinct()[:10]
+
+    results = []
+    for product in products:
+        variant = product.variants.filter(is_active=True, stock__gt=0).first()
+        if not variant:
+            variant = product.variants.filter(is_active=True).first()
+
+        price = variant.price if variant else 0
+
+        image_url = ""
+        if product.image_side:
+            image_url = product.image_side.url
+        elif variant and variant.image:
+            image_url = variant.image.url
+
+        results.append({
+            'id': product.id,
+            'name': product.name,
+            'price': str(price),
+            'image_url': image_url,
+            'url': f"/products/products/{product.id}/"
+        })
+
+    return JsonResponse({'products': results})
 
 
 @never_cache

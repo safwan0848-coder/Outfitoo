@@ -1,13 +1,11 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Order {{ order.order_number }} – OUTFITO</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
+
+{% block title %}order detail{% endblock %}
+
+{% block content %}
+
+ <style>
     @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
 
     :root {
@@ -20,31 +18,7 @@
     html, body { min-height: 100%; }
     body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
 
-    /* ── NAVBAR ── */
-    .navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: rgba(7,13,26,0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); height: 60px; display: flex; align-items: center; padding: 0 28px; }
-    .nav-inner { max-width: 1440px; width: 100%; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-    .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; color: var(--text); flex-shrink: 0; }
-    .nav-logo-box { width: 30px; height: 30px; background: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-    .nav-logo-box img { width: 22px; height: 22px; object-fit: contain; }
-    .nav-wordmark { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2.5px; }
-    .nav-links { display: flex; align-items: center; gap: 32px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; }
-    .nav-links a { text-decoration: none; color: inherit; transition: color .2s; }
-    .nav-links a:hover, .nav-links a.active { color: var(--text); }
-    .nav-right { display: flex; align-items: center; gap: 18px; }
-    .nav-search { display: flex; align-items: center; gap: 8px; background: rgba(16,27,48,0.9); border: 1px solid var(--border); border-radius: 100px; padding: 6px 14px; }
-    .nav-search i { font-size: 11px; color: var(--muted); }
-    .nav-search input { background: transparent; border: none; outline: none; font-size: 12px; color: var(--text); font-family: 'DM Sans', sans-serif; width: 130px; }
-    .nav-search input::placeholder { color: var(--muted); }
-    .nav-icon-btn { position: relative; color: #7a8faf; font-size: 16px; cursor: pointer; transition: color .2s; text-decoration: none; display: inline-flex; align-items: center; }
-    .nav-icon-btn:hover { color: var(--text); }
-    .nav-badge { position: absolute; top: -7px; right: -8px; background: var(--accent2); color: #000; font-size: 8px; font-weight: 800; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--bg); }
-    .nav-user-wrap { position: relative; }
-    #userDropdown { position: absolute; right: 0; top: calc(100% + 10px); width: 180px; background: #0c1424; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); z-index: 500; }
-    #userDropdown a { display: block; padding: 10px 16px; font-size: 13px; color: var(--text); text-decoration: none; transition: background .15s; }
-    #userDropdown a:hover { background: rgba(255,255,255,0.05); }
-    #userDropdown a.accent-link { color: var(--accent); }
-    #userDropdown hr { border: none; border-top: 1px solid rgba(255,255,255,0.08); }
-    #userDropdown a.logout { color: #f87171; }
+    
     .glow-line { position: fixed; top: 60px; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent 10%, rgba(0,229,255,0.07) 50%, transparent 90%); pointer-events: none; z-index: 199; }
 
     /* ── PAGE ── */
@@ -159,6 +133,85 @@
     .action-btn.invoice-btn:hover { background: rgba(59,223,176,0.05); }
     .action-btn.disabled { opacity: .38; cursor: not-allowed; pointer-events: none; }
 
+    /* RETURN TRACKER */
+    .item-return-tracker {
+      margin: 15px 0 10px;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .irt-header {
+      font-size: 11px;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+    .irt-status { font-weight: bold; text-transform: uppercase; margin-left: 6px; }
+    .irt-status.pending { color: #fbbf24; }
+    .irt-status.approved { color: #4ade80; }
+    .irt-status.rejected { color: #f87171; }
+    .irt-status.picked { color: var(--accent2); }
+    
+    .irt-bar-container {
+      position: relative;
+      padding-top: 5px;
+      margin-bottom: 5px;
+    }
+    .irt-bar-bg {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      height: 3px;
+      background: var(--surface);
+      border-radius: 2px;
+    }
+    .irt-bar-fill {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    .irt-steps {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      z-index: 2;
+    }
+    .irt-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      width: 33.33%;
+    }
+    .irt-step::before {
+      content: '';
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      transition: all 0.3s ease;
+    }
+    .irt-step.done::before {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 8px rgba(59, 223, 176, 0.4);
+    }
+    .irt-step span {
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .irt-step.done span {
+      color: var(--text);
+    }
+
     /* ── FOOTER ── */
     footer { background: var(--surface); border-top: 1px solid var(--border); margin-top: 60px; padding: 40px 28px 24px; }
     .footer-inner { max-width: 1200px; margin: 0 auto; }
@@ -270,58 +323,8 @@
     .btn-modal-confirm.return-confirm { background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #000; }
     .btn-modal-confirm.return-confirm:hover { opacity: .9; }
   </style>
-</head>
-<body>
 
-<!-- ══════════ NAVBAR ══════════ -->
-<header class="navbar">
-  <div class="nav-inner">
-    <a href="#" class="nav-logo">
-      <div class="nav-logo-box">
-        <img src="{% static 'images/outfito.png' %}" alt="Outfito">
-      </div>
-      <span class="nav-wordmark">OUTFITO</span>
-    </a>
-    <div class="nav-links hidden lg:flex">
-      <a href="#" class="active">Home</a>
-      <a href="{% url 'categories_page' %}">Categories</a>
-      <a href="{% url 'user_product_list' %}">New Arrivals</a>
-      <a href="#">About</a>
-    </div>
-    <div class="nav-right">
-      <div class="nav-search hidden md:flex">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Search outfits...">
-      </div>
-      {% if request.user.is_authenticated %}
-      <a href="{% url 'wishlist_view' %}" class="nav-icon-btn">
-        <i class="fa-regular fa-heart"></i>
-        {% if wishlist_count > 0 %}<span class="nav-badge">{{ wishlist_count }}</span>{% endif %}
-      </a>
-      {% else %}
-      <a href="{% url 'login' %}?next={{ request.path }}" class="nav-icon-btn"><i class="fa-regular fa-heart"></i></a>
-      {% endif %}
-      <a href="{% url 'cart_view' %}" class="nav-icon-btn">
-        <i class="fa-solid fa-cart-shopping"></i>
-        <span class="nav-badge">{{ cart_count|default:0 }}</span>
-      </a>
-      <div class="nav-user-wrap">
-        {% if request.user.is_authenticated %}
-        <span id="userMenuBtn" class="nav-icon-btn"><i class="fa-regular fa-user"></i></span>
-        <div id="userDropdown" class="hidden">
-          <a href="{% url 'profile' %}">Profile</a>
-          <a href="{% url 'order_list' %}" class="accent-link">Orders</a>
-          <a href="{% url 'wallet' %}">Wallet</a>
-          <hr>
-          <a href="{% url 'logout' %}" class="logout">Logout</a>
-        </div>
-        {% else %}
-        <a href="{% url 'login' %}" class="nav-icon-btn"><i class="fa-regular fa-user"></i></a>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-</header>
+
 <div class="glow-line"></div>
 
 <!-- ══════════ PAGE ══════════ -->
@@ -336,9 +339,9 @@
     <div>
       <div class="order-title-row">
         <div class="order-number">Order #{{ order.order_number }}</div>
-        {% with p=order.payment_status|lower %}
-        <span class="status-badge {% if p == 'paid' or p == 'success' %}badge-paid{% elif p == 'pending' %}badge-pending{% elif p == 'failed' %}badge-failed{% else %}badge-placed{% endif %}">
-          {{ order.payment_status }}
+        {% with s=order.order_status|lower %}
+        <span class="status-badge {% if s == 'delivered' %}badge-delivered{% elif s == 'cancelled' %}badge-cancelled{% elif s == 'shipped' or s == 'out for delivery' %}badge-shipped{% else %}badge-pending{% endif %}">
+          {{ order.order_status }}
         </span>
         {% endwith %}
       </div>
@@ -390,11 +393,27 @@
             </div>
             
             {% if item.latest_return %}
-            <div style="font-size: 11px; margin-top: 5px; margin-bottom: 10px; color: {% if item.latest_return.status == 'Pending' %}#fbbf24{% elif item.latest_return.status == 'Approved' %}#4ade80{% else %}#f87171{% endif %}; font-weight: bold;">
-              Return Request: {{ item.latest_return.status }}
-              {% if item.latest_return.status == 'Rejected' %}
-                <span style="color:var(--muted); font-weight:normal; margin-left:5px;">(Item cannot be returned)</span>
+            <div class="item-return-tracker">
+              <div class="irt-header">
+                <strong>Return Status:</strong> 
+                {% with status=item.latest_return.status %}
+                <span class="irt-status {{ status|lower|cut:' ' }}">{{ status }}</span>
+                {% if status == 'Rejected' %}
+                  <span style="color:var(--muted); font-weight:normal; margin-left:5px;">(Declined)</span>
+                {% endif %}
+              </div>
+              {% if status != 'Rejected' %}
+              <div class="irt-bar-container">
+                <div class="irt-bar-bg"></div>
+                <div class="irt-bar-fill" style="width: {% if status == 'Approved' %}50%{% elif status == 'Picked Up' %}100%{% else %}0%{% endif %};"></div>
+                <div class="irt-steps">
+                  <div class="irt-step done"><span>Request</span></div>
+                  <div class="irt-step {% if status == 'Approved' or status == 'Picked Up' %}done{% endif %}"><span>Approve</span></div>
+                  <div class="irt-step {% if status == 'Picked Up' %}done{% endif %}"><span>Pickup</span></div>
+                </div>
+              </div>
               {% endif %}
+              {% endwith %}
             </div>
             {% endif %}
 
@@ -464,45 +483,7 @@
         {% else %}
         
         <div class="tracker-wrap" style="position: relative;">
-          <!-- RETURN TRACKER (Overlaid or separated if a return exists) -->
-          {% if order.return_requests.all %}
-          {% with req=order.return_requests.last %}
-          <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border);">
-              <h4 style="margin: 0 0 10px 0; font-size: 14px; text-transform: uppercase; color: var(--accent2); text-align: center;">Return Tracking</h4>
-              {% if req.status == 'Rejected' %}
-              <div style="text-align: center; padding: 10px;">
-                <i class="fa-solid fa-xmark-circle" style="font-size: 24px; margin-bottom: 10px; display: block; color: var(--danger);"></i>
-                <span style="color: var(--danger); font-weight: bold; font-size: 14px;">Return Request Rejected</span>
-              </div>
-              {% else %}
-              <div class="tracker" style="--progress: {% if req.status == 'Approved' %}50%{% elif req.status == 'Picked Up' %}100%{% else %}25%{% endif %}; padding:0;">
-                
-                <div class="tracker-step">
-                  <div class="step-circle done"><i class="fa-solid fa-check"></i></div>
-                  <div class="step-label done" style="font-size: 11px;">Requested</div>
-                </div>
-
-                <div class="tracker-step">
-                  <div class="step-circle {% if req.status == 'Approved' or req.status == 'Picked Up' %}done{% else %}active{% endif %}">
-                    <i class="fa-solid {% if req.status == 'Approved' or req.status == 'Picked Up' %}fa-check{% else %}fa-rotate-left{% endif %}"></i>
-                  </div>
-                  <div class="step-label {% if req.status == 'Approved' or req.status == 'Picked Up' %}done{% endif %}" style="font-size: 11px;">Approved</div>
-                </div>
-
-                <div class="tracker-step">
-                  <div class="step-circle {% if req.status == 'Picked Up' %}done{% elif req.status == 'Approved' %}active{% endif %}">
-                    <i class="fa-solid {% if req.status == 'Picked Up' %}fa-box-open{% else %}fa-truck-ramp-box{% endif %}"></i>
-                  </div>
-                  <div class="step-label {% if req.status == 'Picked Up' %}done{% endif %}" style="font-size: 11px;">
-                    {% if req.status == 'Picked Up' %}Picked Up{% else %}Pending Pickup{% endif %}
-                  </div>
-                </div>
-
-              </div>
-              {% endif %}
-          </div>
-          {% endwith %}
-          {% endif %}
+          <!-- RETURN TRACKER (Removed - Now Item Level) -->
 
           <div class="tracker" style="--progress: {% if s == 'delivered' %}100%{% elif s == 'out for delivery' %}75%{% elif s == 'shipped' %}50%{% elif s == 'pending' %}25%{% else %}10%{% endif %}">
 
@@ -840,16 +821,9 @@
 </div><!-- /modal-overlay -->
 
 
-<script>
-/* ── NAVBAR DROPDOWN ── */
-const uBtn = document.getElementById('userMenuBtn');
-const uMenu = document.getElementById('userDropdown');
-if (uBtn && uMenu) {
-  uBtn.addEventListener('click', e => { e.stopPropagation(); uMenu.classList.toggle('hidden'); });
-  document.addEventListener('click', () => uMenu.classList.add('hidden'));
-  uMenu.addEventListener('click', e => e.stopPropagation());
-}
 
+
+<script>
 /* ── TRACKER ANIMATION ── */
 document.addEventListener('DOMContentLoaded', () => {
   const t = document.querySelector('.tracker');
@@ -1058,5 +1032,4 @@ document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
 modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 </script>
 
-</body>
-</html>
+{% endblock %}

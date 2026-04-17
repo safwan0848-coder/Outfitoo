@@ -1,0 +1,278 @@
+{% load static %}
+
+<!-- PRE-REQUISITE: Ensure FontAwesome is loaded in your base.html -->
+<nav class="fixed top-0 w-full z-[999999] bg-[#0a0e1a] border-b border-white/10 shadow-lg">    <div class="max-w-[1440px] mx-auto flex justify-between items-center py-4 px-6 lg:px-10">
+
+        <!-- LOGO -->
+        <a href="/" class="flex items-center gap-3 group">
+            <div class="relative w-10 h-10 flex items-center justify-center rounded-xl bg-white shadow-[0_4px_15px_rgba(255,255,255,0.15)] group-hover:shadow-[0_4px_25px_rgba(16,185,129,0.4)] group-hover:-translate-y-0.5 transition-all duration-300 border border-white/40">
+                <img src="{% static 'images/outfito.png' %}" alt="Outfito" class="w-6 h-6 object-contain drop-shadow-sm group-hover:scale-110 transition-transform duration-300">
+            </div>
+            <span class="text-2xl font-black italic tracking-tighter uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] group-hover:text-emerald-400 transition-colors duration-300">
+                OUTFITO
+            </span>
+        </a>
+
+        <!-- CENTER MENU (DESKTOP) -->
+        <div class="hidden lg:flex items-center gap-10 text-xs font-bold text-gray-400 uppercase tracking-[0.15em]">
+            <a href="#" class="group relative text-white transition-colors duration-300 hover:text-white">
+                Home
+                <span class="absolute -bottom-2 left-0 w-full h-[2px] bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+            </a>
+            <a href="{% url 'categories_page' %}" class="group relative hover:text-white transition-colors duration-300">
+                Categories
+                <span class="absolute -bottom-2 left-0 w-0 h-[2px] bg-emerald-500 transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a href="{% url 'user_product_list' %}" class="group relative hover:text-white transition-colors duration-300">
+                Vault
+                <span class="absolute -bottom-2 left-0 w-0 h-[2px] bg-emerald-500 transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a href="#about" class="group relative hover:text-white transition-colors duration-300">
+                About
+                <span class="absolute -bottom-2 left-0 w-0 h-[2px] bg-emerald-500 transition-all duration-300 group-hover:w-full"></span>
+            </a>
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="flex items-center gap-5 lg:gap-7">
+
+            <!-- SEARCH (DESKTOP) -->
+            <div class="relative hidden md:block">
+                <div class="flex items-center bg-white/5 hover:bg-white/10 border border-white/10 focus-within:border-emerald-500/50 focus-within:bg-white/10 rounded-full px-4 py-2 transition-all duration-300 group">
+                    <i class="fa-solid fa-magnifying-glass text-gray-500 group-focus-within:text-emerald-500 transition-colors text-xs mr-3"></i>
+                    <input type="text" id="desktop-search-input" placeholder="Search outfits..." autocomplete="off" class="bg-transparent text-xs w-48 focus:w-64 focus:outline-none text-white font-medium placeholder-gray-500 transition-all duration-300">
+                </div>
+                
+                <!-- Desktop Search Results Dropdown -->
+                <div id="desktop-search-results" class="absolute right-0 mt-2 w-[380px] bg-[#121826]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] transform opacity-0 scale-95 pointer-events-none transition-all duration-200 origin-top-right overflow-hidden z-[999] flex flex-col max-h-[350px]">
+                    <div id="desktop-search-results-content" class="overflow-y-auto flex-1 p-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"></div>
+                    <div id="desktop-search-loading" class="hidden text-center py-4">
+                        <i class="fa-solid fa-circle-notch fa-spin text-emerald-500"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ICONS -->
+            <div class="flex items-center gap-5 text-gray-300">
+
+                <!-- WISHLIST -->
+                {% if request.user.is_authenticated %}
+                <a href="{% url 'wishlist_view' %}" class="relative group">
+                {% else %}
+                <a href="{% url 'login' %}?next={{ request.path }}" class="relative group">
+                {% endif %}
+                    <i class="fa-regular fa-heart text-xl group-hover:text-emerald-400 transition-colors duration-300"></i>
+                    {% if wishlist_count > 0 %}
+                    <span class="absolute -top-1.5 -right-2 bg-emerald-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold ring-2 ring-[#0a0e1a] shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                        {{ wishlist_count }}
+                    </span>
+                    {% endif %}
+                </a>
+
+                <!-- CART -->
+                <a href="{% url 'cart_view' %}" class="relative group">
+                    <i class="fa-solid fa-cart-shopping text-xl group-hover:text-emerald-400 transition-colors duration-300"></i>
+                    <span class="absolute -top-1.5 -right-2 bg-emerald-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold ring-2 ring-[#0a0e1a] shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                        {{ cart_count|default:0 }}
+                    </span>
+                </a>
+
+                <!-- USER ACCOUNT -->
+                <div class="relative">
+                    {% if request.user.is_authenticated %}
+                    
+                    <!-- USER ICON -->
+                    <button id="userMenuBtn" class="focus:outline-none group">
+                        <i class="fa-regular fa-user text-xl group-hover:text-emerald-400 transition-colors duration-300"></i>
+                    </button>
+
+                    <!-- PREMIUM DROPDOWN -->
+                    <div id="userDropdown" class="absolute right-0 mt-6 w-56 bg-[#121826]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] transform opacity-0 scale-95 pointer-events-none transition-all duration-200 origin-top-right overflow-hidden">
+                        
+                        <div class="px-4 py-3 border-b border-white/10 bg-white/5">
+                            <p class="text-xs text-gray-400 uppercase tracking-wider">Signed in as</p>
+                            <p class="text-sm font-bold text-white truncate">{{ request.user.username|default:"User" }}</p>
+                        </div>
+
+                        <div class="py-2">
+                            <a href="{% url 'profile' %}" class="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 hover:pl-6 transition-all duration-300">
+                                <i class="fa-regular fa-id-badge w-4 text-emerald-500/70"></i> Profile
+                            </a>
+                            <a href="{% url 'address-list' %}" class="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 hover:pl-6 transition-all duration-300">
+                                <i class="fa-solid fa-location-dot w-4 text-emerald-500/70"></i> Address
+                            </a>
+                            <a href="{% url 'wallet' %}" class="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 hover:pl-6 transition-all duration-300">
+                                <i class="fa-solid fa-wallet w-4 text-emerald-500/70"></i> Wallet
+                            </a>
+                            <a href="{% url 'order_list' %}" class="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 hover:pl-6 transition-all duration-300">
+                                <i class="fa-solid fa-box-open w-4 text-emerald-500/70"></i> Orders
+                            </a>
+                        </div>
+
+                        <div class="border-t border-white/10 py-2 bg-red-500/5">
+                            <a href="{% url 'logout' %}" class="flex items-center gap-3 px-5 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 hover:pl-6 transition-all duration-300">
+                                <i class="fa-solid fa-arrow-right-from-bracket w-4"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <!-- LOGIN -->
+                    <a href="{% url 'login' %}" class="group">
+                        <i class="fa-regular fa-user text-xl group-hover:text-emerald-400 transition-colors duration-300"></i>
+                    </a>
+                    {% endif %}
+                </div>
+
+                <!-- MOBILE MENU TOGGLE -->
+                <button id="mobileMenuBtn" class="lg:hidden text-gray-300 hover:text-white focus:outline-none ml-2">
+                    <i class="fa-solid fa-bars text-2xl"></i>
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MOBILE MENU DRAWER -->
+    <div id="mobileMenu" class="hidden lg:hidden border-t border-white/10 bg-[#0a0e1a]/95 backdrop-blur-2xl absolute w-full left-0 transition-all duration-300 overflow-hidden shadow-2xl">
+        <div class="px-6 py-6 flex flex-col gap-6">
+            <!-- Mobile Search -->
+            <div class="relative w-full z-[999]">
+                <div class="flex items-center bg-white/5 border border-white/10 rounded-full px-4 py-3">
+                    <i class="fa-solid fa-magnifying-glass text-gray-500 text-sm mr-3"></i>
+                    <input type="text" id="mobile-search-input" placeholder="Search outfits..." autocomplete="off" class="bg-transparent text-sm w-full focus:outline-none text-white font-medium">
+                </div>
+                
+                <!-- Mobile Search Results Dropdown -->
+                <div id="mobile-search-results" class="absolute top-[110%] left-0 w-full bg-[#121826]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] transform opacity-0 scale-95 pointer-events-none transition-all duration-200 origin-top overflow-hidden z-[999] flex flex-col max-h-[300px]">
+                    <div id="mobile-search-results-content" class="overflow-y-auto flex-1 p-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"></div>
+                    <div id="mobile-search-loading" class="hidden text-center py-4">
+                        <i class="fa-solid fa-circle-notch fa-spin text-emerald-500"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Links -->
+            <div class="flex flex-col gap-4 text-sm font-bold text-gray-400 uppercase tracking-[0.15em]">
+                <a href="#" class="text-white border-l-2 border-emerald-500 pl-3">Home</a>
+                <a href="{% url 'categories_page' %}" class="hover:text-white pl-3 transition-colors">Categories</a>
+                <a href="{% url 'user_product_list' %}" class="hover:text-white pl-3 transition-colors">Vault</a>
+                <a href="#about" class="hover:text-white pl-3 transition-colors">About</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInputs = [
+        { input: document.getElementById('desktop-search-input'), results: document.getElementById('desktop-search-results'), content: document.getElementById('desktop-search-results-content'), loading: document.getElementById('desktop-search-loading') },
+        { input: document.getElementById('mobile-search-input'), results: document.getElementById('mobile-search-results'), content: document.getElementById('mobile-search-results-content'), loading: document.getElementById('mobile-search-loading') }
+    ];
+
+    let searchTimeout = null;
+
+    searchInputs.forEach(({ input, results, content, loading }) => {
+        if (!input || !results || !content) return;
+
+        input.addEventListener('input', function(e) {
+            const query = e.target.value.trim();
+
+            if (query.length === 0) {
+                closeDropdown(results);
+                return;
+            }
+
+            // Show dropdown & loading
+            openDropdown(results);
+            content.innerHTML = '';
+            loading.classList.remove('hidden');
+
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                fetch(`/products/ajax/search/?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        loading.classList.add('hidden');
+                        renderSearchResults(data.products, content, query);
+                    })
+                    .catch(err => {
+                        loading.classList.add('hidden');
+                        content.innerHTML = '<div class="p-3 text-sm text-red-400 text-center">Error loading results.</div>';
+                        console.error('Search error:', err);
+                    });
+            }, 300); // 300ms debounce
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !results.contains(e.target)) {
+                closeDropdown(results);
+            }
+        });
+        
+        // Open on focus if there's text
+        input.addEventListener('focus', () => {
+            if (input.value.trim().length > 0 && content.innerHTML !== '') {
+                openDropdown(results);
+            }
+        });
+        
+        // Optional: Redirect when hitting enter
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const query = input.value.trim();
+                if (query.length > 0) {
+                    window.location.href = `/products/?q=${encodeURIComponent(query)}`;
+                }
+            }
+        });
+    });
+
+    function openDropdown(dropdown) {
+        dropdown.classList.remove("opacity-0", "scale-95", "pointer-events-none");
+        dropdown.classList.add("opacity-100", "scale-100");
+    }
+
+    function closeDropdown(dropdown) {
+        dropdown.classList.add("opacity-0", "scale-95", "pointer-events-none");
+        dropdown.classList.remove("opacity-100", "scale-100");
+    }
+
+    function renderSearchResults(products, container, query) {
+        if (!products || products.length === 0) {
+            container.innerHTML = `<div class="p-4 text-sm text-gray-400 text-center">No products found for "${query}"</div>`;
+            return;
+        }
+
+        let html = '';
+        products.forEach(product => {
+            const defaultImage = "{% static 'images/placeholder_product.png' %}";
+            const imageUrl = product.image_url ? product.image_url : defaultImage;
+            
+            html += `
+                <a href="${product.url}" class="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg transition-colors group">
+                    <img src="${imageUrl}" alt="${product.name}" class="w-12 h-12 object-cover rounded shadow ring-1 ring-white/10 group-hover:ring-emerald-500/50 transition-all" onerror="this.src='${defaultImage}'">
+                    <div class="flex-1 overflow-hidden">
+                        <h4 class="text-xs font-bold text-white truncate group-hover:text-emerald-400 transition-colors">${product.name}</h4>
+                        <p class="text-xs text-emerald-500/80 mt-0.5 font-medium">₹${product.price}</p>
+                    </div>
+                </a>
+            `;
+        });
+        
+        // Add a "view all" link if there are exactly 10 results (meaning there might be more)
+        if (products.length >= 5) {
+            html += `
+                <div class="mt-2 pt-2 border-t border-white/5">
+                    <a href="/products/?q=${encodeURIComponent(query)}" class="block w-full py-2 text-center text-xs font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded transition-all">
+                        View All Search Results <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+            `;
+        }
+
+        container.innerHTML = html;
+    }
+});
+</script>

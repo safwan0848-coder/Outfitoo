@@ -1,0 +1,52 @@
+<div class="fixed top-[64px] left-0 w-[260px] h-[calc(100vh-64px)] p-3 overflow-y-auto">
+    <!-- GO BACK -->
+    <a href="#" onclick="goBackOrHome(event)" class="nav-item">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Go Back
+    </a>
+
+    <a href="{% url 'profile' %}"
+       class="nav-item {% if 'profile' in request.path %}active{% endif %}">
+        <span class="material-symbols-outlined">person</span>
+        Profile
+    </a>
+
+    <a href="{% url 'address-list' %}"
+       class="nav-item {% if 'address' in request.path %}active{% endif %}">
+        <span class="material-symbols-outlined">location_on</span>
+        Address
+    </a>
+
+    <a href="{% url 'order_list' %}"
+       class="nav-item {% if 'order' in request.path %}active{% endif %}">
+        <span class="material-symbols-outlined">package_2</span>
+        Orders
+    </a>
+
+    <a href="{% url 'wishlist_view' %}"
+       class="nav-item {% if 'wishlist' in request.path %}active{% endif %}">
+        <span class="material-symbols-outlined">favorite</span>
+        Wishlist
+    </a>
+
+    <a href="{% url 'wallet' %}"
+       class="nav-item {% if 'wallet' in request.path %}active{% endif %}">
+        <span class="material-symbols-outlined">account_balance_wallet</span>
+        Wallet
+    </a>
+
+</div>
+
+<script>
+function goBackOrHome(e) {
+    e.preventDefault();
+
+    // If there is previous page
+    if (document.referrer && document.referrer !== window.location.href) {
+        window.history.back();
+    } else {
+        // fallback (change if needed)
+        window.location.href = "/";
+    }
+}
+</script>

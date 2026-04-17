@@ -1,12 +1,9 @@
+
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Checkout – OUTFITO</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<script src="https://cdn.tailwindcss.com"></script>
+
+{% block content %}
+
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
@@ -427,8 +424,7 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 </style>
-</head>
-<body>
+
 
 <!-- TOAST CONTAINER -->
 <div class="toast-container" id="toastContainer"></div>
@@ -481,59 +477,6 @@
   </div>
 </div>
 
-<!-- NAVBAR -->
-<nav class="fixed top-0 w-full z-50 bg-[#0a0e1a]/90 backdrop-blur-md border-b border-white/5 py-3 px-6">
-  <div class="max-w-[1440px] mx-auto flex justify-between items-center">
-    <a href="#" class="flex items-center gap-2">
-      <div class="w-8 h-8 bg-white rounded flex items-center justify-center">
-        <img src="{% static 'images/outfito.png' %}" alt="logo">
-      </div>
-      <span class="text-xl font-black italic tracking-tighter uppercase">OUTFITO</span>
-    </a>
-    <div class="hidden lg:flex items-center gap-8 text-xs font-bold text-gray-400 uppercase tracking-widest">
-      <a href="#" class="hover:text-white">Home</a>
-      <a href="{% url 'categories_page' %}" class="hover:text-white">Categories</a>
-      <a href="{% url 'user_product_list' %}" class="hover:text-white">Shop</a>
-    </div>
-    <div class="flex items-center gap-6">
-      <div class="hidden md:flex bg-[#161b29] px-3 py-1 rounded-full">
-        <input type="text" placeholder="Search outfits..." class="bg-transparent text-xs focus:outline-none text-white w-32">
-      </div>
-      {% if request.user.is_authenticated %}
-      <a href="{% url 'wishlist_view' %}">
-      {% else %}
-      <a href="{% url 'login' %}?next={{ request.path }}">
-      {% endif %}
-        <div class="relative text-gray-300 hover:text-white transition-colors">
-          <i class="fa-regular fa-heart"></i>
-          {% if wishlist_count > 0 %}
-          <span class="absolute -top-2 -right-2 bg-emerald-500 text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{{ wishlist_count }}</span>
-          {% endif %}
-        </div>
-      </a>
-      <a href="{% url 'cart_view' %}">
-        <div class="relative text-gray-300 hover:text-white transition-colors">
-          <i class="fa-solid fa-cart-shopping"></i>
-          <span class="absolute -top-2 -right-2 bg-emerald-500 text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{{ cart_count|default:0 }}</span>
-        </div>
-      </a>
-      <div class="relative">
-        {% if request.user.is_authenticated %}
-        <i id="userMenuBtn" class="fa-regular fa-user cursor-pointer text-gray-300 hover:text-white transition-colors"></i>
-        <div id="userDropdown" class="absolute right-0 mt-3 w-48 bg-[#161b29] border border-white/10 rounded-lg hidden text-sm">
-          <a href="{% url 'profile' %}" class="block px-4 py-2 hover:bg-white/5">Profile</a>
-          <a href="{% url 'order_list' %}" class="block px-4 py-2 hover:bg-white/5">Orders</a>
-          <a href="{% url 'wallet' %}" class="block px-4 py-2 hover:bg-white/5">Wallet</a>
-          <hr class="border-white/10">
-          <a href="{% url 'logout' %}" class="block px-4 py-2 text-red-400 hover:bg-white/5">Logout</a>
-        </div>
-        {% else %}
-        <a href="{% url 'login' %}"><i class="fa-regular fa-user text-gray-300 hover:text-white transition-colors"></i></a>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-</nav>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
 <!--  CHECKOUT FORM                                             -->
@@ -723,17 +666,7 @@
 
 </form>
 
-<!-- ═══════════════════════════════════════════════════════════ -->
-<!--  JAVASCRIPT                                                -->
-<!-- ═══════════════════════════════════════════════════════════ -->
 <script>
-/* ── NAVBAR DROPDOWN ── */
-const userBtn  = document.getElementById("userMenuBtn");
-const userMenu = document.getElementById("userDropdown");
-if (userBtn && userMenu) {
-  userBtn.addEventListener("click", (e) => { e.stopPropagation(); userMenu.classList.toggle("hidden"); });
-  document.addEventListener("click", () => userMenu.classList.add("hidden"));
-}
 
 /* ── TOAST ── */
 function showToast(message, type = 'error') {
@@ -879,6 +812,4 @@ function validateAndSubmit() {
   }
 }
 </script>
-
-</body>
-</html>
+{% endblock %}

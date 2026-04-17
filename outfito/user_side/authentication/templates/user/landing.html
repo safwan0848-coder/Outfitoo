@@ -1,15 +1,10 @@
+
+
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OUTFITO | Identity Through Wear</title>
+{% block content %}
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-
-    <style>
+<style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
 
         :root {
@@ -18,12 +13,7 @@
             --card-dark: #0f1422;
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-navy);
-            color: #ffffff;
-            -webkit-font-smoothing: antialiased;
-        }
+
 
         /* --- CAROUSEL SYSTEM --- */
         .hero-carousel {
@@ -195,17 +185,6 @@
             margin-right: 8px;
         }
 
-        /* --- NAV SEARCH --- */
-        .nav-search {
-            background: #161b29;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 99px;
-            padding: 0.4rem 1rem;
-            width: 240px;
-            display: flex;
-            align-items: center;
-        }
-
         /* CUSTOM ANIMATIONS */
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(30px); }
@@ -215,125 +194,7 @@
         .animate-up {
             animation: fadeInUp 0.8s ease forwards;
         }
-    </style>
-</head>
-<body>
-
-    <!-- NAV BAR -->
-<nav class="fixed top-0 w-full z-50 bg-[#0a0e1a]/90 backdrop-blur-md border-b border-white/5 py-3 px-6">
-<div class="max-w-[1440px] mx-auto flex justify-between items-center">
-
-    <!-- LOGO -->
-    <div class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-white rounded flex items-center justify-center">
-            <img src="{% static 'images/outfito.png' %}">
-        </div>
-        <span class="text-xl font-black italic tracking-tighter uppercase">OUTFITO</span>
-    </div>
-
-    <!-- CENTER MENU -->
-    <div class="hidden lg:flex items-center gap-8 text-xs font-bold text-gray-400 uppercase tracking-widest">
-        <a href="#" class="text-white border-b-2 border-emerald-500 pb-1">Home</a>
-        <a href="{% url 'categories_page' %}" class="hover:text-white transition">Categories</a>
-        <a href="{% url 'user_product_list' %}" class="hover:text-white transition">Vault</a>
-        <a href="#about" class="hover:text-white transition">About</a>
-    </div>
-
-    <!-- RIGHT SIDE -->
-    <div class="flex items-center gap-6">
-
-        <!-- SEARCH -->
-        <div class="nav-search hidden md:flex">
-            <i class="fa-solid fa-magnifying-glass text-gray-500 text-xs mr-2"></i>
-            <input type="text" placeholder="Search outfits..." class="bg-transparent text-[10px] w-full focus:outline-none text-white font-bold">
-        </div>
-
-        <div class="flex items-center gap-4 text-white">
-
-            <!-- WISHLIST -->
-<!-- WISHLIST -->
-{% if request.user.is_authenticated %}
-<a href="{% url 'wishlist_view' %}">
-{% else %}
-<a href="{% url 'login' %}?next={{ request.path }}">
-{% endif %}
-
-    <div class="relative">
-        <i class="fa-regular fa-heart cursor-pointer hover:text-emerald-500"></i>
-
-        {% if wishlist_count > 0 %}
-        <span class="absolute -top-2 -right-2 bg-emerald-500 text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-            {{ wishlist_count }}
-        </span>
-        {% endif %}
-    </div>
-
-</a>
-
-            <!-- CART -->
-<a href="{% url 'cart_view' %}">
-    <div class="relative">
-        <i class="fa-solid fa-cart-shopping cursor-pointer hover:text-emerald-500"></i>
-        <span class="absolute -top-2 -right-2 bg-emerald-500 text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-            {{ cart_count|default:0 }}
-        </span>
-    </div>
-</a>
-
-            <!-- USER ACCOUNT -->
-<div class="relative">
-
-{% if request.user.is_authenticated %}
-
-<!-- USER ICON -->
-<i id="userMenuBtn" class="fa-regular fa-user cursor-pointer hover:text-emerald-500"></i>
-
-<!-- DROPDOWN -->
-<div id="userDropdown"
-     class="absolute right-0 mt-3 w-48 bg-[#161b29] border border-white/10 rounded-lg shadow-lg hidden">
-
-    <a href="{% url 'profile' %}" class="block px-4 py-3 text-sm hover:bg-white/5">
-        Profile
-    </a>
-
-    <a href="{% url 'address-list' %}" class="block px-4 py-3 text-sm hover:bg-white/5">
-        Address
-    </a>
-
-    <a href="{% url 'wallet' %}" class="block px-4 py-3 text-sm hover:bg-white/5">
-        Wallet
-    </a>
-
-    <a href="{% url 'order_list' %}" class="block px-4 py-3 text-sm hover:bg-white/5">
-        Orders
-    </a>
-
-    <hr class="border-white/10">
-
-    <a href="{% url 'logout' %}" class="block px-4 py-3 text-sm text-red-400 hover:bg-white/5">
-        Logout
-    </a>
-
-</div>
-
-{% else %}
-
-<!-- LOGIN -->
-<a href="{% url 'login' %}">
-    <i class="fa-regular fa-user cursor-pointer hover:text-emerald-500"></i>
-</a>
-
-{% endif %}
-
-</div>
-
-        </div>
-
-    </div>
-
-</div>
-</nav>
-
+</style>
     <!-- HERO CAROUSEL (3 Slides) -->
     <section class="hero-carousel">
         <!-- Slide 1 -->
@@ -547,11 +408,7 @@
             © 2024 Outfito. All rights reserved.
         </div>
     </footer>
-
 <script>
-
-/* ---------------- HERO CAROUSEL ---------------- */
-
 let currentSlide = 0;
 const slides = document.querySelectorAll('.slide');
 const bars = [
@@ -613,32 +470,6 @@ function startProgress() {
 // Initialize carousel
 setSlide(0);
 
-
-
-/* ---------------- USER DROPDOWN MENU ---------------- */
-
-const userBtn = document.getElementById("userMenuBtn");
-const dropdown = document.getElementById("userDropdown");
-
-if(userBtn && dropdown){
-
-    userBtn.addEventListener("click", function(e){
-
-        e.stopPropagation();
-        dropdown.classList.toggle("hidden");
-
-    });
-
-    document.addEventListener("click", function(e){
-
-        if(!dropdown.contains(e.target) && !userBtn.contains(e.target)){
-            dropdown.classList.add("hidden");
-        }
-
-    });
-
-}
-
 </script>
-</body>
-</html>
+
+{% endblock %}

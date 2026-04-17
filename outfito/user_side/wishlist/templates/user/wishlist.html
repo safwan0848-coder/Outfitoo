@@ -1,1153 +1,417 @@
+{% extends 'dashboard_base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wishlist | OUTFITO</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+{% block dashboard_content %}
+
 <style>
+/* ── OUTFITO PREMIUM WISHLIST UI ── */
 :root {
-  --bg: #04080f;
-  --bg1: #070e1a;
-  --bg2: #0b1626;
-  --bg3: #0f1d33;
-  --glass: rgba(255,255,255,0.03);
-  --glass-border: rgba(255,255,255,0.06);
-  --glass-hover: rgba(255,255,255,0.06);
-  --accent: #00e5a0;
-  --accent-dim: rgba(0,229,160,0.12);
-  --accent-glow: rgba(0,229,160,0.2);
-  --accent2: #0af;
-  --red: #ff4d6d;
-  --red-dim: rgba(255,77,109,0.12);
-  --amber: #ffb830;
-  --text: #eef2ff;
-  --text2: #7a8ba8;
-  --text3: #3d5068;
-  --serif: 'Playfair Display', serif;
-  --sans: 'Outfit', sans-serif;
-  --r: 18px;
-  --rs: 10px;
+  --w-bg: transparent; /* Match dashboard base */
+  --w-card: #111827; 
+  --w-soft: #0d1424;
+  --w-input: #161f2e;
+  --w-border: rgba(255,255,255,0.07);
+  --w-border-hover: rgba(255,255,255,0.14);
+  --w-text: #f8fafc;
+  --w-muted: #94a3b8;
+  --w-sub: #4b5563;
+  --w-primary: #7c3aed;
+  --w-accent: #10b981;
+  --w-danger: #ef4444;
+  --w-radius: 0.875rem;
+  --w-serif: 'Cormorant Garamond', serif;
+  --w-sans: 'DM Sans', sans-serif;
 }
 
-*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-html { scroll-behavior: smooth; }
+.wl-wrap {
+  font-family: var(--w-sans);
+  color: var(--w-text);
+  padding: 1rem 0;
+}
 
-body {
-  font-family: var(--sans);
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
+/* Header */
+.wl-head {
   display: flex;
-  overflow-x: hidden;
-}
-
-/* ── NOISE TEXTURE OVERLAY ── */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 999;
-  opacity: 0.6;
-}
-
-/* ── AMBIENT GLOWS ── */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 60% 40% at 80% 0%, rgba(0,229,160,0.07) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 50% at 0% 100%, rgba(0,170,255,0.05) 0%, transparent 60%),
-    radial-gradient(ellipse 30% 30% at 50% 50%, rgba(0,229,160,0.02) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* ══════════════════════════════
-   SIDEBAR
-══════════════════════════════ */
-.sidebar {
-  width: 240px;
-  min-height: 100vh;
-  background: linear-gradient(180deg, var(--bg1) 0%, var(--bg) 100%);
-  border-right: 1px solid var(--glass-border);
-  padding: 32px 0;
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  z-index: 10;
-  overflow: hidden;
-}
-
-/* Sidebar ambient */
-.sidebar::before {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0;
-  width: 100%; height: 50%;
-  background: radial-gradient(ellipse at 50% 100%, rgba(0,229,160,0.04), transparent 70%);
-  pointer-events: none;
-}
-
-.sidebar-logo {
-  padding: 0 26px 32px;
-  border-bottom: 1px solid var(--glass-border);
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo-mark {
-  width: 32px; height: 32px;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--serif);
-  font-size: 14px;
-  font-weight: 900;
-  color: #000;
-  flex-shrink: 0;
-}
-
-.logo-text {
-  font-family: var(--serif);
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  background: linear-gradient(120deg, var(--text) 40%, var(--accent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.sidebar-back {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 9px 26px;
-  font-size: 11.5px;
-  color: var(--text3);
-  text-decoration: none;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-weight: 600;
-  transition: all 0.2s;
-  margin-bottom: 14px;
-}
-.sidebar-back:hover { color: var(--text2); letter-spacing: 0.16em; }
-.sidebar-back svg { width: 13px; height: 13px; flex-shrink: 0; }
-
-.nav-section {
-  padding: 0 14px;
-  margin-bottom: 4px;
-}
-
-.nav-label {
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text3);
-  font-weight: 700;
-  padding: 0 12px;
-  margin-bottom: 6px;
-  margin-top: 12px;
-  display: block;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 11px 14px;
-  font-size: 13px;
-  font-weight: 400;
-  color: var(--text2);
-  text-decoration: none;
-  border-radius: 10px;
-  transition: all 0.2s;
-  position: relative;
-}
-.nav-item:hover { background: var(--glass); color: var(--text); }
-.nav-item.active {
-  background: var(--accent-dim);
-  color: var(--accent);
-  font-weight: 600;
-}
-.nav-item.active::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 50%;
-  transform: translateY(-50%);
-  width: 3px; height: 60%;
-  background: var(--accent);
-  border-radius: 0 3px 3px 0;
-}
-.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.8; }
-.nav-item.active svg { opacity: 1; }
-
-.nav-badge {
-  margin-left: auto;
-  font-size: 10px;
-  font-weight: 700;
-  background: var(--accent);
-  color: #000;
-  min-width: 18px; height: 18px;
-  border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
-  padding: 0 5px;
-}
-
-.sidebar-footer {
-  margin-top: auto;
-  padding: 20px 26px 0;
-  border-top: 1px solid var(--glass-border);
-}
-
-.sidebar-footer-text {
-  font-size: 10.5px;
-  color: var(--text3);
-  line-height: 1.6;
-}
-
-/* ══════════════════════════════
-   MAIN CONTENT
-══════════════════════════════ */
-.main {
-  flex: 1;
-  padding: 48px 52px;
-  position: relative;
-  z-index: 1;
-  min-height: 100vh;
-}
-
-/* ── PAGE HEADER ── */
-.page-header {
-  margin-bottom: 44px;
-  position: relative;
-}
-
-.header-eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 10.5px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--accent);
-  font-weight: 700;
-  margin-bottom: 10px;
-}
-
-.eyebrow-dot {
-  width: 5px; height: 5px;
-  background: var(--accent);
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.8); }
-}
-
-.header-title {
-  font-family: var(--serif);
-  font-size: 52px;
-  font-weight: 900;
-  line-height: 0.95;
-  letter-spacing: -0.02em;
-  margin-bottom: 14px;
-}
-
-.header-title em {
-  font-style: italic;
-  color: var(--accent);
-}
-
-.header-meta {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.header-desc {
-  font-size: 13.5px;
-  color: var(--text2);
-  font-weight: 300;
-  max-width: 340px;
-  line-height: 1.6;
-}
-
-.header-divider {
-  width: 1px; height: 32px;
-  background: var(--glass-border);
-}
-
-.count-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--accent-dim);
-  border: 1px solid rgba(0,229,160,0.2);
-  border-radius: 100px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--accent);
-}
-
-.count-pill svg { width: 13px; height: 13px; }
-
-/* Header line decoration */
-.header-line {
-  position: absolute;
-  right: 0; top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  opacity: 0.15;
-}
-
-.header-line span {
-  display: block;
-  height: 1px;
-  background: var(--accent);
-}
-
-/* ── SORT BAR ── */
-.sort-bar {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 28px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--glass-border);
+  align-items: flex-end;
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid var(--w-border);
+  padding-bottom: 1.5rem;
 }
-
-.sort-tabs {
-  display: flex;
-  gap: 4px;
-  background: var(--bg2);
-  border: 1px solid var(--glass-border);
-  border-radius: 10px;
-  padding: 4px;
-}
-
-.sort-tab {
-  padding: 6px 14px;
-  border-radius: 7px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text2);
-  cursor: pointer;
-  border: none;
-  background: transparent;
-  font-family: var(--sans);
-  transition: all 0.2s;
-}
-
-.sort-tab.active {
-  background: var(--bg3);
-  color: var(--text);
-}
-
-.sort-tab:hover:not(.active) { color: var(--text); }
-
-.view-toggle {
-  display: flex;
-  gap: 4px;
-}
-
-.view-btn {
-  width: 34px; height: 34px;
-  background: var(--bg2);
-  border: 1px solid var(--glass-border);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: var(--text3);
-}
-
-.view-btn.active { background: var(--bg3); color: var(--text); border-color: var(--glass-hover); }
-.view-btn svg { width: 14px; height: 14px; }
-
-/* ══════════════════════════════
-   GRID
-══════════════════════════════ */
-.wishlist-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-}
-
-/* ── CARD ── */
-.wl-card {
-  background: var(--bg1);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--r);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  transition: transform 0.4s cubic-bezier(0.23,1,0.32,1),
-              border-color 0.3s ease,
-              box-shadow 0.4s ease;
-  animation: cardIn 0.5s cubic-bezier(0.23,1,0.32,1) both;
-}
-
-@keyframes cardIn {
-  from { opacity: 0; transform: translateY(24px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-{% for i in "123456789" %}.wl-card:nth-child({{ forloop.counter }}) { animation-delay: {{ forloop.counter0 }}00ms; }
-{% endfor %}
-
-.wl-card:hover {
-  transform: translateY(-8px);
-  border-color: rgba(0,229,160,0.2);
-  box-shadow:
-    0 20px 60px rgba(0,0,0,0.6),
-    0 0 0 1px rgba(0,229,160,0.08),
-    0 0 80px rgba(0,229,160,0.06);
-}
-
-/* ── IMAGE ZONE ── */
-.card-img-zone {
-  position: relative;
-  height: 280px;
-  overflow: hidden;
-  background: var(--bg2);
-  flex-shrink: 0;
-}
-
-.card-img-zone img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  transition: transform 0.6s cubic-bezier(0.23,1,0.32,1);
-  display: block;
-}
-
-.wl-card:hover .card-img-zone img { transform: scale(1.07); }
-
-/* Gradient overlay on image */
-.img-grad {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    transparent 40%,
-    rgba(7,14,26,0.5) 70%,
-    rgba(7,14,26,0.85) 100%
-  );
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-.wl-card:hover .img-grad { opacity: 1; }
-
-/* Quick action overlay */
-.img-actions {
-  position: absolute;
-  bottom: 14px;
-  left: 14px;
-  right: 14px;
-  display: flex;
-  gap: 8px;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: all 0.3s cubic-bezier(0.23,1,0.32,1);
-  pointer-events: none;
-  z-index: 5;
-}
-.wl-card:hover .img-actions { opacity: 1; transform: translateY(0); pointer-events: all; }
-
-/* Remove btn (top right) */
-.btn-remove {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 36px; height: 36px;
-  background: rgba(4,8,15,0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all 0.2s;
-  z-index: 6;
-}
-.btn-remove svg { width: 14px; height: 14px; color: var(--text2); transition: color 0.2s; }
-.btn-remove:hover { background: var(--red-dim); border-color: rgba(255,77,109,0.3); }
-.btn-remove:hover svg { color: var(--red); }
-
-/* Badges */
-.img-badge {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  z-index: 5;
-}
-
-.badge {
-  padding: 4px 9px;
-  border-radius: 6px;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  display: inline-block;
-  width: fit-content;
-}
-
-.badge-sale  { background: var(--red);   color: #fff; }
-.badge-new   { background: var(--accent); color: #000; }
-.badge-low   { background: var(--amber);  color: #000; }
-
-/* OOS overlay */
-.oos-layer {
-  position: absolute;
-  inset: 0;
-  background: rgba(4,8,15,0.65);
-  backdrop-filter: blur(3px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 4;
-}
-
-.oos-label {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--text2);
-  background: rgba(0,0,0,0.6);
-  border: 1px solid var(--glass-border);
-  padding: 6px 14px;
-  border-radius: 8px;
-}
-
-.img-placeholder-box {
-  width: 100%; height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  color: var(--text3);
-}
-
-.img-placeholder-box svg { width: 32px; height: 32px; }
-.img-placeholder-box span { font-size: 11px; letter-spacing: 0.05em; }
-
-/* ── CARD BODY ── */
-.card-body {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  position: relative;
-}
-
-/* Top accent line that grows on hover */
-.card-body::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 20px; right: 20px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-.wl-card:hover .card-body::before { opacity: 0.4; }
-
-.card-category {
-  font-size: 9.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--text3);
+.wl-title-wrap h1 {
+  font-family: var(--w-serif);
+  font-size: 2.4rem;
   font-weight: 700;
-  margin-bottom: 6px;
+  margin: 0 0 0.4rem 0;
+  letter-spacing: -0.01em;
+  color: var(--w-text);
 }
-
-.card-name {
-  font-family: var(--serif);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1.2;
-  margin-bottom: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.wl-title-wrap p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--w-muted);
 }
-
-/* Variant chips */
-.variant-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-}
-
-.v-chip {
+.wl-count {
+  background: var(--w-card);
+  border: 1px solid var(--w-border);
+  padding: 0.4rem 1rem;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--w-primary);
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  border-radius: 100px;
-  font-size: 11px;
-  color: var(--text2);
-  font-weight: 500;
+  gap: 6px;
 }
 
-.color-swatch {
-  width: 9px; height: 9px;
+/* GRID */
+.wl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+/* CARD */
+.wl-card {
+  background: var(--w-card);
+  border: 1px solid var(--w-border);
+  border-radius: var(--w-radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+  position: relative;
+}
+.wl-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--w-border-hover);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+}
+
+.wl-img-box {
+  background: var(--w-soft);
+  position: relative;
+  aspect-ratio: 3/4;
+  overflow: hidden;
+}
+.wl-img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+.wl-card:hover .wl-img-box img {
+  transform: scale(1.05);
+}
+
+/* Remove Button */
+.wl-remove {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  background: rgba(17,24,39,0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--w-border);
   border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.2);
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--w-muted);
+  text-decoration: none;
+  transition: all 0.2s;
+  z-index: 10;
+}
+.wl-remove:hover {
+  background: rgba(239,68,68,0.15);
+  border-color: rgba(239,68,68,0.3);
+  color: var(--w-danger);
 }
 
-/* Price */
-.price-area {
+/* Badges */
+.wl-badges {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+}
+.wl-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+.wl-badge.low { background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.wl-badge.out { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.25); }
+.wl-badge.sale { background: rgba(124,58,237,0.2); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
+
+/* Body */
+.wl-body {
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.wl-cat {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--w-primary);
+  margin-bottom: 0.4rem;
+}
+
+.wl-name {
+  font-family: var(--w-serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--w-text);
+  margin-bottom: 0.5rem;
+  text-decoration: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.2s;
+}
+.wl-name:hover {
+  color: var(--w-primary);
+}
+
+.wl-vars {
+  display: flex;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--w-muted);
+  margin-bottom: 1rem;
+}
+.wl-var-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.wl-color-swatch {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.wl-price-box {
+  margin-top: auto;
+  margin-bottom: 1rem;
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin-bottom: 14px;
 }
-
-.price-main {
-  font-family: var(--serif);
-  font-size: 26px;
-  font-weight: 900;
-  color: var(--accent);
-  line-height: 1;
+.wl-price {
+  font-family: var(--w-serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--w-text);
 }
-
-.price-strike {
-  font-size: 13px;
-  color: var(--text3);
+.wl-price-old {
+  font-size: 0.85rem;
+  color: var(--w-sub);
   text-decoration: line-through;
 }
 
-.price-save {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--accent);
-  background: var(--accent-dim);
-  padding: 2px 7px;
-  border-radius: 100px;
-}
-
-.price-na { font-size: 13px; color: var(--text3); font-style: italic; }
-
-/* Stock */
-.stock-strip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 5px 10px;
-  border-radius: 7px;
-  margin-bottom: 16px;
-  width: fit-content;
-}
-
-.stock-strip.low  { background: rgba(255,184,48,0.1); color: #ffb830; border: 1px solid rgba(255,184,48,0.2); }
-.stock-strip.out  { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,77,109,0.2); }
-.stock-strip svg  { width: 11px; height: 11px; }
-
-/* Divider */
-.card-sep {
-  height: 1px;
-  background: var(--glass-border);
-  margin: auto 0 16px;
-}
-
-/* Cart button */
-.btn-cart {
+/* Add Cart */
+.wl-btn-cart {
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 13px 18px;
-  background: linear-gradient(135deg, var(--accent) 0%, #00c9ff 100%);
-  color: #040d17;
-  font-family: var(--sans);
-  font-size: 13px;
-  font-weight: 700;
+  padding: 0.75rem;
+  background: var(--w-primary);
+  color: #fff;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
+  font-family: var(--w-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   cursor: pointer;
-  text-decoration: none;
-  letter-spacing: 0.02em;
-  transition: all 0.3s cubic-bezier(0.23,1,0.32,1);
-  position: relative;
-  overflow: hidden;
+  transition: all 0.2s;
 }
-
-.btn-cart::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, transparent, rgba(255,255,255,0.15));
-  opacity: 0;
-  transition: opacity 0.3s;
+.wl-btn-cart:hover:not(:disabled) {
+  background: #6d28d9;
+  transform: translateY(-1px);
 }
-
-.btn-cart:hover:not(:disabled)::after { opacity: 1; }
-
-.btn-cart:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0,229,160,0.4);
-}
-
-.btn-cart svg { width: 15px; height: 15px; flex-shrink: 0; }
-
-.btn-cart:disabled {
-  background: var(--bg3);
-  color: var(--text3);
+.wl-btn-cart:disabled {
+  background: var(--w-input);
+  color: var(--w-sub);
   cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
+  border: 1px solid var(--w-border);
 }
 
-/* ══════════════════════════════
-   EMPTY STATE
-══════════════════════════════ */
-.empty-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
+/* Empty State */
+.wl-empty-box {
   text-align: center;
-  gap: 0;
-  animation: cardIn 0.6s ease;
+  padding: 4rem 2rem;
+  background: var(--w-card);
+  border: 1px dashed var(--w-border);
+  border-radius: var(--w-radius);
+  max-width: 600px;
+  margin: 2rem auto;
 }
-
-.empty-graphic {
-  position: relative;
-  width: 120px; height: 120px;
-  margin-bottom: 28px;
+.wl-empty-icon {
+  font-size: 3rem;
+  color: var(--w-sub);
+  margin-bottom: 1rem;
 }
-
-.empty-ring {
-  width: 100%; height: 100%;
-  border-radius: 50%;
-  border: 1px solid rgba(0,229,160,0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: spin 12s linear infinite;
+.wl-empty-box h2 {
+  font-family: var(--w-serif);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--w-text);
+  margin: 0 0 0.5rem 0;
 }
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.empty-ring::before {
-  content: '';
-  position: absolute;
-  width: 8px; height: 8px;
-  background: var(--accent);
-  border-radius: 50%;
-  top: -4px; left: 50%;
-  transform: translateX(-50%);
-  box-shadow: 0 0 12px var(--accent);
+.wl-empty-box p {
+  color: var(--w-muted);
+  font-size: 0.95rem;
+  margin: 0 0 1.5rem 0;
 }
-
-.empty-icon-inner {
-  width: 80px; height: 80px;
-  background: var(--accent-dim);
-  border: 1px solid rgba(0,229,160,0.2);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  inset: 50%;
-  transform: translate(-50%, -50%);
-  animation: none; /* override parent spin */
-}
-
-.empty-icon-inner svg {
-  width: 32px; height: 32px;
-  color: var(--accent);
-}
-
-/* Counter-spin the inner icon so it stays upright */
-.empty-ring .empty-icon-inner {
-  animation: counter-spin 12s linear infinite;
-}
-@keyframes counter-spin { to { transform: translate(-50%, -50%) rotate(-360deg); } }
-
-.empty-title {
-  font-family: var(--serif);
-  font-size: 28px;
-  font-weight: 900;
-  margin-bottom: 10px;
-  letter-spacing: -0.01em;
-}
-
-.empty-sub {
-  font-size: 14px;
-  color: var(--text2);
-  font-weight: 300;
-  max-width: 280px;
-  line-height: 1.6;
-  margin-bottom: 28px;
-}
-
-.btn-explore {
+.wl-btn-shop {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 13px 28px;
-  background: linear-gradient(135deg, var(--accent), #00c9ff);
-  color: #040d17;
-  font-family: var(--sans);
-  font-size: 13.5px;
-  font-weight: 700;
-  border-radius: 100px;
-  text-decoration: none;
-  letter-spacing: 0.02em;
-  transition: all 0.3s cubic-bezier(0.23,1,0.32,1);
-}
-
-.btn-explore:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 32px rgba(0,229,160,0.35);
-}
-
-.btn-explore svg { width: 15px; height: 15px; }
-
-/* ══════════════════════════════
-   TOASTS
-══════════════════════════════ */
-.toast-stack {
-  position: fixed;
-  top: 24px;
-  right: 24px;
-  display: flex;
-  flex-direction: column;
   gap: 8px;
-  z-index: 9999;
+  background: var(--w-text);
+  color: var(--w-card);
+  padding: 0.8rem 1.8rem;
+  border-radius: 99px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.2s;
 }
-
-.toast {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 13px 18px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 500;
-  min-width: 260px;
-  animation: toastSlide 0.3s cubic-bezier(0.23,1,0.32,1);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+.wl-btn-shop:hover {
+  background: var(--w-muted);
+  box-shadow: 0 4px 15px rgba(255,255,255,0.1);
 }
-
-@keyframes toastSlide {
-  from { opacity: 0; transform: translateX(20px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-.toast svg { width: 16px; height: 16px; flex-shrink: 0; }
-.toast-success { background: rgba(0,40,25,0.92); border: 1px solid rgba(0,229,160,0.25); color: #6ee7b7; }
-.toast-error   { background: rgba(40,5,15,0.92);  border: 1px solid rgba(255,77,109,0.25); color: #fca5a5; }
-.toast-warning { background: rgba(40,30,0,0.92);  border: 1px solid rgba(255,184,48,0.25); color: #fcd34d; }
-
-/* ── SCROLLBAR ── */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--text3); border-radius: 2px; }
 </style>
-</head>
-<body>
 
-{% if messages %}
-<div class="toast-stack" id="toastStack">
-  {% for message in messages %}
-  <div class="toast toast-{{ message.tags }}">
-    {% if message.tags == 'success' %}
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-    {% elif message.tags == 'warning' %}
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    {% else %}
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+<div class="wl-wrap">
+  
+  <div class="wl-head">
+    <div class="wl-title-wrap">
+      <h1>My Wishlist</h1>
+      <p>Save your favorite selections, thoughtfully curated.</p>
+    </div>
+    {% if items %}
+    <div class="wl-count">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      {{ items|length }} Item{{ items|length|pluralize }}
+    </div>
     {% endif %}
-    {{ message }}
   </div>
-  {% endfor %}
-</div>
-{% endif %}
-
-<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
-<aside class="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-mark">O</div>
-    <span class="logo-text">OUTFITO</span>
-  </div>
-
-  <a href="{% url 'user_product_list' %}" class="sidebar-back">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>
-    Back to Shop
-  </a>
-
-  <div class="nav-section">
-    <span class="nav-label">Account</span>
-
-    <a href="{% url 'profile' %}" class="nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-      Profile
-    </a>
-    <a href="{% url 'address-list' %}" class="nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-      Addresses
-    </a>
-    <a href="{% url 'order_list' %}" class="nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M8 8h8M8 16h5"/></svg>
-      My Orders
-    </a>
-    <a href="{% url 'wishlist' %}" class="nav-item active">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-      Wishlist
-      {% if items %}<span class="nav-badge">{{ items|length }}</span>{% endif %}
-    </a>
-    <a href="{% url 'wallet' %}" class="nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="15" rx="3"/><path d="M2 10h20"/><circle cx="16" cy="15" r="1.5" fill="currentColor"/></svg>
-      Wallet
-    </a>
-  </div>
-
-  <div class="sidebar-footer">
-    <p class="sidebar-footer-text">Your data is safe &amp; encrypted. We never share your info.</p>
-  </div>
-</aside>
-
-<!-- ═══════════════════ MAIN ═══════════════════ -->
-<main class="main">
-
-  <!-- PAGE HEADER -->
-  <header class="page-header">
-    <div class="header-eyebrow">
-      <span class="eyebrow-dot"></span>
-      Curated collection
-    </div>
-    <h1 class="header-title">My <em>Wishlist</em></h1>
-    <div class="header-meta">
-      <p class="header-desc">Items you love, saved for later. Add to cart before they run out.</p>
-      {% if items %}
-      <div class="header-divider"></div>
-      <div class="count-pill">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-        {{ items|length }} saved item{{ items|length|pluralize }}
-      </div>
-      {% endif %}
-    </div>
-
-    <!-- Decorative lines -->
-    <div class="header-line">
-      <span style="width:80px;"></span>
-      <span style="width:50px;"></span>
-      <span style="width:120px;"></span>
-      <span style="width:35px;"></span>
-    </div>
-  </header>
 
   {% if items %}
-
-
-
-  <!-- GRID -->
-  <div class="wishlist-grid">
+  <div class="wl-grid">
     {% for item in items %}
-    {% with product=item.product variant=item.variant %}
-    <div class="wl-card">
-
-      <!-- IMAGE -->
-      <div class="card-img-zone">
-
-        <!-- Badges -->
-        <div class="img-badge">
-          {% if variant and variant.original_price and variant.original_price > variant.price %}
-            <span class="badge badge-sale">Sale</span>
-          {% elif product.discount %}
-            <span class="badge badge-sale">{{ product.discount }}% Off</span>
-          {% endif %}
-          {% if variant and variant.stock > 0 and variant.stock <= 3 %}
-            <span class="badge badge-low">Low stock</span>
-          {% endif %}
-        </div>
-
-        <!-- Remove -->
-        <a href="{% url 'remove_from_wishlist' product.id %}" class="btn-remove" title="Remove">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </a>
-
-        <!-- Image -->
-        {% if variant and variant.image %}
-          <img src="{{ variant.image.url }}" alt="{{ product.name }}">
-        {% elif product.image %}
-          <img src="{{ product.image.url }}" alt="{{ product.name }}">
-        {% elif product.image_side %}
-          <img src="{{ product.image_side.url }}" alt="{{ product.name }}">
-        {% else %}
-          <div class="img-placeholder-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9l4-4 4 4 4-4 4 4"/><path d="M3 15l4 4 4-4 4 4 4-4"/></svg>
-            <span>No image</span>
-          </div>
-        {% endif %}
-
-        <!-- OOS -->
-        {% if variant and variant.stock == 0 %}
-        <div class="oos-layer">
-          <span class="oos-label">Out of Stock</span>
-        </div>
-        {% endif %}
-
-        <div class="img-grad"></div>
-      </div>
-
-      <!-- BODY -->
-      <div class="card-body">
-        <div class="card-category">{{ product.category }}</div>
-        <div class="card-name" title="{{ product.name }}">{{ product.name }}</div>
-
-        {% if variant %}
-        <div class="variant-row">
-          {% if variant.color %}
-          <span class="v-chip">
-            <span class="color-swatch" style="background:{{ variant.color }};"></span>
-            {{ variant.color|title }}
-          </span>
-          {% endif %}
-          {% if variant.size %}
-          <span class="v-chip">{{ variant.size }}</span>
-          {% endif %}
-        </div>
-        {% endif %}
-
-        <div class="price-area">
-          {% if variant %}
-            <span class="price-main">₹{{ variant.price|floatformat:0 }}</span>
-            {% if variant.original_price and variant.original_price > variant.price %}
-              <span class="price-strike">₹{{ variant.original_price|floatformat:0 }}</span>
+      {% with product=item.product variant=item.variant %}
+      <div class="wl-card">
+        
+        <div class="wl-img-box">
+          <div class="wl-badges">
+            {% if variant and variant.stock == 0 %}
+              <div class="wl-badge out">Sold Out</div>
+            {% elif variant and variant.stock > 0 and variant.stock <= 3 %}
+              <div class="wl-badge low">Low Stock</div>
+            {% elif variant and variant.original_price and variant.original_price > variant.price %}
+              <div class="wl-badge sale">Sale</div>
             {% endif %}
+          </div>
+          
+          <a href="{% url 'remove_from_wishlist' product.id %}" class="wl-remove" title="Remove">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </a>
+
+          <a href="{% url 'product_detail' product.id %}" style="display:block; height:100%;">
+            {% if variant and variant.image %}
+              <img src="{{ variant.image.url }}" alt="{{ product.name }}" loading="lazy">
+            {% elif product.variants.first and product.variants.first.image %}
+              <img src="{{ product.variants.first.image.url }}" alt="{{ product.name }}" loading="lazy">
+            {% elif product.image_side %}
+              <img src="{{ product.image_side.url }}" alt="{{ product.name }}" loading="lazy">
+            {% else %}
+              <img src="https://placehold.co/400x533/161f2e/4b5563?text=OUTFITO" alt="{{ product.name }}">
+            {% endif %}
+          </a>
+        </div>
+
+        <div class="wl-body">
+          <div class="wl-cat">{{ product.category.category_name|default:product.category }}</div>
+          
+          <a href="{% url 'product_detail' product.id %}" class="wl-name" title="{{ product.name }}">
+            {{ product.name }}
+          </a>
+
+          <div class="wl-vars">
+            {% if variant and variant.color %}
+              <span class="wl-var-item"><div class="wl-color-swatch" style="background: {{ variant.color|lower }};"></div>{{ variant.color|title }}</span>
+            {% endif %}
+            {% if variant and variant.size %}
+               <span class="wl-var-item">{{ variant.size }}</span>
+            {% endif %}
+          </div>
+
+          <div class="wl-price-box">
+            {% if variant %}
+              <span class="wl-price">₹{{ variant.price|floatformat:0 }}</span>
+              {% if variant.original_price and variant.original_price > variant.price %}
+                <span class="wl-price-old">₹{{ variant.original_price|floatformat:0 }}</span>
+              {% endif %}
+            {% else %}
+               <span class="wl-price" style="font-size: 1rem; color: var(--w-sub);">Unavailable</span>
+            {% endif %}
+          </div>
+
+          {% if variant and variant.stock > 0 and variant.is_active and not product.is_deleted and product.is_listed %}
+            <form action="{% url 'add_to_cart' variant.id %}" method="POST" style="margin-top: auto;">
+              {% csrf_token %}
+              <input type="hidden" name="quantity" value="1">
+              <button type="submit" class="wl-btn-cart">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                Add to Cart
+              </button>
+            </form>
           {% else %}
-            <span class="price-na">Variant unavailable</span>
+            <button type="button" class="wl-btn-cart" disabled style="margin-top: auto;">
+               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+               Out of Stock
+            </button>
           {% endif %}
         </div>
 
-        {% if variant and variant.stock > 0 and variant.stock <= 3 %}
-        <div class="stock-strip low">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-          Only {{ variant.stock }} left
-        </div>
-        {% elif variant and variant.stock == 0 %}
-        <div class="stock-strip out">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-          Out of Stock
-        </div>
-        {% endif %}
-
-        <div class="card-sep"></div>
-
-        {% if variant and variant.stock > 0 and variant.is_active and not product.is_deleted and product.is_listed %}
-          <form action="{% url 'add_to_cart' variant.id %}" method="POST">
-            {% csrf_token %}
-            <button type="submit" class="btn-cart">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-              Add to Cart
-            </button>
-          </form>
-        {% else %}
-          <button type="button" class="btn-cart" disabled>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-            Unavailable
-          </button>
-        {% endif %}
       </div>
-    </div>
-    {% endwith %}
+      {% endwith %}
     {% endfor %}
   </div>
 
   {% else %}
-
-  <!-- EMPTY STATE -->
-  <div class="empty-wrap">
-    <div class="empty-graphic">
-      <div class="empty-ring">
-        <div class="empty-icon-inner">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-        </div>
-      </div>
+  <div class="wl-empty-box">
+    <div class="wl-empty-icon">
+      <svg viewBox="0 0 24 24" width="60" height="60" fill="none" stroke="currentColor" stroke-width="1"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
     </div>
-    <h3 class="empty-title">Nothing saved yet</h3>
-    <p class="empty-sub">Browse the collection and tap the heart on items you love — they'll live here.</p>
-    <a href="{% url 'user_product_list' %}" class="btn-explore">
-      Explore Collection
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    <h2>Nothing saved yet</h2>
+    <p>Explore our curated collections and tap the heart to save your favorites.</p>
+    <a href="{% url 'user_product_list' %}" class="wl-btn-shop">
+      Explore Collection <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </a>
   </div>
-
   {% endif %}
 
-</main>
+</div>
 
-<script>
-/* Auto-dismiss toasts */
-setTimeout(() => {
-  const s = document.getElementById('toastStack');
-  if (s) { s.style.transition = 'opacity .4s'; s.style.opacity = '0'; setTimeout(() => s?.remove(), 400); }
-}, 3500);
-
-/* Sort tabs (UI only) */
-document.querySelectorAll('.sort-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.sort-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-  });
-});
-
-/* View toggle (UI only) */
-document.querySelectorAll('.view-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  });
-});
-</script>
-</body>
-</html>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Outfito{% endblock %}</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+    :root {
+ 
+            --emerald-brand: #00845a; /* Matching the exact green from the cart image */
+            --bg-navy: #0a0e1a;
+            --card-dark: #0f1422;
+        
+    }
+            body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-navy);
+            color: #ffffff;
+            -webkit-font-smoothing: antialiased;
+        }
+
+    .nav-search {
+        background: #161b29;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 99px;
+        padding: 0.4rem 1rem;
+        width: 240px;
+        display: flex;
+        align-items: center;
+    }
+
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 18px;
+        border-radius: 14px;
+        color: #6b7280;
+        text-decoration: none;
+        transition: 0.25s;
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    .nav-item:hover {
+        background: rgba(255,255,255,.05);
+        color: #fff;
+        transform: translateX(5px);
+    }
+
+    .nav-item.active {
+        background: rgba(16,185,129,.15);
+        color: #10b981;
+        border-right: 3px solid #10b981;
+    }
+    body {
+    font-family: 'Inter', sans-serif;
+    background-color: #0a0e1a;
+}
+nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 999999; /* increase more */
+}
+    </style>
+</head>
+
+<body>
+
+{% include 'navbar.html' %}
+
+<div class="pt-[64px]">
+        {% block content %}
+    {% endblock %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const userBtn = document.getElementById("userMenuBtn");
+    const dropdown = document.getElementById("userDropdown");
+
+    if (userBtn && dropdown) {
+
+        userBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+
+            // TOGGLE OPEN
+            dropdown.classList.toggle("opacity-0");
+            dropdown.classList.toggle("scale-95");
+            dropdown.classList.toggle("pointer-events-none");
+
+            dropdown.classList.toggle("opacity-100");
+            dropdown.classList.toggle("scale-100");
+        });
+
+        // CLICK OUTSIDE CLOSE
+        document.addEventListener("click", function (e) {
+            if (!dropdown.contains(e.target) && !userBtn.contains(e.target)) {
+
+                dropdown.classList.add("opacity-0", "scale-95", "pointer-events-none");
+                dropdown.classList.remove("opacity-100", "scale-100");
+            }
+        });
+    }
+
+    // MOBILE MENU
+    const mobileBtn = document.getElementById("mobileMenuBtn");
+    const mobileMenu = document.getElementById("mobileMenu");
+
+    if (mobileBtn && mobileMenu) {
+        mobileBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            mobileMenu.classList.toggle("hidden");
+        });
+
+        document.addEventListener("click", function (e) {
+            if (!mobileMenu.contains(e.target) && !mobileBtn.contains(e.target)) {
+                mobileMenu.classList.add("hidden");
+            }
+        });
+    }
+
+});
+</script>
+
+
+</body>
+</html>

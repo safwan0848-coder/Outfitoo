@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="flex">
+    
+    {% include 'sidebar.html' %}
+
+    <div class="flex-1 p-6 ml-[260px]">
+        {% block dashboard_content %}
+        {% endblock %}
+    </div>
+
+</div>
+
+{% endblock %}

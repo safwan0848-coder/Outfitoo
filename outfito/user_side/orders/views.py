@@ -12,6 +12,7 @@ from .models import Order, OrderItem,ReturnRequest
 from xhtml2pdf import pisa
 from decimal import Decimal
 from django.core.paginator import Paginator
+from django.template.loader import render_to_string
 
 VALID_STATUSES = {
     'placed', 'confirmed', 'shipped',
@@ -372,18 +373,21 @@ def return_order(request, order_id):
 
 @login_required
 def download_invoice(request, order_id):
-    order=get_object_or_404(Order, id=order_id, user=request.user)
-    
-    template_path='user/invoice.html'
-    context={'order': order}
-    
-    response=HttpResponse(content_type='application/pdf')
-    response['Content-Disposition']=f'attachment; filename="invoice_{order.order_number}.pdf"'
-    
-    template=get_template(template_path)
-    html=template.render(context)
-    
-    pisa_status=pisa.CreatePDF(html, dest=response)
+    # 1. Get order
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+
+    # 2. Convert HTML template → string
+    html = render_to_string('user/invoice.html', {'order': order})
+
+    # 3. Create PDF response
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="invoice_{order.order_number}.pdf"'
+
+    # 4. Generate PDF
+    pisa_status = pisa.CreatePDF(html, dest=response)
+
+    # 5. Handle error
     if pisa_status.err:
-        return HttpResponse('We had some errors <pre>' + html + '</pre>')
+        return HttpResponse('Error generating PDF')
+
     return response

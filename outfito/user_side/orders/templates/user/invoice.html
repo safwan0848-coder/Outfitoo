@@ -2,397 +2,546 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice - OUTFITO</title>
-    <!-- Importing elegant fonts for a premium fashion brand look -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <title>Premium Invoice – OUTFITO</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+        @page {
+            size: A4 portrait;
+            margin: 1.6cm 2cm 2.4cm 2cm;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Inter', sans-serif;
-            font-size: 13px;
-            color: #1f2937;
-            margin: 0;
-            padding: 40px 20px;
-            background: #f4f5f7;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .invoice-wrapper {
-            max-width: 850px;
-            margin: auto;
+            font-family: 'DM Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10.5px;
+            line-height: 1.6;
+            color: #1a1a28;
             background: #ffffff;
-            padding: 50px 60px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
-            position: relative;
-            overflow: hidden;
         }
 
-        /* Top Accent Line */
-        .invoice-wrapper::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 6px;
-            background: #0f172a;
-        }
-
-        /* Header Section */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 50px;
-            padding-bottom: 25px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .brand-container {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .brand {
-            font-family: 'Playfair Display', serif;
-            font-size: 32px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: #0f172a;
-            margin-bottom: 4px;
-        }
-
-        .brand-tagline {
-            font-size: 11px;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .invoice-title-block {
-            text-align: right;
-        }
-
-        .invoice-title {
-            font-size: 24px;
-            font-weight: 300;
-            letter-spacing: 4px;
-            color: #6b7280;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-
-        .invoice-meta {
-            font-size: 12px;
-            color: #6b7280;
-        }
-
-        .invoice-meta strong {
-            color: #1f2937;
-            font-weight: 600;
-        }
-
-        /* Two Column Grid for Details */
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-bottom: 40px;
-        }
-
-        .section h4 {
-            margin: 0 0 12px 0;
-            font-size: 11px;
-            font-weight: 700;
-            color: #0f172a;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 8px;
-        }
-
-        .info-content {
-            color: #1f2937;
-            line-height: 1.7;
-            font-size: 13px;
-        }
-
-        .info-content span.label {
-            display: inline-block;
-            width: 95px;
-            color: #6b7280;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            background: #f8fafc;
-            border: 1px solid #e5e7eb;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        /* Status Colors */
-        .status-delivered {
-            color: #059669;
-            background: #ecfdf5;
-            border-color: #34d399;
-        }
-
-        .status-cancelled {
-            color: #dc2626;
-            background: #fef2f2;
-            border-color: #f87171;
-        }
-
-        /* Table Styles */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th {
-            background: #0f172a;
-            color: #ffffff;
-            text-align: left;
-            padding: 14px 15px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        th:first-child { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
-        th:last-child { border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
-
-        td {
-            padding: 16px 15px;
-            border-bottom: 1px solid #e5e7eb;
-            vertical-align: middle;
-        }
-
-        .product-name {
-            font-weight: 600;
-            color: #0f172a;
-            margin-bottom: 4px;
-            display: block;
-        }
-
-        .product-variant {
-            color: #6b7280;
-            font-size: 12px;
-        }
-
-        .right {
-            text-align: right;
-        }
-
-        /* Totals Section */
-        .totals-wrapper {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 30px;
-        }
-
-        .totals-table {
-            width: 350px;
-            border-collapse: collapse;
-        }
-
-        .totals-table td {
-            padding: 10px 15px;
-            border-bottom: none;
-        }
-
-        .totals-table tr {
-            border-bottom: 1px solid #f8fafc;
-        }
-
-        .totals-table .label {
-            color: #6b7280;
-        }
-
-        .totals-table .amount {
-            text-align: right;
+        /* ── RUPEE FIX: Use HTML entity fallback + universal font stack ── */
+        /* Never rely on a single font for ₹. Stack: Noto Sans > DejaVu > Arial */
+        .cur {
+            font-family: 'Noto Sans', 'DejaVu Sans', 'Arial Unicode MS', Arial, sans-serif;
             font-weight: 500;
         }
 
-        .totals-table .grand-total td {
-            padding-top: 15px;
-            padding-bottom: 15px;
+        /* ── TYPOGRAPHY ── */
+        .serif { font-family: 'Cormorant Garamond', 'Georgia', 'Times New Roman', serif; }
+        .mono {
+            font-family: 'Courier New', 'Courier', monospace;
+            letter-spacing: 0.03em;
+        }
+        .muted { color: #7a7a96; }
+        .gold  { color: #b18a4c; }
+
+        /* ── LAYOUT HELPERS ── */
+        .w100 { width: 100%; border-collapse: collapse; }
+        .vtop { vertical-align: top; }
+        .vmid { vertical-align: middle; }
+        .tr   { text-align: right; }
+        .tc   { text-align: center; }
+
+        /* ══════════════════════════════
+           HEADER
+        ══════════════════════════════ */
+        .header-wrap {
+            padding-bottom: 18px;
+            border-bottom: 2.5px solid #1a1a28;
+            margin-bottom: 26px;
+        }
+
+        .brand-mark {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 52px;
+            font-weight: 700;
+            letter-spacing: 6px;
+            line-height: 1;
+            color: #0d0d1a;
+            text-transform: uppercase;
+        }
+        .brand-mark span {
+            font-style: italic;
+            font-weight: 400;
+            color: #b18a4c;
+        }
+        .brand-tagline {
+            font-size: 8.5px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #9999b8;
+            margin-top: 9px;
+        }
+
+        .inv-title {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: #0d0d1a;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        .inv-num {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: #b18a4c;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        .inv-date {
+            font-size: 9.5px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #9999b8;
+        }
+
+        /* ══════════════════════════════
+           INFO BAND (3 cells)
+        ══════════════════════════════ */
+        .info-band {
+            background: #0d0d1a;
+            border-radius: 8px;
+            margin-bottom: 28px;
+            overflow: hidden;
+        }
+        .info-cell {
+            padding: 20px 24px;
+            vertical-align: top;
+            border-right: 1px solid rgba(255,255,255,0.08);
+        }
+        .info-cell:last-child { border-right: none; }
+        .ic-label {
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: #6666a0;
+            margin-bottom: 10px;
+        }
+        .ic-name {
+            font-family: 'Cormorant Garamond', Georgia, serif;
             font-size: 16px;
             font-weight: 700;
-            color: #0f172a;
-            border-top: 2px solid #0f172a;
-            border-bottom: 2px solid #0f172a;
+            color: #f5f0e8;
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+        }
+        .ic-body {
+            font-size: 10px;
+            color: #9494b8;
+            line-height: 1.7;
+        }
+        .ic-phone {
+            font-family: 'Courier New', monospace;
+            font-size: 10.5px;
+            color: #b18a4c;
+            margin-top: 8px;
+            letter-spacing: 0.5px;
+        }
+        .ic-pay-method {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 17px;
+            font-weight: 600;
+            color: #f0e8d8;
+            margin-bottom: 5px;
         }
 
-        /* Footer */
-        .footer {
-            margin-top: 60px;
-            text-align: center;
-            color: #6b7280;
+        /* ── STATUS BADGES (dark bg) ── */
+        .badge {
+            display: inline-block;
+            padding: 5px 14px;
+            font-size: 8.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 40px;
+            border: 1.5px solid;
+        }
+        .b-delivered { border-color: #27c27e; color: #27c27e; background: rgba(39,194,126,0.12); }
+        .b-pending   { border-color: #e9a835; color: #e9a835; background: rgba(233,168,53,0.12); }
+        .b-shipped   { border-color: #5b9cf6; color: #5b9cf6; background: rgba(91,156,246,0.12); }
+        .b-returned  { border-color: #f06fa0; color: #f06fa0; background: rgba(240,111,160,0.12); }
+        .b-cancelled { border-color: #f06060; color: #f06060; background: rgba(240,96,96,0.12); }
+
+        /* ── INLINE ITEM BADGES (light bg) ── */
+        .tag {
+            display: inline-block;
+            font-size: 9px;
+            font-weight: 500;
+            background: #f5f3ef;
+            border: 1px solid #ddd8cf;
+            border-radius: 30px;
+            padding: 3px 11px;
+            color: #3c3c5c;
+            margin-right: 6px;
+            margin-top: 6px;
+        }
+
+        .return-note {
+            display: inline-block;
+            font-size: 9px;
+            font-style: italic;
+            color: #b34e6e;
+            background: #fdf2f7;
+            padding: 4px 12px;
+            border-radius: 4px;
+            border-left: 3px solid #c35b7a;
+            margin-top: 8px;
+        }
+
+        /* ══════════════════════════════
+           ITEMS TABLE
+        ══════════════════════════════ */
+        .items-head th {
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #9898b4;
+            padding: 0 8px 12px 0;
+            border-bottom: 1.5px solid #0d0d1a;
+            text-align: left;
+        }
+        .items-head th.tr { text-align: right; }
+
+        .items-body tr { border-bottom: 1px solid #ede8e0; }
+        .items-body td {
+            padding: 18px 8px 18px 0;
+            vertical-align: middle;
+        }
+        .items-body td.tr { text-align: right; }
+
+        .prod-name {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #0d0d1a;
+            letter-spacing: 0.2px;
+            margin-bottom: 3px;
+        }
+
+        .item-badge-sm {
+            display: inline-block;
+            padding: 3px 10px;
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 30px;
+            border: 1px solid;
+        }
+        .ib-delivered { border-color: #27c27e; color: #1f8f5c; background: #eafaf3; }
+        .ib-pending   { border-color: #e9a835; color: #a87520; background: #fef8ec; }
+        .ib-shipped   { border-color: #5b9cf6; color: #2a64c4; background: #eef3fd; }
+        .ib-returned  { border-color: #f06fa0; color: #b34e6e; background: #fdf2f7; }
+        .ib-cancelled { border-color: #f06060; color: #b83434; background: #fef3f3; }
+
+        .price-col {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            color: #7a7a96;
+        }
+        .total-col {
+            font-family: 'Courier New', monospace;
             font-size: 12px;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 20px;
+            font-weight: 700;
+            color: #1a1a28;
+        }
+        .qty-col {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a1a28;
         }
 
-        .footer p {
-            margin: 4px 0;
+        /* ══════════════════════════════
+           TOTALS
+        ══════════════════════════════ */
+        .totals-wrap { margin-top: 24px; }
+
+        .concierge-box {
+            background: #fbfaf8;
+            border-radius: 8px;
+            border: 1px solid #e8e2d8;
+            padding: 20px 22px;
+        }
+        .cnc-title {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #0d0d1a;
+            margin-bottom: 10px;
+        }
+        .cnc-body {
+            font-size: 10px;
+            color: #4e4e6a;
+            line-height: 1.7;
+        }
+        .cnc-contact {
+            margin-top: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #b18a4c;
+            font-family: 'Courier New', monospace;
         }
 
-        /* Responsive */
-        @media (max-width: 600px) {
-            .invoice-wrapper {
-                padding: 30px 20px;
-            }
-            .header {
-                flex-direction: column;
-                gap: 20px;
-            }
-            .invoice-title-block {
-                text-align: left;
-            }
-            .info-grid {
-                grid-template-columns: 1fr;
-                gap: 25px;
-            }
-            .totals-table {
-                width: 100%;
-            }
+        .totals-table td {
+            padding: 7px 0;
+            font-size: 11px;
         }
+        .tl { color: #5e5e7a; }
+        .ta {
+            text-align: right;
+            font-weight: 600;
+            color: #1a1a28;
+            font-family: 'Courier New', monospace;
+        }
+        .savings-td { color: #1f8f5c; }
+
+        .grand-row td {
+            border-top: 2px solid #b18a4c;
+            border-bottom: 2px solid #b18a4c;
+            padding: 15px 0;
+        }
+        .grand-label {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #0d0d1a;
+        }
+        .grand-amount {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #b18a4c;
+            text-align: right;
+        }
+
+        /* ══════════════════════════════
+           FOOTER
+        ══════════════════════════════ */
+        .footer-bar {
+            margin-top: 32px;
+            padding-top: 18px;
+            border-top: 1px solid #d4cec4;
+        }
+        .footer-left {
+            font-size: 9.5px;
+            color: #7a7a96;
+            line-height: 1.8;
+        }
+        .footer-left strong { color: #0d0d1a; font-weight: 700; }
+        .footer-right {
+            text-align: right;
+            font-size: 9.5px;
+            color: #9999b4;
+            line-height: 1.8;
+        }
+        .footer-brand {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: #0d0d1a;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .footer-slogan {
+            letter-spacing: 2.5px;
+            font-size: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #b18a4c;
+        }
+
+        /* Page break safety */
+        .info-band, .totals-wrap, .footer-bar { page-break-inside: avoid; }
+        tr { page-break-inside: avoid; }
     </style>
 </head>
 <body>
 
-<div class="invoice-wrapper">
+    <!-- ═══════════ HEADER ═══════════ -->
+    <table class="w100 header-wrap">
+        <tr>
+            <td class="vtop" style="width: 55%;">
+                <div class="brand-mark">OUT<span>FI</span>TO</div>
+                <div class="brand-tagline">Premium Apparel Atelier</div>
+            </td>
+            <td class="vtop tr" style="width: 45%;">
+                <div class="inv-title">Invoice</div>
+                <div class="inv-num mono">#{{ order.order_number }}</div>
+                <div class="inv-date">{{ order.created_at|date:"F d, Y" }}</div>
+            </td>
+        </tr>
+    </table>
 
-    <!-- HEADER -->
-    <div class="header">
-        <div class="brand-container">
-            <div class="brand">OUTFITO</div>
-            <div class="brand-tagline">Premium Apparel & Accessories</div>
-        </div>
-        <div class="invoice-title-block">
-            <div class="invoice-title">Invoice</div>
-            <div class="invoice-meta">
-                Date: <strong>{{ order.created_at|date:"M d, Y H:i" }}</strong>
-            </div>
-        </div>
-    </div>
-
-    <!-- TWO COLUMN GRID FOR DETAILS -->
-    <div class="info-grid">
-        
-        <!-- ORDER DETAILS -->
-        <div class="section">
-            <h4>Order Information</h4>
-            <div class="info-content">
-                <div><span class="label">Order No:</span> <strong>#{{ order.order_number }}</strong></div>
-                
-                <div style="margin-top: 8px;">
-                    <span class="label">Order Status:</span> 
-                    {% if order.order_status == "Delivered" %}
-                        <span class="status-badge status-delivered">Delivered</span>
-                    {% elif order.order_status == "Cancelled" %}
-                        <span class="status-badge status-cancelled">Cancelled</span>
-                    {% else %}
-                        <span class="status-badge">{{ order.order_status }}</span>
-                    {% endif %}
-                </div>
-
-
-                <div style="margin-top: 8px;">
-                    <span class="label">Payment:</span> {{ order.get_payment_method_display }}
-                </div>
-            </div>
-        </div>
-
-        <!-- SHIPPING ADDRESS -->
-        <div class="section">
-            <h4>Shipping Address</h4>
-            <div class="info-content">
+    <!-- ═══════════ INFO BAND (dark) ═══════════ -->
+    <table class="w100 info-band">
+        <tr>
+            <td class="info-cell" style="width: 38%;">
+                <div class="ic-label">Billed To</div>
                 {% if order.shipping_address %}
                     {% with addr=order.shipping_address %}
-                    <strong style="color: #0f172a; display: block; margin-bottom: 4px; font-size: 14px;">{{ addr.full_name }}</strong>
-                    {{ addr.address_line1 }}
-                    {% if addr.address_line2 %}, {{ addr.address_line2 }}{% endif %}<br>
-                    {{ addr.city }}, {{ addr.state }} - {{ addr.pincode }}<br>
-                    {{ addr.country|default:"India" }}<br>
-                    <div style="margin-top: 6px;">Phone: {{ addr.phone_number }}</div>
+                    <div class="ic-name">{{ addr.full_name }}</div>
+                    <div class="ic-body">
+                        {{ addr.address_line1 }}{% if addr.address_line2 %}, {{ addr.address_line2 }}{% endif %}<br>
+                        {{ addr.city }}, {{ addr.state }} &mdash; {{ addr.pincode }}<br>
+                        {{ addr.country|default:"India" }}
+                    </div>
+                    <div class="ic-phone"><span class="cur">+91</span> {{ addr.phone_number }}</div>
                     {% endwith %}
                 {% else %}
-                    <div style="color: #6b7280; font-style: italic;">No address available</div>
+                    <div class="ic-body" style="color:#6666a0; font-style:italic;">No address on file</div>
                 {% endif %}
-            </div>
-        </div>
+            </td>
+            <td class="info-cell" style="width: 27%;">
+                <div class="ic-label">Payment Method</div>
+                <div class="ic-pay-method">{{ order.get_payment_method_display }}</div>
+                <div class="ic-body">Secure &amp; Encrypted</div>
+            </td>
+            <td class="info-cell" style="width: 35%;">
+                <div class="ic-label">Order Status</div>
+                <div style="margin-bottom: 10px;">
+                    <span class="badge
+                        {% if order.order_status == 'Delivered' %}b-delivered
+                        {% elif order.order_status == 'Cancelled' %}b-cancelled
+                        {% elif order.order_status == 'Shipped' %}b-shipped
+                        {% elif order.order_status == 'Returned' %}b-returned
+                        {% else %}b-pending{% endif %}">
+                        {{ order.order_status }}
+                    </span>
+                </div>
+                <div class="ic-body">Concierge · 24/7 Support</div>
+            </td>
+        </tr>
+    </table>
 
-    </div>
-
-    <!-- ITEMS TABLE -->
-    <table>
-        <thead>
+    <!-- ═══════════ ITEMS TABLE ═══════════ -->
+    <table class="w100" style="margin-bottom: 8px;">
+        <thead class="items-head">
             <tr>
-                <th>Product</th>
-                <th class="right">Price</th>
-                <th class="right">Qty</th>
-                <th class="right">Total</th>
+                <th style="width: 42%;">Item Details</th>
+                <th style="width: 15%; text-align: center;">Status</th>
+                <th class="tr" style="width: 15%;">Unit Price</th>
+                <th class="tr" style="width: 8%;">Qty</th>
+                <th class="tr" style="width: 20%;">Amount</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody class="items-body">
             {% for item in order.items.all %}
             <tr>
+                <!-- Item Details -->
                 <td>
-                    <span class="product-name">{{ item.variant.product.name }}</span>
-                    <span class="product-variant">{{ item.variant.size }} / {{ item.variant.color }}</span>
+                    <div class="prod-name">{{ item.variant.product.name }}</div>
+                    {% if item.item_status == 'returned' and item.return_reason %}
+                        <div class="return-note">&#8635; Return: {{ item.return_reason }}</div>
+                    {% endif %}
+                    <div>
+                        <span class="tag">Size: {{ item.variant.size }}</span>
+                        <span class="tag">{{ item.variant.color|title }}</span>
+                        {% if item.variant.sku %}
+                        <span class="tag" style="background:transparent; border-style: dashed;">{{ item.variant.sku }}</span>
+                        {% endif %}
+                    </div>
                 </td>
-                <td class="right">Rs. {{ item.price }}</td>
-                <td class="right">{{ item.quantity }}</td>
-                <td class="right" style="font-weight: 500; color: #0f172a;">
-                    Rs. {{ item.price|floatformat:2 }} × {{ item.quantity }}
+                <!-- Per-item status -->
+                <td class="tc">
+                    <span class="item-badge-sm
+                        {% if item.item_status == 'returned' %}ib-returned
+                        {% elif item.item_status == 'delivered' %}ib-delivered
+                        {% elif item.item_status == 'shipped' %}ib-shipped
+                        {% elif item.item_status == 'cancelled' %}ib-cancelled
+                        {% else %}ib-pending{% endif %}">
+                        {{ item.get_item_status_display }}
+                    </span>
+                </td>
+                <!-- Unit Price -->
+                <td class="tr price-col">
+                    <span class="cur">&#8377;</span>{{ item.price|floatformat:2 }}
+                </td>
+                <!-- Qty -->
+                <td class="tr qty-col">{{ item.quantity }}</td>
+                <!-- Line Total -->
+                <td class="tr total-col">
+                    {% widthratio item.price 1 item.quantity as item_total %}
+                    <span class="cur">&#8377;</span>{{ item_total }}
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <!-- TOTALS SECTION -->
-    <div class="totals-wrapper">
-        <table class="totals-table">
-            <tr>
-                <td class="label">Subtotal</td>
-                <td class="amount">Rs. {{ order.subtotal }}</td>
-            </tr>
-            <tr>
-                <td class="label">Delivery</td>
-                <td class="amount">Rs. {{ order.delivery_charge }}</td>
-            </tr>
-            <tr>
-                <td class="label">Tax</td>
-                <td class="amount">Rs. {{ order.tax_amount }}</td>
-            </tr>
-            <tr>
-                <td class="label">Discount</td>
-                <td class="amount" style="color: #10b981;">- Rs. {{ order.discount_amount }}</td>
-            </tr>
-            <tr class="grand-total">
-                <td>Total</td>
-                <td class="amount">Rs. {{ order.total_amount }}</td>
-            </tr>
-        </table>
-    </div>
+    <!-- ═══════════ TOTALS + CONCIERGE ═══════════ -->
+    <table class="w100 totals-wrap">
+        <tr>
+            <!-- Concierge Note -->
+            <td class="vtop" style="width: 50%; padding-right: 28px;">
+                <div class="concierge-box">
+                    <div class="cnc-title">&#10022; Concierge Note</div>
+                    <div class="cnc-body">
+                        Thank you for shopping with Outfito. This invoice is computer&#8209;generated
+                        and valid without signature. For styling advice, returns, or
+                        adjustments, please quote your order ID.
+                    </div>
+                    <div class="cnc-contact">
+                        concierge@outfito.com &nbsp;·&nbsp; +91 1800 456 7890
+                    </div>
+                </div>
+            </td>
+            <!-- Totals -->
+            <td class="vtop" style="width: 50%;">
+                <table class="w100">
+                    <tr>
+                        <td class="tl">Subtotal</td>
+                        <td class="ta"><span class="cur">&#8377;</span>{{ order.subtotal|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td class="tl">Shipping &amp; Handling</td>
+                        <td class="ta"><span class="cur">&#8377;</span>{{ order.delivery_charge|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td class="tl">GST (estimated)</td>
+                        <td class="ta"><span class="cur">&#8377;</span>{{ order.tax_amount|floatformat:2 }}</td>
+                    </tr>
+                    {% if order.discount_amount and order.discount_amount > 0 %}
+                    <tr>
+                        <td class="tl savings-td">Discount / Savings</td>
+                        <td class="ta savings-td">&minus; <span class="cur">&#8377;</span>{{ order.discount_amount|floatformat:2 }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr class="grand-row">
+                        <td class="grand-label">Total (INR)</td>
+                        <td class="grand-amount"><span class="cur">&#8377;</span>{{ order.total_amount|floatformat:2 }}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 
-    <!-- FOOTER -->
-    <div class="footer">
-        <p><strong>Thank you for shopping with Outfito!</strong></p>
-        <p>Support: support@outfito.com</p>
-    </div>
-
-</div>
+    <!-- ═══════════ FOOTER ═══════════ -->
+    <table class="w100 footer-bar">
+        <tr>
+            <td class="footer-left vtop" style="width: 55%;">
+                <strong>House of Outfito</strong> &nbsp;·&nbsp; Digital Boutique<br>
+                GSTIN: 22AAAAA0000A1Z5 &nbsp;·&nbsp; PAN: AAACT0000A
+            </td>
+            <td class="footer-right vtop" style="width: 45%;">
+                <span class="footer-brand">OUTFITO</span>
+                www.outfito.com &nbsp;·&nbsp; clientservices@outfito.com<br>
+                <span class="footer-slogan">Luxury &nbsp;·&nbsp; Curated &nbsp;·&nbsp; Essential</span>
+            </td>
+        </tr>
+    </table>
 
 </body>
 </html>
