@@ -2,16 +2,20 @@ from django.db import models
 from django.conf import settings
 from user_side.address.models import Address
 from admin_side.variants_management.models import Variant
+from admin_side.coupon_management.models import Coupon
 import uuid
 User = settings.AUTH_USER_MODEL
 
 class Order(models.Model):
     PAYMENT_METHODS = [
-        ('cod', 'Cash on Delivery'),
-    ]
+    ('cod', 'Cash on Delivery'),
+    ('razorpay', 'Razorpay'),
+    ('wallet', 'Wallet'),
+]
     PAYMENT_STATUS = [
         ('pending', 'Pending'),
         ('paid', 'Paid'),
+        ('failed', 'Failed'),
     ]
     ORDER_STATUS_CHOICES = [
         ('Pending', 'Pending'),
@@ -24,7 +28,12 @@ class Order(models.Model):
     user=models.ForeignKey(User, on_delete=models.CASCADE)
     shipping_address=models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
     order_number=models.CharField(max_length=20, unique=True, blank=True)
-    payment_method=models.CharField(max_length=20, choices=PAYMENT_METHODS)
+    payment_method = models.CharField(
+    max_length=20,
+    choices=PAYMENT_METHODS,
+    null=True,
+    blank=True
+)
     payment_status=models.CharField(max_length=20, choices=PAYMENT_STATUS, default='pending')
     order_status=models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='Pending')
     subtotal=models.DecimalField(max_digits=10, decimal_places=2)
@@ -33,7 +42,8 @@ class Order(models.Model):
     delivery_charge=models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount=models.DecimalField(max_digits=10, decimal_places=2)
     created_at=models.DateTimeField(auto_now_add=True)
-
+    coupon=models.ForeignKey(Coupon,on_delete=models.SET_NULL,null=True,blank=True)
+    
     @property
     def has_return_request(self):
         return self.return_requests.filter(status='Pending').exists()

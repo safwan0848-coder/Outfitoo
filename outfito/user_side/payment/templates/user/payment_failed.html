@@ -1,0 +1,266 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Payment Failed – OUTFITO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:           #080c18;
+    --surface:      #0e1525;
+    --surface2:     #131929;
+    --border:       rgba(255,255,255,0.07);
+    --accent:       #f87171;
+    --accent-hover: #ef4444;
+    --text:         #e8ecf4;
+    --muted:        #6b7a99;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(248,113,113,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(248,113,113,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+    animation: orbFade 1.2s ease forwards;
+  }
+  .orb-1 { width: 420px; height: 420px; background: rgba(248,113,113,0.08);  top: -100px; right: -80px; animation-delay: 0.3s; }
+  .orb-2 { width: 320px; height: 320px; background: rgba(185,28,28,0.06);   bottom: -60px; left: -60px; animation-delay: 0.5s; }
+  @keyframes orbFade { to { opacity: 1; } }
+
+  .card {
+    position: relative;
+    z-index: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 48px 44px 40px;
+    width: 100%;
+    max-width: 560px;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(28px);
+    animation: cardRise 0.7s cubic-bezier(0.22,1,0.36,1) 0.1s forwards;
+  }
+  @keyframes cardRise { to { opacity: 1; transform: translateY(0); } }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    border-radius: 1px;
+  }
+
+  .icon-wrap {
+    width: 76px; height: 76px;
+    border-radius: 50%;
+    background: rgba(248,113,113,0.07);
+    border: 1.5px solid rgba(248,113,113,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    opacity: 0;
+    transform: scale(0.7);
+    animation: iconPop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.3s forwards;
+  }
+  @keyframes iconPop { to { opacity: 1; transform: scale(1); } }
+  .icon-wrap i { font-size: 32px; color: var(--accent); }
+
+  .brand-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .brand-badge span { color: var(--text); }
+
+  .headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 44px;
+    letter-spacing: 3px;
+    line-height: 1.1;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff 40%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtext { font-size: 14px; color: var(--muted); margin-bottom: 32px; line-height: 1.6; }
+
+  .actions { display: grid; grid-template-columns: 1fr; gap: 12px; }
+
+  .btn-primary {
+    padding: 14px 20px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 800;
+    font-size: 14px;
+    border: none;
+    border-radius: 12px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.3px;
+    transition: all 0.25s;
+    cursor: pointer;
+  }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(248,113,113,0.28); }
+
+  .btn-outline {
+    padding: 14px 20px;
+    background: transparent;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 13.5px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.3px;
+    transition: all 0.25s;
+    cursor: pointer;
+  }
+  .btn-outline:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04); transform: translateY(-2px); }
+
+  .btn-ghost {
+    padding: 12px 20px;
+    background: transparent;
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 13px;
+    border: none;
+    border-radius: 12px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'DM Sans', sans-serif;
+    transition: color 0.2s;
+    cursor: pointer;
+  }
+  .btn-ghost:hover { color: var(--text); }
+
+  .foot-note {
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .foot-note i { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="card">
+
+  <div class="brand-badge">
+    <div style="width:16px;height:16px;background:#fff;border-radius:3px;display:flex;align-items:center;justify-content:center;">
+      <img src="{% static 'images/outfito.png' %}" alt="logo" style="width:14px;height:14px;object-fit:contain;">
+    </div>
+    <span>OUTFITO</span>
+  </div>
+
+  <div class="icon-wrap">
+    <i class="fa-solid fa-xmark"></i>
+  </div>
+
+  {% if messages %}
+    <div style="margin-bottom: 20px;">
+      {% for message in messages %}
+        <div style="color: var(--accent); font-weight: 600; font-size: 15px; background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.2); border-radius: 8px; padding: 10px; margin-bottom: 5px;">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="headline">Payment Failed</div>
+  <p class="subtext">
+    Oops! We could not process your payment.<br>
+    Your order was not completed. Please try again.
+  </p>
+
+  <div class="actions">
+    {# Primary: retry checkout #}
+    <a href="{% url 'checkout' %}" class="btn-primary">
+      <i class="fa-solid fa-rotate-right"></i> Try Again
+    </a>
+
+    {# Secondary: go back to cart #}
+    <a href="{% url 'cart_view' %}" class="btn-outline">
+      <i class="fa-solid fa-cart-shopping"></i> Return to Cart
+    </a>
+
+    {# Tertiary: go home #}
+    <a href="#" class="btn-ghost">
+      <i class="fa-solid fa-house"></i> Back to Home
+    </a>
+  </div>
+
+  <p class="foot-note">
+    <i class="fa-solid fa-shield-halved"></i>
+    If money was deducted from your account, it will be refunded automatically.
+  </p>
+
+</div>
+
+</body>
+</html>

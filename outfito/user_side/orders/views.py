@@ -1,9 +1,10 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db import transaction
-from django.db.models import Q
-from django.http import HttpResponse
+from django.db.models import Q, F
+from django.http import HttpResponse, JsonResponse
 from django.template.loader import get_template
+import json
 from django.conf import settings
 from django.contrib import messages
 from user_side.cart.models import Cart
@@ -13,30 +14,72 @@ from xhtml2pdf import pisa
 from decimal import Decimal
 from django.core.paginator import Paginator
 from django.template.loader import render_to_string
+from admin_side.coupon_management.models import Coupon
+import razorpay
+from user_side.payment.models import Payment
 
 VALID_STATUSES = {
     'placed', 'confirmed', 'shipped',
     'delivered', 'returned', 'cancelled', 'pending'
 }
 
+from django.utils import timezone
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, render
+from django.db.models import F
+from django.utils import timezone
+
+# NOTE: Add your existing imports here (Cart, Address, Coupon, etc.)
+
+
 @login_required
 def checkout_view(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
-    cart_items=cart.items.select_related('variant', 'variant__product')
+    cart_items = cart.items.select_related('variant', 'variant__product')
 
     if not cart_items.exists():
         return redirect('cart')
 
-    addresses=Address.objects.filter(user=request.user).order_by('-is_default', '-created_at')
-    default_address=addresses.filter(is_default=True).first()
+    addresses = Address.objects.filter(user=request.user).order_by('-is_default', '-created_at')
+    default_address = addresses.filter(is_default=True).first()
 
-    subtotal=sum(item.quantity * item.variant.price for item in cart_items)
+    subtotal = sum(item.quantity * item.variant.price for item in cart_items)
 
-    tax=0
-    delivery=50
-    discount=0
+    tax = 0
+    delivery = 50
+    discount = 0
 
-    total=subtotal + tax + delivery - discount
+    coupon_id = request.session.get('coupon_id')
+    applied_coupon_code = None
+    if coupon_id:
+        try:
+            coupon = Coupon.objects.get(id=coupon_id, is_active=True)
+            if subtotal >= coupon.min_amount:
+                applied_coupon_code = coupon.code
+                if coupon.discount_type == 'fixed':
+                    discount = coupon.discount_value
+                else:
+                    calculated = (subtotal * coupon.discount_value) / 100
+                    if coupon.max_discount:
+                        calculated = min(calculated, coupon.max_discount)
+                    discount = calculated
+            else:
+                request.session.pop('coupon_id', None)
+        except Coupon.DoesNotExist:
+            request.session.pop('coupon_id', None)
+
+    total = subtotal + tax + delivery - discount
+
+    now = timezone.now()
+    available_coupons = Coupon.objects.filter(
+        is_active=True,
+        start_date__lte=now,
+        expiry_date__gte=now
+    ).exclude(
+        usage_limit__isnull=False,
+        used_count__gte=F('usage_limit')
+    )
 
     context = {
         "cart_items": cart_items,
@@ -47,6 +90,8 @@ def checkout_view(request):
         "delivery": delivery,
         "discount": discount,
         "total": total,
+        "available_coupons": available_coupons,
+        "applied_coupon_code": applied_coupon_code,
     }
     return render(request, "user/checkout.html", context)
 
@@ -54,87 +99,6 @@ def checkout_view(request):
 def order_success(request, order_id):
     order=get_object_or_404(Order, id=order_id, user=request.user)
     return render(request, "user/success.html", {"order": order})
-
-@login_required
-def place_order(request):
-    if request.method != "POST":
-        return redirect('checkout')
-
-    address_id=request.POST.get("address_id", "").strip()
-    payment_method=request.POST.get("payment_method", "").strip()
-
-    if not address_id:
-        messages.error(request, "Please select a delivery address.")
-        return redirect('checkout')
-
-    VALID_PAYMENT_METHODS = ["razorpay", "wallet", "cod"]
-    if payment_method not in VALID_PAYMENT_METHODS:
-        messages.error(request, "Please select a valid payment method.")
-        return redirect('checkout')
-
-    address=get_object_or_404(Address, id=address_id, user=request.user)
-
-    cart, _=Cart.objects.get_or_create(user=request.user)
-    cart_items=cart.items.select_related('variant', 'variant__product')
-
-    if not cart_items.exists():
-        messages.error(request, "Your cart is empty.")
-        return redirect('cart')
-
-    subtotal=sum(item.quantity * item.variant.price for item in cart_items)
-    tax=0
-    delivery=50
-    discount=0
-    total=subtotal + tax + delivery - discount
-
-    try:
-        with transaction.atomic():
-            for item in cart_items:
-                if item.variant.stock < item.quantity:
-                    messages.error(request,
-                        f"Insufficient stock for {item.variant.product.name}. "
-                        f"Only {item.variant.stock} left."
-                    )
-                    return redirect('cart')
-
-            if payment_method == "wallet":
-                wallet=getattr(request.user, 'wallet', None)
-                if not wallet or wallet.balance < total:
-                    messages.error(request, "Insufficient wallet balance.")
-                    return redirect('checkout')
-
-            order=Order.objects.create(
-                user=request.user,
-                shipping_address=address,
-                payment_method=payment_method,
-                subtotal=subtotal,
-                tax_amount=tax,
-                discount_amount=discount,
-                delivery_charge=delivery,
-                total_amount=total,
-            )
-
-            for item in cart_items:
-                OrderItem.objects.create(
-                    order=order,
-                    variant=item.variant,
-                    price=item.variant.price,
-                    quantity=item.quantity
-                )
-                item.variant.stock -= item.quantity
-                item.variant.save()
-
-            if payment_method == "wallet":
-                wallet=request.user.wallet
-                wallet.balance -= total
-                wallet.save()
-            cart.items.all().delete()
-
-        return redirect('order_success', order_id=order.id)
-
-    except Exception as e:
-        messages.error(request, "An error occurred while placing your order. Please try again.")
-        return redirect('checkout')
 
 
 @login_required
@@ -391,3 +355,197 @@ def download_invoice(request, order_id):
         return HttpResponse('Error generating PDF')
 
     return response
+
+
+@login_required
+def apply_coupon(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            code = data.get('code', '').strip().upper()
+            
+            cart, _ = Cart.objects.get_or_create(user=request.user)
+            cart_items = cart.items.select_related('variant')
+            subtotal = sum(item.quantity * item.variant.price for item in cart_items)
+            
+            if not code:
+                request.session.pop('coupon_id', None)
+                return JsonResponse({'success': True, 'message': 'Coupon removed', 'discount': 0.0, 'new_total': float(subtotal + 50)})
+                
+            try:
+                coupon = Coupon.objects.get(code__iexact=code, is_active=True)
+            except Coupon.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'Invalid or expired coupon code.'})
+                
+            if subtotal < coupon.min_amount:
+                return JsonResponse({'success': False, 'message': f'Minimum order amount of ₹{coupon.min_amount} required.'})
+                
+            if coupon.usage_limit and coupon.used_count >= coupon.usage_limit:
+                return JsonResponse({'success': False, 'message': 'This coupon usage limit has been reached.'})
+                
+            if coupon.discount_type == 'fixed':
+                discount = coupon.discount_value
+            else:
+                calculated = (subtotal * coupon.discount_value) / 100
+                if coupon.max_discount:
+                    calculated = min(calculated, coupon.max_discount)
+                discount = calculated
+                
+            request.session['coupon_id'] = coupon.id
+            new_total = float(subtotal + 50 - discount) # assuming tax=0, delivery=50
+            return JsonResponse({'success': True, 'message': 'Coupon applied successfully!', 'discount': float(discount), 'new_total': new_total})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+
+@login_required
+def place_order(request):
+    if request.method != "POST":
+        return redirect('checkout')
+ 
+    address_id = request.POST.get("address_id")
+    payment_method = request.POST.get("payment_method")
+ 
+    if not address_id:
+        messages.error(request, "Select address")
+        return redirect('checkout')
+ 
+    if payment_method not in ["razorpay", "wallet", "cod"]:
+        messages.error(request, "Invalid payment method")
+        return redirect('checkout')
+ 
+    address = get_object_or_404(Address, id=address_id, user=request.user)
+ 
+    cart = Cart.objects.get(user=request.user)
+    items = cart.items.select_related('variant')
+ 
+    if not items.exists():
+        messages.error(request, "Cart empty")
+        return redirect('cart')
+ 
+    subtotal = sum(i.quantity * i.variant.price for i in items)
+    delivery = 50
+    tax = 0
+    discount = 0
+ 
+    # coupon
+    coupon = None
+    coupon_id = request.session.get('coupon_id')
+    if coupon_id:
+        try:
+            coupon = Coupon.objects.get(id=coupon_id, is_active=True)
+            if subtotal >= coupon.min_amount:
+                if coupon.discount_type == 'fixed':
+                    discount = coupon.discount_value
+                else:
+                    calc = (subtotal * coupon.discount_value) / 100
+                    if coupon.max_discount:
+                        calc = min(calc, coupon.max_discount)
+                    discount = calc
+            else:
+                coupon = None
+        except Coupon.DoesNotExist:
+            coupon = None
+ 
+    total = max(subtotal + delivery + tax - discount, 0)
+ 
+    # stock check only (no deduction yet)
+    for item in items:
+        if item.variant.stock < item.quantity:
+            messages.error(request, f"Stock issue for {item.variant}")
+            return redirect('cart')
+ 
+    # create order (pending)
+    order = Order.objects.create(
+        user=request.user,
+        shipping_address=address,
+        payment_method=payment_method,
+        subtotal=subtotal,
+        tax_amount=tax,
+        discount_amount=discount,
+        coupon=coupon,
+        delivery_charge=delivery,
+        total_amount=total,
+        payment_status='pending'
+    )
+ 
+    # create order items
+    for item in items:
+        OrderItem.objects.create(
+            order=order,
+            variant=item.variant,
+            price=item.variant.price,
+            quantity=item.quantity
+        )
+ 
+    # ---------------- COD ----------------
+    if payment_method == "cod":
+        Payment.objects.create(
+            order=order,
+            payment_method='cod',
+            payment_status='pending',
+            amount=total
+        )
+ 
+        for item in items:
+            item.variant.stock -= item.quantity
+            item.variant.save()
+ 
+        cart.items.all().delete()
+        request.session.pop('coupon_id', None)
+ 
+        return redirect('order_success', order_id=order.id)
+ 
+    # ---------------- WALLET ----------------
+    if payment_method == "wallet":
+        wallet = request.user.wallet
+        if wallet.balance < total:
+            messages.error(request, "Insufficient wallet balance")
+            return redirect('checkout')
+ 
+        wallet.balance -= total
+        wallet.save()
+ 
+        Payment.objects.create(
+            order=order,
+            payment_method='wallet',
+            payment_status='success',
+            amount=total
+        )
+ 
+        order.payment_status = 'paid'
+        order.save()
+ 
+        for item in items:
+            item.variant.stock -= item.quantity
+            item.variant.save()
+ 
+        cart.items.all().delete()
+        request.session.pop('coupon_id', None)
+ 
+        return redirect('order_success', order_id=order.id)
+ 
+    # ---------------- RAZORPAY ----------------
+    if payment_method == "razorpay":
+        payment = Payment.objects.create(
+            order=order,
+            payment_method='razorpay',
+            payment_status='pending',
+            amount=total
+        )
+ 
+        key_id = settings.RAZORPAY_KEY_ID.strip(' "\'')
+        key_secret = settings.RAZORPAY_KEY_SECRET.strip(' "\'')
+        client = razorpay.Client(auth=(key_id, key_secret))
+ 
+        rp_order = client.order.create({
+            "amount": int(total * 100),
+            "currency": "INR",
+            "payment_capture": "1"
+        })
+ 
+        payment.razorpay_order_id = rp_order['id']
+        payment.save()
+ 
+        return redirect('payment_page', order_id=order.id)

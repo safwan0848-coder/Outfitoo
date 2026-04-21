@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Outfito | Edit Coupon</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Material+Icons+Outlined&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        cream:   { DEFAULT: '#faf8f4', 2: '#f3f0ea' },
+        forest:  { DEFAULT: '#1a5c3a', mid: '#2a7a50', light: '#e8f4ee', dim: '#134a2c' },
+        gold:    { DEFAULT: '#b18a4c', light: '#f5edd8', dim: '#8a6a36' },
+        ink:     { DEFAULT: '#0e0e1a', 2: '#3a3a52', 3: '#7878a0', 4: '#a8a8c0' },
+        surface: { DEFAULT: '#ffffff', 2: '#f8f6f1' },
+      },
+      fontFamily: {
+        display: ['Cormorant Garamond', 'Georgia', 'serif'],
+        body:    ['DM Sans', 'Helvetica Neue', 'sans-serif'],
+      },
+      boxShadow: {
+        'card': '0 1px 3px rgba(14,14,26,.06), 0 1px 2px rgba(14,14,26,.04)',
+      }
+    },
+  },
+}
+</script>
+<style>
+  body { font-family: 'DM Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+  .material-icons-outlined { vertical-align: middle; font-size: 19px; line-height: 1; }
+  .nav-active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 58%; background: #1a5c3a; border-radius: 2px; }
+  /* Toggle switch */
+  .toggle-checkbox:checked { right: 0; border-color: #1a5c3a; }
+  .toggle-checkbox:checked + .toggle-label { background-color: #1a5c3a; }
+</style>
+</head>
+
+<body class="bg-cream text-ink min-h-screen">
+<div class="flex min-h-screen">
+
+  <!-- ═══════════ SIDEBAR ═══════════ -->
+  <aside class="w-[252px] shrink-0 bg-surface border-r border-[#e8e2d8] flex flex-col sticky top-0 h-screen overflow-y-auto">
+    <!-- Brand -->
+    <div class="px-7 py-8 border-b border-[#ede8df]">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-forest rounded-lg flex items-center justify-center text-white shrink-0">
+          <span class="material-icons-outlined" style="font-size:17px">storefront</span>
+        </div>
+        <span class="font-display text-[22px] font-bold tracking-wide text-forest">Outfito</span>
+      </div>
+    </div>
+    <!-- Nav -->
+    <nav class="flex-1 px-3 py-6 space-y-0.5">
+      <p class="text-[9.5px] font-bold tracking-[.22em] uppercase text-ink-4 px-3 mb-3">Management</p>
+      <a href="#" class="flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-medium text-ink-3 hover:bg-cream-2 hover:text-ink-2 transition-colors">
+        <span class="material-icons-outlined">dashboard</span> Dashboard
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-medium text-ink-3 hover:bg-cream-2 hover:text-ink-2 transition-colors">
+        <span class="material-icons-outlined">shopping_bag</span> Orders
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-medium text-ink-3 hover:bg-cream-2 hover:text-ink-2 transition-colors">
+        <span class="material-icons-outlined">inventory_2</span> Products
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-medium text-ink-3 hover:bg-cream-2 hover:text-ink-2 transition-colors">
+        <span class="material-icons-outlined">category</span> Categories
+      </a>
+      <a href="{% url 'coupon_list' %}" class="nav-active relative flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-semibold text-white bg-forest transition-colors shadow-card">
+        <span class="material-icons-outlined text-white">sell</span> Coupons
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-medium text-ink-3 hover:bg-cream-2 hover:text-ink-2 transition-colors">
+        <span class="material-icons-outlined">local_offer</span> Offers
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-medium text-ink-3 hover:bg-cream-2 hover:text-ink-2 transition-colors">
+        <span class="material-icons-outlined">groups</span> Customers
+      </a>
+    </nav>
+    <!-- User -->
+    <div class="px-4 py-4 border-t border-[#ede8df] flex items-center gap-3">
+      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvha7Z95xQ9raQvrupsxDQ3RQNaSmCfyH_OBfN4YssokVX_tjoJXvUGNBGVNzqG_TDL1S40PHwQcIAM-y3EBGDEkrqypABxAF82BJ4WDTlTPmxZQhQjsVDSTr-HEfYPR-pze5rlRoso4dk-Nn09-vUvJzUruSz7PGlk62QvhhZYqEwPK5Tfn8UF5BDQwEjYxv0GXxMS5X-EfeZuJQ7cHFllqrlchvnFesNPoo6_p8LYcyv4I4_pWdKFxhZX2ylwbk-uD7mrxVNQHo"
+        class="w-9 h-9 rounded-full object-cover border-2 border-[#e0dbd0]" alt="Admin"/>
+      <div class="min-w-0">
+        <p class="text-[12.5px] font-semibold text-ink">Busthan Thasreef</p>
+        <p class="text-[10.5px] text-ink-3 truncate">busthan@outfito.com</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════════ MAIN ═══════════ -->
+  <main class="flex-1 overflow-y-auto px-12 py-12 min-w-0">
+    <div class="max-w-[850px] mx-auto">
+      
+      <!-- Breadcrumb & Header -->
+      <div class="mb-8">
+        <div class="flex items-center gap-2 text-ink-3 text-[13px] font-medium mb-3">
+          <a href="{% url 'coupon_list' %}" class="hover:text-ink">Coupons</a>
+          <span class="material-icons-outlined" style="font-size: 14px;">chevron_right</span>
+          <span class="text-ink">Edit Coupon</span>
+        </div>
+        <h1 class="font-display text-[32px] font-bold leading-none tracking-tight text-ink mb-1 text-center">Edit Coupon</h1>
+        <div class="w-16 h-[3px] bg-forest mx-auto mt-2 rounded"></div>
+      </div>
+
+      <form method="POST" action="{% url 'edit_coupon' coupon.id %}">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <!-- LEFT: General Information -->
+          <div class="md:col-span-2 space-y-6 bg-surface border border-[#e8e2d8] rounded-2xl shadow-card p-6">
+            <div>
+              <h2 class="text-[16px] font-bold text-ink mb-1">General Information</h2>
+              <p class="text-[12.5px] text-ink-3">Configure the basic details of your discount coupon.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <!-- Code -->
+              <div>
+                <label class="block text-[11.5px] font-bold text-ink-2 mb-1.5 uppercase tracking-wide">Coupon Code <span class="text-red-500">*</span></label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-4">
+                    <span class="material-icons-outlined" style="font-size:16px">sell</span>
+                  </span>
+                  <input type="text" name="code" value="{{ coupon.code }}" required
+                    class="w-full pl-9 pr-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink placeholder-ink-4 outline-none focus:border-forest focus:ring-1 focus:ring-forest transition-colors uppercase"/>
+                </div>
+              </div>
+              
+              <!-- Value -->
+              <div>
+                <label class="block text-[11.5px] font-bold text-ink-2 mb-1.5 uppercase tracking-wide">Discount Value <span class="text-red-500">*</span></label>
+                <input type="number" name="discount_value" value="{{ coupon.discount_value }}" required min="0" step="0.01"
+                  class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest focus:ring-1 focus:ring-forest transition-colors"/>
+                <p class="text-[10px] text-ink-4 mt-1.5">The percentage or fixed amount to deduct.</p>
+              </div>
+
+              <!-- Type -->
+              <div class="col-span-2 grid grid-cols-2 gap-4 border border-[#e0dbd0] p-1 rounded-lg">
+                <label class="relative flex items-center justify-between p-3 border rounded-md cursor-pointer hover:bg-cream transition-colors has-[:checked]:border-forest has-[:checked]:bg-forest-light">
+                  <div class="flex items-center gap-2">
+                    <input type="radio" name="discount_type" value="percentage" {% if coupon.discount_type == 'percentage' %}checked{% endif %} class="w-4 h-4 accent-forest text-forest focus:ring-forest"/>
+                    <span class="text-[13px] font-semibold text-ink">Percentage (%)</span>
+                  </div>
+                  <span class="text-ink-4 font-display font-bold text-lg">%</span>
+                </label>
+                <label class="relative flex items-center justify-between p-3 border rounded-md border-transparent cursor-pointer hover:bg-cream transition-colors has-[:checked]:border-forest has-[:checked]:bg-forest-light">
+                  <div class="flex items-center gap-2">
+                    <input type="radio" name="discount_type" value="fixed" {% if coupon.discount_type == 'fixed' %}checked{% endif %} class="w-4 h-4 accent-forest text-forest focus:ring-forest"/>
+                    <span class="text-[13px] font-semibold text-ink">Fixed Amount (₹)</span>
+                  </div>
+                  <span class="material-icons-outlined text-ink-4 text-[18px]">payments</span>
+                </label>
+              </div>
+
+              <!-- Min Purchase -->
+              <div>
+                <label class="block text-[11.5px] font-bold text-ink-2 mb-1.5 uppercase tracking-wide">Minimum Purchase (₹)</label>
+                <input type="number" name="min_amount" value="{{ coupon.min_amount }}" min="0" step="0.01"
+                  class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest focus:ring-1 focus:ring-forest transition-colors"/>
+              </div>
+
+              <!-- Max Discount -->
+              <div>
+                <label class="block text-[11.5px] font-bold text-ink-2 mb-1.5 uppercase tracking-wide">Maximum Discount (₹)</label>
+                <input type="number" name="max_discount" value="{{ coupon.max_discount|default_if_none:'' }}" min="0" step="0.01" {% if coupon.discount_type == 'fixed' %}disabled class="w-full px-3 py-2.5 text-[13px] border border-[#e0dbd0] rounded-lg outline-none bg-gray-100 cursor-not-allowed opacity-50"{% else %}class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest focus:ring-1 focus:ring-forest transition-colors"{% endif %}/>
+                <p class="text-[10px] text-ink-4 mt-1.5">Applicable for percentage discounts.</p>
+              </div>
+
+              <!-- Usage Limit -->
+              <div>
+                <label class="block text-[11.5px] font-bold text-ink-2 mb-1.5 uppercase tracking-wide">Usage Limit (Per User)</label>
+                <input type="number" name="usage_limit_per_user" value="{{ coupon.usage_limit_per_user }}" min="1"
+                  class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest focus:ring-1 focus:ring-forest transition-colors"/>
+              </div>
+
+              <div>
+                <label class="block text-[11.5px] font-bold text-ink-2 mb-1.5 uppercase tracking-wide">Total Usage Limit</label>
+                <input type="number" name="usage_limit" value="{{ coupon.usage_limit }}" min="1"
+                  class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest focus:ring-1 focus:ring-forest transition-colors"/>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- RIGHT: Schedule & Status -->
+          <div class="space-y-6">
+            
+            <div class="bg-surface border border-[#e8e2d8] rounded-2xl shadow-card p-6">
+              <h2 class="text-[16px] font-bold text-ink mb-1">Schedule</h2>
+              <p class="text-[12.5px] text-ink-3 mb-5">Set validity period.</p>
+              
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-[11.5px] font-bold text-ink-2 mb-1.5 uppercase tracking-wide">Start Date</label>
+                  <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-4 pointer-events-none">
+                      <span class="material-icons-outlined" style="font-size:16px">calendar_today</span>
+                    </span>
+                    <input type="date" name="start_date" value="{{ coupon.start_date|date:'Y-m-d' }}" required
+                      class="w-full pl-9 pr-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest focus:ring-1 focus:ring-forest transition-colors"/>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-[11.5px] font-bold text-ink-2 mb-1.5 uppercase tracking-wide">End Date</label>
+                  <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-4 pointer-events-none">
+                      <span class="material-icons-outlined" style="font-size:16px">event</span>
+                    </span>
+                    <input type="date" name="expiry_date" value="{{ coupon.expiry_date|date:'Y-m-d' }}" required
+                      class="w-full pl-9 pr-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest focus:ring-1 focus:ring-forest transition-colors"/>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-surface border border-[#e8e2d8] rounded-2xl shadow-card p-6 flex flex-col justify-center">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h2 class="text-[13px] font-bold text-ink uppercase tracking-wide">Active Status</h2>
+                  <p class="text-[11px] text-ink-4 mt-0.5">Enable or disable coupon</p>
+                </div>
+                <!-- Toggle -->
+                <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" name="is_active" id="toggle" {% if coupon.is_active %}checked{% endif %} class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-gray-300 appearance-none cursor-pointer duration-200 ease-in-out"/>
+                    <label for="toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Helper Box -->
+            <div class="bg-forest-light border border-forest/20 rounded-2xl p-5 flex gap-3 text-forest-mid">
+              <span class="material-icons-outlined text-forest-mid mt-0.5">info</span>
+              <p class="text-[12px] leading-relaxed font-medium">Ensure you have double-checked the usage limits before saving. Once a coupon code is used, it cannot be modified to maintain transactional integrity.</p>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Buttons -->
+        <div class="mt-8 flex items-center justify-center gap-3 pb-12">
+          <a href="{% url 'coupon_list' %}" class="px-8 py-3 rounded-lg text-[13.5px] font-semibold border border-[#e0dbd0] text-ink-2 bg-white hover:bg-cream-2 transition-colors">
+            Cancel
+          </a>
+          <button type="submit" class="px-8 py-3 rounded-lg text-[13.5px] font-semibold bg-ink text-[#faf8f4] hover:bg-ink-2 shadow-card transition-colors">
+            Save Changes
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </main>
+</div>
+
+<!-- Theme toggle -->
+<button onclick="document.documentElement.classList.toggle('dark')" class="fixed bottom-7 right-7 w-11 h-11 rounded-full bg-surface border border-[#e0dbd0] shadow-fab flex items-center justify-center text-ink-3 hover:scale-110 active:scale-100 transition-transform z-50">
+  <span class="material-icons-outlined dark:hidden" style="font-size:18px">dark_mode</span>
+  <span class="material-icons-outlined hidden dark:block" style="font-size:18px">light_mode</span>
+</button>
+
+<script>
+  // Simple listener to disable max discount if fixed amount is chosen
+  document.querySelectorAll('input[name="discount_type"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      const maxDiscountInput = document.querySelector('input[name="max_discount"]');
+      if(this.value === 'fixed') {
+        maxDiscountInput.disabled = true;
+        maxDiscountInput.value = '';
+        maxDiscountInput.classList.add('bg-gray-100', 'cursor-not-allowed', 'opacity-50');
+      } else {
+        maxDiscountInput.disabled = false;
+        maxDiscountInput.classList.remove('bg-gray-100', 'cursor-not-allowed', 'opacity-50');
+      }
+    });
+  });
+</script>
+</body>
+</html>

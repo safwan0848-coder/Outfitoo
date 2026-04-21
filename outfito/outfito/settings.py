@@ -15,7 +15,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     'admin_side.products_management',
     'admin_side.variants_management', 
     'admin_side.order_management', 
+    'admin_side.coupon_management',
+    
 
     
     'user_side.authentication',
@@ -64,6 +66,8 @@ INSTALLED_APPS = [
     'user_side.wishlist',
     'user_side.cart',
     'user_side.orders',
+    'user_side.payment',
+
 ]
 SITE_ID = 1
 
@@ -182,3 +186,6 @@ LOGOUT_REDIRECT_URL = '/'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_test_SfiHifJQNqP7gI")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "gLV4cIcLHYNtnBsFN6uOLK02")

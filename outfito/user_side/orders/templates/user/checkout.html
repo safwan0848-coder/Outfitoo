@@ -221,6 +221,53 @@
     text-decoration: none;
     display: inline-block;
     margin-bottom: 16px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .view-coupons:hover { text-decoration: underline; }
+
+  .coupon-card {
+    background: var(--surface2);
+    border: 1px dashed var(--accent);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .coupon-card-left { flex: 1; }
+  .coupon-code {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    background: rgba(59,223,176,0.1);
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .coupon-desc { font-size: 13px; color: var(--text); font-weight: 500; }
+  .coupon-min { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .coupon-apply-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .coupon-apply-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59,223,176,0.3);
   }
 
   .place-order-btn {
@@ -477,6 +524,37 @@
   </div>
 </div>
 
+<!-- COUPON MODAL -->
+<div class="modal-overlay" id="couponModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Available Coupons</div>
+      <button type="button" class="modal-close" onclick="closeCouponModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    {% if available_coupons %}
+      {% for coupon in available_coupons %}
+      <div class="coupon-card">
+        <div class="coupon-card-left">
+          <div class="coupon-code">{{ coupon.code }}</div>
+          <div class="coupon-desc">
+            {% if coupon.discount_type == 'percentage' %}
+              {{ coupon.discount_value|floatformat:0 }}% OFF up to ₹{{ coupon.max_discount }}
+            {% else %}
+              Flat ₹{{ coupon.discount_value|floatformat:0 }} OFF
+            {% endif %}
+          </div>
+          <div class="coupon-min">On minimum purchase of ₹{{ coupon.min_amount|floatformat:0 }}</div>
+        </div>
+        <button type="button" class="coupon-apply-btn" onclick="applySpecificCoupon('{{ coupon.code|escapejs }}')">Apply</button>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p style="color:var(--muted);font-size:14px;text-align:center;padding:20px 0;">No coupons available right now.</p>
+    {% endif %}
+  </div>
+</div>
+
 
 <!-- ═══════════════════════════════════════════════════════════ -->
 <!--  CHECKOUT FORM                                             -->
@@ -629,11 +707,17 @@
 
           <div class="divider"></div>
 
-          <div class="coupon-row">
+          <div class="coupon-row" id="couponInputContainer" {% if applied_coupon_code %}style="display:none;"{% endif %}>
             <input class="coupon-input" type="text" id="couponInput" placeholder="Enter coupon code">
             <button type="button" class="coupon-btn" onclick="applyCoupon()">Apply</button>
           </div>
-          <a href="#" class="view-coupons"><i class="fa-solid fa-tag" style="font-size:11px;"></i> View available coupons</a>
+          <div class="coupon-row" id="couponAppliedContainer" {% if not applied_coupon_code %}style="display:none;"{% endif %}>
+            <div class="coupon-input" style="font-weight:700; color:var(--accent); background:rgba(59,223,176,0.1); border-color:var(--accent); display:flex; align-items:center; gap:8px;">
+              <i class="fa-solid fa-circle-check"></i> <span id="appliedCouponCode">{{ applied_coupon_code }}</span> Applied!
+            </div>
+            <button type="button" class="coupon-btn" style="color:var(--error); border-color:var(--error);" onclick="removeCoupon()">Remove</button>
+          </div>
+          <button type="button" class="view-coupons" onclick="openCouponModal()"><i class="fa-solid fa-tag" style="font-size:11px;"></i> View available coupons</button>
 
           <div class="divider"></div>
 
@@ -666,6 +750,7 @@
 
 </form>
 
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
 
 /* ── TOAST ── */
@@ -699,6 +784,17 @@ function closeModal() { modal.classList.remove("open"); document.body.style.over
 
 document.getElementById("closeModal").addEventListener("click", closeModal);
 modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+
+const couponModal = document.getElementById("couponModal");
+function openCouponModal() { couponModal.classList.add("open"); document.body.style.overflow = "hidden"; }
+function closeCouponModal() { couponModal.classList.remove("open"); document.body.style.overflow = ""; }
+couponModal.addEventListener("click", (e) => { if (e.target === couponModal) closeCouponModal(); });
+
+function applySpecificCoupon(code) {
+  document.getElementById('couponInput').value = code;
+  closeCouponModal();
+  applyCoupon();
+}
 
 function toggleExtraAddresses() {
   const btn = document.getElementById('toggleAddressesBtn');
@@ -769,47 +865,94 @@ function setPayment(method) {
   document.getElementById('paymentCard').classList.remove('payment-error-border');
 }
 
-/* ── COUPON (stub — wire to your backend) ── */
-function applyCoupon() {
+/* ── COUPON (fetch integration) ── */
+async function applyCoupon() {
   const code = document.getElementById('couponInput').value.trim();
-  if (!code) { showToast('Enter a coupon code first.'); return; }
-  showToast('Coupon feature coming soon.', 'success');
+  if (!code) { 
+      showToast('Enter a coupon code first.');
+      return; 
+  }
+  await processCoupon(code);
+}
+
+async function removeCoupon() {
+  await processCoupon("");
+}
+
+async function processCoupon(code) {
+  try {
+      const response = await fetch("{% url 'apply_coupon' %}", {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: JSON.stringify({ code: code })
+      });
+      const data = await response.json();
+      if (data.success) {
+          showToast(data.message, 'success');
+          // Update the DOM instead of reloading
+          const discountLine = document.querySelector('.summary-line.discount span:last-child');
+          if (discountLine) discountLine.textContent = `-₹${data.discount.toFixed(2)}`;
+          
+          const totalDisp = document.getElementById('totalDisplay');
+          if (totalDisp) totalDisp.textContent = `₹${data.new_total.toFixed(2)}`;
+          
+          if (code === "") {
+             document.getElementById('couponInputContainer').style.display = 'flex';
+             document.getElementById('couponAppliedContainer').style.display = 'none';
+             document.getElementById('couponInput').value = "";
+          } else {
+             document.getElementById('couponInputContainer').style.display = 'none';
+             document.getElementById('couponAppliedContainer').style.display = 'flex';
+             document.getElementById('appliedCouponCode').textContent = code;
+          }
+      } else {
+          showToast(data.message, 'error');
+      }
+  } catch(error) {
+      showToast('Error applying coupon. Please try again later.', 'error');
+  }
 }
 
 /* ── VALIDATE & SUBMIT ── */
 function validateAndSubmit() {
   let valid = true;
 
-  /* 1 – address */
   const addressId = document.getElementById('selectedAddressId').value.trim();
   if (!addressId) {
     document.getElementById('addressError').classList.add('show');
     showToast('Please select a delivery address.');
     valid = false;
-  } else {
-    document.getElementById('addressError').classList.remove('show');
   }
 
-  /* 2 – payment */
   const paymentMethod = document.getElementById('paymentMethodInput').value.trim();
   const validMethods  = ['razorpay', 'wallet', 'cod'];
+
   if (!paymentMethod || !validMethods.includes(paymentMethod)) {
     document.getElementById('paymentError').classList.add('show');
     document.getElementById('paymentCard').classList.add('payment-error-border');
-    document.getElementById('paymentCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
     showToast('Please select a payment method.');
     valid = false;
-  } else {
-    document.getElementById('paymentError').classList.remove('show');
-    document.getElementById('paymentCard').classList.remove('payment-error-border');
   }
 
   if (valid) {
     const btn = document.getElementById('placeOrderBtn');
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Placing Order...';
+
     document.getElementById('checkoutForm').submit();
   }
 }
 </script>
+
+<!-- HIDDEN RAZORPAY SUBMISSION FORM -->
+<form id="razorpay-form" action="{% url 'verify_payment' %}" method="POST" style="display:none;">
+    {% csrf_token %}
+    <input type="hidden" name="razorpay_order_id" id="rzp_order_id">
+    <input type="hidden" name="razorpay_payment_id" id="rzp_payment_id">
+    <input type="hidden" name="razorpay_signature" id="rzp_signature">
+</form>
+
 {% endblock %}

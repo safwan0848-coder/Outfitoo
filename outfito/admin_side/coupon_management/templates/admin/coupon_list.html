@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Outfito | Coupon Management</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Material+Icons+Outlined&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        cream:   { DEFAULT: '#faf8f4', 2: '#f3f0ea' },
+        forest:  { DEFAULT: '#1a5c3a', mid: '#2a7a50', light: '#e8f4ee', dim: '#134a2c' },
+        gold:    { DEFAULT: '#b18a4c', light: '#f5edd8', dim: '#8a6a36' },
+        ink:     { DEFAULT: '#0e0e1a', 2: '#3a3a52', 3: '#7878a0', 4: '#a8a8c0' },
+        surface: { DEFAULT: '#ffffff', 2: '#f8f6f1' },
+        sidebar: { DEFAULT: '#f5f1e9' },
+      },
+      fontFamily: {
+        display: ['Cormorant Garamond', 'Georgia', 'serif'],
+        body:    ['DM Sans', 'Helvetica Neue', 'sans-serif'],
+      },
+      boxShadow: {
+        'card': '0 1px 3px rgba(14,14,26,.06), 0 1px 2px rgba(14,14,26,.04)',
+        'card-hover': '0 4px 16px rgba(14,14,26,.09), 0 2px 6px rgba(14,14,26,.05)',
+        'fab': '0 8px 32px rgba(14,14,26,.14), 0 2px 8px rgba(14,14,26,.08)',
+      },
+      keyframes: {
+        fadeUp: {
+          '0%':   { opacity: '0', transform: 'translateY(12px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        'fade-up':    'fadeUp .38s ease both',
+        'fade-up-1':  'fadeUp .38s .08s ease both',
+        'fade-up-2':  'fadeUp .38s .16s ease both',
+        'fade-up-3':  'fadeUp .38s .24s ease both',
+      },
+    },
+  },
+}
+</script>
+<style>
+  body { font-family: 'DM Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+  .material-icons-outlined { vertical-align: middle; font-size: 19px; line-height: 1; }
+
+  /* Usage bar animation */
+  .bar-fill { transition: width .6s cubic-bezier(.4,0,.2,1); }
+
+  /* Active nav indicator */
+  .nav-active::before {
+    content: '';
+    position: absolute; left: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 3px; height: 58%;
+    background: #1a5c3a;
+    border-radius: 2px;
+  }
+  .dark .nav-active::before { background: #2ecc8e; }
+
+  /* Code chip shimmer on hover */
+  .code-chip { transition: box-shadow .18s ease, transform .18s ease; }
+  .code-chip:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,92,58,.18); }
+
+  /* Smooth dark transitions */
+  * { transition-property: background-color, border-color, color; transition-duration: .15s; transition-timing-function: ease; }
+  .no-transition, .bar-fill { transition: none; }
+  .bar-fill { transition: width .6s cubic-bezier(.4,0,.2,1) !important; }
+</style>
+</head>
+
+<body class="bg-cream dark:bg-[#0e0e1a] text-ink dark:text-[#f0ead8] min-h-screen">
+<div class="flex min-h-screen">
+
+  <!-- ═══════════ SIDEBAR ═══════════ -->
+  <aside class="w-[252px] shrink-0 bg-surface dark:bg-[#14141f] border-r border-[#e8e2d8] dark:border-[#22223a] flex flex-col sticky top-0 h-screen overflow-y-auto">
+
+    <!-- Brand -->
+    <div class="px-7 py-8 border-b border-[#ede8df] dark:border-[#22223a]">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-forest rounded-lg flex items-center justify-center text-white shrink-0">
+          <span class="material-icons-outlined" style="font-size:17px">storefront</span>
+        </div>
+        <span class="font-display text-[22px] font-bold tracking-wide text-forest dark:text-[#2ecc8e]">Outfito</span>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 px-3 py-6 space-y-0.5">
+      <p class="text-[9.5px] font-bold tracking-[.22em] uppercase text-ink-4 dark:text-[#44445a] px-3 mb-3">Management</p>
+
+
+
+      <!-- Static nav (for non-Django preview) -->
+      <a href="#" class="flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-medium text-ink-3 dark:text-[#6868a0] hover:bg-cream-2 dark:hover:bg-[#1a1a2e] hover:text-ink-2 transition-colors">
+        <span class="material-icons-outlined">dashboard</span> Dashboard
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-medium text-ink-3 dark:text-[#6868a0] hover:bg-cream-2 dark:hover:bg-[#1a1a2e] hover:text-ink-2 transition-colors">
+        <span class="material-icons-outlined">shopping_bag</span> Orders
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-medium text-ink-3 dark:text-[#6868a0] hover:bg-cream-2 dark:hover:bg-[#1a1a2e] hover:text-ink-2 transition-colors">
+        <span class="material-icons-outlined">inventory_2</span> Products
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-medium text-ink-3 dark:text-[#6868a0] hover:bg-cream-2 dark:hover:bg-[#1a1a2e] hover:text-ink-2 transition-colors">
+        <span class="material-icons-outlined">category</span> Categories
+      </a>
+      <a href="#" class="nav-active relative flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-semibold text-forest dark:text-[#2ecc8e] bg-forest-light dark:bg-[#0d2018] transition-colors">
+        <span class="material-icons-outlined text-forest dark:text-[#2ecc8e]">confirmation_number</span> Coupons
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-medium text-ink-3 dark:text-[#6868a0] hover:bg-cream-2 dark:hover:bg-[#1a1a2e] hover:text-ink-2 transition-colors">
+        <span class="material-icons-outlined">local_offer</span> Offers
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-medium text-ink-3 dark:text-[#6868a0] hover:bg-cream-2 dark:hover:bg-[#1a1a2e] hover:text-ink-2 transition-colors">
+        <span class="material-icons-outlined">groups</span> Customers
+      </a>
+    </nav>
+
+    <!-- User -->
+    <div class="px-4 py-4 border-t border-[#ede8df] dark:border-[#22223a] flex items-center gap-3">
+      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvha7Z95xQ9raQvrupsxDQ3RQNaSmCfyH_OBfN4YssokVX_tjoJXvUGNBGVNzqG_TDL1S40PHwQcIAM-y3EBGDEkrqypABxAF82BJ4WDTlTPmxZQhQjsVDSTr-HEfYPR-pze5rlRoso4dk-Nn09-vUvJzUruSz7PGlk62QvhhZYqEwPK5Tfn8UF5BDQwEjYxv0GXxMS5X-EfeZuJQ7cHFllqrlchvnFesNPoo6_p8LYcyv4I4_pWdKFxhZX2ylwbk-uD7mrxVNQHo"
+        class="w-9 h-9 rounded-full object-cover border-2 border-[#e0dbd0] dark:border-[#2a2a42]" alt="Admin"/>
+      <div class="min-w-0">
+        <p class="text-[12.5px] font-semibold text-ink dark:text-[#f0ead8] truncate">Busthan Thasreef</p>
+        <p class="text-[10.5px] text-ink-3 truncate">busthan@outfito.com</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════════ MAIN ═══════════ -->
+  <main class="flex-1 overflow-y-auto px-12 py-12 min-w-0">
+    <div class="max-w-[1100px] mx-auto">
+
+      <!-- Page header -->
+      <div class="flex items-start justify-between gap-6 mb-8 animate-fade-up">
+        <div>
+          <h1 class="font-display text-[46px] font-bold leading-none tracking-tight text-ink dark:text-[#f0ead8] mb-2">Coupons</h1>
+          <p class="text-[13.5px] text-ink-3 dark:text-[#6868a0]">Manage discount codes, promotions &amp; usage limits.</p>
+        </div>
+        <a href="{% url 'add_coupon' %}" class="flex items-center gap-2 bg-forest dark:bg-[#2ecc8e] text-white dark:text-[#0e0e1a] px-5 py-2.5 rounded-lg text-[13px] font-semibold shadow-card hover:bg-forest-dim dark:hover:bg-white hover:-translate-y-px active:translate-y-0 transition-all duration-150 shrink-0">
+          <span class="material-icons-outlined" style="font-size:17px">add_circle_outline</span>
+          Add Coupon
+        </a>
+      </div>
+
+      <!-- Stats strip -->
+      <div class="grid grid-cols-4 gap-4 mb-7 animate-fade-up-1">
+
+        <div class="bg-surface dark:bg-[#14141f] border border-[#e8e2d8] dark:border-[#22223a] rounded-xl p-5 shadow-card hover:shadow-card-hover transition-shadow">
+          <p class="text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4 dark:text-[#44445a] mb-3">Total Coupons</p>
+          <p class="font-display text-[34px] font-bold text-ink dark:text-[#f0ead8] leading-none">{{ total_coupons }}</p>
+          <span class="inline-block mt-2.5 text-[10px] font-semibold bg-forest-light dark:bg-[#0d2018] text-forest-mid dark:text-[#2ecc8e] px-2.5 py-1 rounded-full">All time records</span>
+        </div>
+
+        <div class="bg-surface dark:bg-[#14141f] border border-[#e8e2d8] dark:border-[#22223a] rounded-xl p-5 shadow-card hover:shadow-card-hover transition-shadow">
+          <p class="text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4 dark:text-[#44445a] mb-3">Active</p>
+          <p class="font-display text-[34px] font-bold text-ink dark:text-[#f0ead8] leading-none">{{ active_coupons }}</p>
+          <span class="inline-block mt-2.5 text-[10px] font-semibold bg-forest-light dark:bg-[#0d2018] text-forest-mid dark:text-[#2ecc8e] px-2.5 py-1 rounded-full">{{ active_rate }}% active rate</span>
+        </div>
+
+        <div class="bg-surface dark:bg-[#14141f] border border-[#e8e2d8] dark:border-[#22223a] rounded-xl p-5 shadow-card hover:shadow-card-hover transition-shadow">
+          <p class="text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4 dark:text-[#44445a] mb-3">Total Uses</p>
+          <p class="font-display text-[34px] font-bold text-ink dark:text-[#f0ead8] leading-none">{{ total_uses }}</p>
+          <span class="inline-block mt-2.5 text-[10px] font-semibold bg-forest-light dark:bg-[#0d2018] text-forest-mid dark:text-[#2ecc8e] px-2.5 py-1 rounded-full">Coupon applications</span>
+        </div>
+
+        <div class="bg-surface dark:bg-[#14141f] border border-[#e8e2d8] dark:border-[#22223a] rounded-xl p-5 shadow-card hover:shadow-card-hover transition-shadow">
+          <p class="text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4 dark:text-[#44445a] mb-3">Savings Given</p>
+          <p class="font-display text-[34px] font-bold text-ink dark:text-[#f0ead8] leading-none">Rs.{{ savings_given }}</p>
+          <span class="inline-block mt-2.5 text-[10px] font-semibold bg-surface-2 dark:bg-[#1a0808] text-ink-3 px-2.5 py-1 rounded-full">Pending order sync</span>
+        </div>
+
+      </div>
+
+      <!-- Table card -->
+      <div class="bg-surface dark:bg-[#14141f] border border-[#e8e2d8] dark:border-[#22223a] rounded-2xl shadow-card overflow-hidden animate-fade-up-2">
+
+        <!-- Toolbar -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-[#ede8df] dark:border-[#1e1e30]">
+          <span class="text-[10.5px] font-bold tracking-[.18em] uppercase text-ink-3 dark:text-[#5050780] dark:text-[#606080]">All Coupons</span>
+          <div class="relative w-72">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-4 pointer-events-none">
+              <span class="material-icons-outlined" style="font-size:16px">search</span>
+            </span>
+            <input type="text" placeholder="Search by code…"
+              class="w-full pl-9 pr-4 py-2 text-[13px] bg-cream dark:bg-[#0e0e1a] border border-[#e0dbd0] dark:border-[#2a2a42] rounded-lg text-ink dark:text-[#f0ead8] placeholder-ink-4 dark:placeholder-[#44445a] outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all"/>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="bg-cream-2 dark:bg-[#0e0e1a] border-b border-[#e0dbd0] dark:border-[#1e1e30]">
+                <th class="px-6 py-3.5 text-left text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4 dark:text-[#44445a]">Code</th>
+                <th class="px-5 py-3.5 text-left text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4 dark:text-[#44445a]">Discount</th>
+                <th class="px-5 py-3.5 text-left text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4 dark:text-[#44445a]">Min / Max</th>
+                <th class="px-5 py-3.5 text-left text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4 dark:text-[#44445a]">Usage</th>
+                <th class="px-5 py-3.5 text-left text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4 dark:text-[#44445a]">Expiry</th>
+                <th class="px-5 py-3.5 text-left text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4 dark:text-[#44445a]">Status</th>
+                <th class="px-6 py-3.5 text-right text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4 dark:text-[#44445a]">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody class="divide-y divide-[#f0ece4] dark:divide-[#1e1e30]">
+
+              {% for coupon in coupons %}
+              <tr class="group hover:bg-cream-2 dark:hover:bg-[#13131f] transition-colors">
+
+                <td class="px-6 py-[18px]">
+                  <span class="code-chip inline-block font-mono text-[12px] font-bold tracking-widest text-forest dark:text-[#2ecc8e] bg-forest-light dark:bg-[#0d2018] border border-forest/10 dark:border-[#2ecc8e]/20 px-3.5 py-1.5 rounded-lg">
+                    {{ coupon.code }}
+                  </span>
+                </td>
+
+                <td class="px-5 py-[18px]">
+                  <div class="font-display text-[18px] font-bold text-ink dark:text-[#f0ead8] leading-tight">
+                    {% if coupon.discount_type == 'percentage' %}{{ coupon.discount_value }}%
+                    {% else %}Rs.{{ coupon.discount_value }}{% endif %}
+                  </div>
+                  <div class="text-[10.5px] text-ink-4 dark:text-[#44445a] mt-0.5">{{ coupon.get_discount_type_display }}</div>
+                </td>
+
+                <td class="px-5 py-[18px]">
+                  <div class="text-[11.5px] text-ink-3 dark:text-[#6868a0] space-y-0.5">
+                    {% if coupon.min_amount %}<div><span class="font-semibold text-ink-2 dark:text-[#9090b8]">Min</span> Rs.{{ coupon.min_amount }}</div>{% endif %}
+                    {% if coupon.max_discount %}<div><span class="font-semibold text-ink-2 dark:text-[#9090b8]">Max</span> Rs.{{ coupon.max_discount }}</div>{% endif %}
+                    {% if not coupon.min_amount and not coupon.max_discount %}<span class="text-ink-4">—</span>{% endif %}
+                  </div>
+                </td>
+
+                <td class="px-5 py-[18px]">
+                  <div class="flex items-baseline gap-1 mb-1.5">
+                    <span class="text-[14px] font-bold text-ink dark:text-[#f0ead8]">{{ coupon.used_count|default:0 }}</span>
+                    <span class="text-[10px] text-ink-4">/</span>
+                    <span class="text-[11px] text-ink-4">{{ coupon.usage_limit|default:"∞" }}</span>
+                  </div>
+                  {% if coupon.usage_limit %}
+                  <div class="w-20 h-1 bg-[#e8e2d8] dark:bg-[#2a2a42] rounded-full overflow-hidden">
+                    <div class="bar-fill h-full bg-gold rounded-full" style="width: {% widthratio coupon.used_count|default:0 coupon.usage_limit 100 %}%"></div>
+                  </div>
+                  {% endif %}
+                </td>
+
+                <td class="px-5 py-[18px]">
+                  <div class="text-[13px] font-medium text-ink-2 dark:text-[#9090b8]">{{ coupon.expiry_date|date:"M d, Y" }}</div>
+                </td>
+
+                <td class="px-5 py-[18px]">
+                  {% if coupon.is_active %}
+                  <span class="inline-flex items-center gap-1.5 text-[9.5px] font-bold uppercase tracking-[.08em] text-forest-mid dark:text-[#2ecc8e] bg-forest-light dark:bg-[#0d2018] border border-forest/20 dark:border-[#2ecc8e]/25 px-3 py-1.5 rounded-full">
+                    <span class="w-1.5 h-1.5 rounded-full bg-forest-mid dark:bg-[#2ecc8e]"></span>Active
+                  </span>
+                  {% else %}
+                  <span class="inline-flex items-center gap-1.5 text-[9.5px] font-bold uppercase tracking-[.08em] text-ink-4 dark:text-[#44445a] bg-surface-2 dark:bg-[#1a1a2e] border border-[#e0dbd0] dark:border-[#2a2a42] px-3 py-1.5 rounded-full">
+                    <span class="w-1.5 h-1.5 rounded-full bg-ink-4 dark:bg-[#44445a]"></span>Inactive
+                  </span>
+                  {% endif %}
+                </td>
+
+                <td class="px-6 py-[18px]">
+                  <div class="flex items-center justify-end gap-1">
+                    <a href="{% url 'edit_coupon' coupon.id %}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-transparent text-ink-4 hover:text-gold-dim hover:bg-gold-light hover:border-gold/20 dark:hover:bg-[#2a1e08] dark:hover:text-gold dark:hover:border-gold/30 transition-all" title="Edit">
+                      <span class="material-icons-outlined" style="font-size:16px">edit</span>
+                    </a>
+                    <a href="{% url 'delete_coupon' coupon.id %}" onclick="return confirm('Are you sure you want to delete this coupon?');" class="w-8 h-8 flex items-center justify-center rounded-lg border border-transparent text-ink-4 hover:text-red-600 hover:bg-red-50 hover:border-red-200 dark:hover:bg-[#1a0808] dark:hover:text-red-400 dark:hover:border-red-900 transition-all" title="Delete">
+                      <span class="material-icons-outlined" style="font-size:16px">delete_outline</span>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="7" class="py-20 text-center">
+                  <div class="text-[#e0dbd0] dark:text-[#2a2a42]"><span class="material-icons-outlined" style="font-size:48px">confirmation_number</span></div>
+                  <p class="text-[13.5px] text-ink-4 mt-3">No coupons found. Create your first coupon.</p>
+                </td>
+              </tr>
+              {% endfor %}
+
+
+
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-between px-6 py-4 border-t border-[#ede8df] dark:border-[#1e1e30]">
+          <span class="text-[11.5px] text-ink-4 dark:text-[#44445a]">Showing 1–5 of 24 coupons</span>
+          <div class="flex items-center gap-1">
+            <button class="flex items-center gap-1 h-8 px-3 text-[12px] font-medium text-ink-3 dark:text-[#6060808] dark:text-[#606080] border border-[#e0dbd0] dark:border-[#2a2a42] rounded-lg bg-surface dark:bg-[#14141f] hover:bg-cream-2 dark:hover:bg-[#1a1a2e] transition-colors">
+              <span class="material-icons-outlined" style="font-size:14px">chevron_left</span> Prev
+            </button>
+            <button class="w-8 h-8 text-[12px] font-bold rounded-lg bg-ink dark:bg-[#f0ead8] text-[#faf8f4] dark:text-[#0e0e1a]">1</button>
+            <button class="w-8 h-8 text-[12px] font-medium rounded-lg text-ink-3 border border-[#e0dbd0] dark:border-[#2a2a42] bg-surface dark:bg-[#14141f] hover:bg-cream-2 dark:hover:bg-[#1a1a2e] transition-colors">2</button>
+            <button class="w-8 h-8 text-[12px] font-medium rounded-lg text-ink-3 border border-[#e0dbd0] dark:border-[#2a2a42] bg-surface dark:bg-[#14141f] hover:bg-cream-2 dark:hover:bg-[#1a1a2e] transition-colors">3</button>
+            <button class="flex items-center gap-1 h-8 px-3 text-[12px] font-medium text-ink-3 dark:text-[#606080] border border-[#e0dbd0] dark:border-[#2a2a42] rounded-lg bg-surface dark:bg-[#14141f] hover:bg-cream-2 dark:hover:bg-[#1a1a2e] transition-colors">
+              Next <span class="material-icons-outlined" style="font-size:14px">chevron_right</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Dark mode FAB -->
+<button onclick="document.documentElement.classList.toggle('dark')"
+  class="fixed bottom-7 right-7 w-11 h-11 rounded-full bg-surface dark:bg-[#14141f] border border-[#e0dbd0] dark:border-[#2a2a42] shadow-fab flex items-center justify-center text-ink-3 hover:scale-110 active:scale-100 transition-transform z-50">
+  <span class="material-icons-outlined dark:hidden" style="font-size:18px">dark_mode</span>
+  <span class="material-icons-outlined hidden dark:block" style="font-size:18px">light_mode</span>
+</button>
+
+</body>
+</html>
