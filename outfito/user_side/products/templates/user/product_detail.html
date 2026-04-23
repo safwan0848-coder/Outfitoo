@@ -99,18 +99,18 @@
         <div class="lg:hidden relative w-full overflow-hidden bg-[#0a0e1a]">
           <div id="mobileCarousel" class="flex w-full overflow-x-auto scrollbar-hide snap-x snap-mandatory touch-pan-x">
             {% if display_variant and display_variant.image %}
-            <div class="mobile-slide w-full flex-shrink-0 snap-start snap-always" style="aspect-ratio:3/4;">
-              <img src="{{ display_variant.image.url }}" class="w-full h-full object-cover" alt="{{ product.name }}" />
+            <div class="mobile-slide w-full flex-shrink-0 snap-start snap-always cursor-pointer" style="aspect-ratio:3/4;" onclick="openMobileZoom('{{ display_variant.image.url }}')">
+              <img src="{{ display_variant.image.url }}" class="w-full h-full object-cover pointer-events-none" alt="{{ product.name }}" />
             </div>
             {% endif %}
             {% if product.image_side %}
-            <div class="mobile-slide w-full flex-shrink-0 snap-start snap-always" style="aspect-ratio:3/4;">
-              <img src="{{ product.image_side.url }}" class="w-full h-full object-cover" alt="Side view" />
+            <div class="mobile-slide w-full flex-shrink-0 snap-start snap-always cursor-pointer" style="aspect-ratio:3/4;" onclick="openMobileZoom('{{ product.image_side.url }}')">
+              <img src="{{ product.image_side.url }}" class="w-full h-full object-cover pointer-events-none" alt="Side view" />
             </div>
             {% endif %}
             {% if product.image_back %}
-            <div class="mobile-slide w-full flex-shrink-0 snap-start snap-always" style="aspect-ratio:3/4;">
-              <img src="{{ product.image_back.url }}" class="w-full h-full object-cover" alt="Back view" />
+            <div class="mobile-slide w-full flex-shrink-0 snap-start snap-always cursor-pointer" style="aspect-ratio:3/4;" onclick="openMobileZoom('{{ product.image_back.url }}')">
+              <img src="{{ product.image_back.url }}" class="w-full h-full object-cover pointer-events-none" alt="Back view" />
             </div>
             {% endif %}
             {% if not display_variant.image and not product.image_side and not product.image_back %}
@@ -634,6 +634,27 @@
 </section>
 {% endif %}
 
+<!-- MOBILE ZOOM MODAL -->
+<div id="mobileZoomModal" class="fixed inset-0 z-[999999] bg-[#070b14] flex-col transition-all duration-300 opacity-0 pointer-events-none" style="display: none;">
+  <!-- Header -->
+  <div class="flex items-center justify-between p-4 bg-gradient-to-b from-black/80 to-transparent absolute top-0 left-0 right-0 z-10">
+    <span class="text-white font-black uppercase tracking-widest text-[10px]">{{ product.name|truncatechars:30 }}</span>
+    <button type="button" onclick="closeMobileZoom()" class="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full text-white active:scale-90 transition-all backdrop-blur-md">
+      <span class="material-icons-outlined text-xl">close</span>
+    </button>
+  </div>
+  
+  <!-- Image Container -->
+  <div class="flex-1 overflow-auto flex items-center justify-center w-full h-full" id="mobileZoomContainer">
+    <img id="mobileZoomImg" src="" class="w-full h-auto object-contain transition-transform duration-300" style="transform-origin: center center;" />
+  </div>
+  
+  <!-- Footer Hint -->
+  <div class="absolute bottom-8 left-0 right-0 flex justify-center pointer-events-none z-10">
+    <span class="bg-black/60 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full text-white text-[10px] font-bold tracking-widest uppercase shadow-2xl">Double tap to zoom</span>
+  </div>
+</div>
+
 <!-- STYLES -->
 <style>
   @keyframes toastIn {
@@ -825,6 +846,71 @@ setTimeout(() => {
   w.style.opacity = '0';
   setTimeout(() => w.remove(), 500);
 }, 4000);
+/* ✅ Mobile Zoom Logic */
+const mzModal = document.getElementById('mobileZoomModal');
+const mzImg = document.getElementById('mobileZoomImg');
+const mzContainer = document.getElementById('mobileZoomContainer');
+let isMobileZoomed = false;
+
+function openMobileZoom(url) {
+  if(window.innerWidth >= 1024) return; // Only mobile
+  if(mzImg) mzImg.src = url;
+  if(mzModal) {
+    mzModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // prevent bg scroll
+    // Trigger reflow for transition
+    void mzModal.offsetWidth;
+    mzModal.classList.remove('opacity-0', 'pointer-events-none');
+    mzModal.classList.add('opacity-100', 'pointer-events-auto');
+  }
+}
+
+function closeMobileZoom() {
+  if(mzModal) {
+    mzModal.classList.remove('opacity-100', 'pointer-events-auto');
+    mzModal.classList.add('opacity-0', 'pointer-events-none');
+    setTimeout(() => {
+      mzModal.style.display = 'none';
+      document.body.style.overflow = '';
+      resetMobileZoom();
+    }, 300);
+  }
+}
+
+function resetMobileZoom() {
+  isMobileZoomed = false;
+  if(mzImg) {
+    mzImg.style.transform = 'scale(1)';
+    mzImg.style.transformOrigin = 'center center';
+  }
+}
+
+/* Double Tap to Zoom */
+let lastTap = 0;
+if(mzImg) {
+  mzImg.addEventListener('touchend', function(e) {
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTap;
+    if (tapLength < 500 && tapLength > 0) {
+      // Double tap
+      e.preventDefault();
+      isMobileZoomed = !isMobileZoomed;
+      if (isMobileZoomed) {
+        // Zoom in to touch point
+        const touch = e.changedTouches[0];
+        const rect = mzImg.getBoundingClientRect();
+        const x = ((touch.clientX - rect.left) / rect.width) * 100;
+        const y = ((touch.clientY - rect.top) / rect.height) * 100;
+        mzImg.style.transformOrigin = `${x}% ${y}%`;
+        mzImg.style.transform = 'scale(2.5)';
+      } else {
+        // Zoom out
+        resetMobileZoom();
+      }
+    }
+    lastTap = currentTime;
+  });
+}
 </script>
 
 {% endblock %}

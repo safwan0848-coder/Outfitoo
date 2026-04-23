@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --sidebar-bg: #f8f5ee; /* Creamy background from screenshot */
+            --primary: #064e3b;   /* Dark green from screenshot */
+            --primary-light: #ecf3f0;
+            --text-main: #374151;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --radius: 12px;
+            --font-display: 'Playfair Display', serif; /* Or similar elegant serif */
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        /* ════════════ SIDEBAR ════════════ */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            padding: 2rem 1.5rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            background: var(--primary);
+            color: white;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+        }
+
+        .sidebar-brand h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0;
+            line-height: 1;
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 0 0.75rem;
+            overflow-y: auto;
+        }
+
+        .nav-label {
+            display: block;
+            padding: 1.5rem 0.75rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .nav-link-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.75rem 1rem;
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 500;
+            border-radius: var(--radius);
+            transition: all 0.2s ease;
+            margin-bottom: 2px;
+        }
+
+        .nav-link-item:hover {
+            background-color: rgba(6, 78, 59, 0.05);
+            color: var(--primary);
+        }
+
+        /* Active State - Matches Screenshot 1 */
+        .nav-link-item.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--primary);
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+
+        /* Active State - Matches Screenshot 2 (Solid Green) */
+        .nav-link-item.active-solid {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(6, 78, 59, 0.3);
+        }
+
+        .nav-link-item .material-icons-outlined {
+            font-size: 20px;
+        }
+
+        /* Submenu Styling */
+        .nav-submenu {
+            margin-left: 2.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .nav-sublink {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .nav-sublink.active {
+            color: var(--primary);
+            background: rgba(6, 78, 59, 0.08);
+        }
+
+        /* Logout Style */
+        .nav-link-item.logout {
+            color: #dc2626;
+        }
+        .nav-link-item.logout:hover {
+            background-color: #fee2e2;
+        }
+
+        /* Footer / User Card */
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.75rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .user-email {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="logo-icon">
+            <span class="material-icons-outlined">shopping_bag</span>
+        </div>
+        <h1>Outfito</h1>
+    </div>
+
+    <nav class="sidebar-nav">
+        <span class="nav-label">Management</span>
+
+        <a class="nav-link-item" href="{% url 'admin_dashboard' %}">
+            <span class="material-icons-outlined">dashboard</span>
+            <span>Dashboard</span>
+        </a>
+
+        <!-- Orders with Submenu -->
+        <a class="nav-link-item active" href="{% url 'admin_order_list' %}">
+            <span class="material-icons-outlined">receipt_long</span>
+            <span>Orders</span>
+        </a>
+        <div class="nav-submenu">
+            <a class="nav-sublink active" href="{% url 'admin_order_list' %}">All Orders</a>
+            <a class="nav-sublink" href="{% url 'admin_returns_list' %}">Returns</a>
+        </div>
+
+        <a class="nav-link-item" href="{% url 'product_list' %}">
+            <span class="material-icons-outlined">inventory_2</span>
+            <span>Products</span>
+        </a>
+
+        <a class="nav-link-item" href="{% url 'category_list' %}">
+            <span class="material-icons-outlined">category</span>
+            <span>Categories</span>
+        </a>
+
+        <a class="nav-link-item" href="{% url 'coupon_list' %}">
+            <span class="material-icons-outlined">confirmation_number</span>
+            <span>Coupons</span>
+        </a>
+
+        <a class="nav-link-item" href="{% url 'offer_list' %}">
+            <span class="material-icons-outlined">sell</span>
+            <span>Offers</span>
+        </a>
+
+        <!-- Highlighted Customers example -->
+        <a class="nav-link-item" href="{% url 'admin-user-management' %}">
+            <span class="material-icons-outlined">people</span>
+            <span>Customers</span>
+        </a>
+
+        <span class="nav-label">Account</span>
+        <a class="nav-link-item logout" href="{% url 'admin_logout' %}" onclick="return confirm('Are you sure you want to logout?')">
+            <span class="material-icons-outlined">logout</span>
+            <span>Logout</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-card">
+            <img class="user-avatar" 
+                 src="{% if request.user.profile_image %}{{ request.user.profile_image.url }}{% else %}https://ui-avatars.com/api/?name={{ request.user.get_full_name|urlencode }}&background=064e3b&color=fff{% endif %}" 
+                 alt="User Profile">
+            <div>
+                <div class="user-name">{{ request.user.get_full_name|default:"Admin User" }}</div>
+                <div class="user-email text-truncate" style="max-width: 130px;">{{ request.user.email|default:"admin@outfito.com" }}</div>
+            </div>
+        </div>
+    </div>
+</aside>
+
+</body>
+</html>
