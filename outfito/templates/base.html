@@ -9,128 +9,79 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,200;0,300;0,400;0,600;1,200;1,300;1,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{% static 'images/outfito.png' %}">
     <style>
     :root {
- 
-            --emerald-brand: #00845a; /* Matching the exact green from the cart image */
+            --emerald-brand: #00845a; 
             --bg-navy: #0a0e1a;
             --card-dark: #0f1422;
-        
-    }
-            body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-navy);
-            color: #ffffff;
-            -webkit-font-smoothing: antialiased;
-        }
-
-    .nav-search {
-        background: #161b29;
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 99px;
-        padding: 0.4rem 1rem;
-        width: 240px;
-        display: flex;
-        align-items: center;
-    }
-
-    .nav-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 18px;
-        border-radius: 14px;
-        color: #6b7280;
-        text-decoration: none;
-        transition: 0.25s;
-        font-size: 14px;
-        margin-bottom: 6px;
-    }
-
-    .nav-item:hover {
-        background: rgba(255,255,255,.05);
-        color: #fff;
-        transform: translateX(5px);
-    }
-
-    .nav-item.active {
-        background: rgba(16,185,129,.15);
-        color: #10b981;
-        border-right: 3px solid #10b981;
     }
     body {
-    font-family: 'Inter', sans-serif;
-    background-color: #0a0e1a;
-}
-nav {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 999999; /* increase more */
-}
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-navy);
+        color: #ffffff;
+        -webkit-font-smoothing: antialiased;
+    }
     </style>
 </head>
 
-<body>
+<body class="flex flex-col min-h-screen">
 
 {% include 'navbar.html' %}
 
-<div class="pt-[64px]">
+<div class="pt-[85px] flex-grow flex flex-col">
         {% block content %}
-    {% endblock %}
+        {% endblock %}
 </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
 
-    const userBtn = document.getElementById("userMenuBtn");
-    const dropdown = document.getElementById("userDropdown");
-
-    if (userBtn && dropdown) {
-
-        userBtn.addEventListener("click", function (e) {
-            e.stopPropagation();
-
-            // TOGGLE OPEN
-            dropdown.classList.toggle("opacity-0");
-            dropdown.classList.toggle("scale-95");
-            dropdown.classList.toggle("pointer-events-none");
-
-            dropdown.classList.toggle("opacity-100");
-            dropdown.classList.toggle("scale-100");
-        });
-
-        // CLICK OUTSIDE CLOSE
-        document.addEventListener("click", function (e) {
-            if (!dropdown.contains(e.target) && !userBtn.contains(e.target)) {
-
-                dropdown.classList.add("opacity-0", "scale-95", "pointer-events-none");
-                dropdown.classList.remove("opacity-100", "scale-100");
-            }
-        });
-    }
-
-    // MOBILE MENU
-    const mobileBtn = document.getElementById("mobileMenuBtn");
-    const mobileMenu = document.getElementById("mobileMenu");
-
-    if (mobileBtn && mobileMenu) {
-        mobileBtn.addEventListener("click", function (e) {
-            e.stopPropagation();
-            mobileMenu.classList.toggle("hidden");
-        });
-
-        document.addEventListener("click", function (e) {
-            if (!mobileMenu.contains(e.target) && !mobileBtn.contains(e.target)) {
-                mobileMenu.classList.add("hidden");
-            }
-        });
-    }
-
-});
-</script>
-
+<!-- FOOTER -->
+<footer id="about" class="bg-[#070e1c] border-t border-white/10 pt-16">
+  <div class="max-w-[1320px] mx-auto px-10 pb-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr] gap-12">
+    <div>
+      <div class="flex items-center gap-2.5 mb-5.5">
+        <div class="w-8 h-8 bg-white rounded-md flex items-center justify-center">
+          <img src="{% static 'images/outfito.png' %}" style="width:22px;height:22px;object-fit:contain;" alt="logo">
+        </div>
+        <span class="font-['Cormorant_Garamond'] text-[1.4rem] font-light tracking-[0.45em] text-[#fffff0]">OUTFITO</span>
+      </div>
+      <p class="text-[0.72rem] text-white/35 leading-[1.9] max-w-[240px] mb-6">Your trusted destination for genuine street apparel. Identity forged through quality and exclusivity.</p>
+      <div class="flex gap-4">
+        <a href="#" class="w-[34px] h-[34px] rounded-full border border-white/10 flex items-center justify-center text-[0.8rem] text-white/40 transition-all duration-300 hover:border-emerald-500 hover:text-emerald-500"><i class="fa-brands fa-facebook"></i></a>
+        <a href="#" class="w-[34px] h-[34px] rounded-full border border-white/10 flex items-center justify-center text-[0.8rem] text-white/40 transition-all duration-300 hover:border-emerald-500 hover:text-emerald-500"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#" class="w-[34px] h-[34px] rounded-full border border-white/10 flex items-center justify-center text-[0.8rem] text-white/40 transition-all duration-300 hover:border-emerald-500 hover:text-emerald-500"><i class="fa-brands fa-tiktok"></i></a>
+      </div>
+    </div>
+    <div>
+      <h4 class="text-[0.58rem] font-bold tracking-[0.3em] uppercase text-[#fffff0] border-l-2 border-emerald-500 pl-3 mb-5.5">Shop By Brand</h4>
+      <ul class="list-none flex flex-col gap-3">
+        <li><a href="#" class="text-[0.72rem] text-white/35 transition-colors duration-250 hover:text-[#fffff0]">Limited Drops</a></li>
+        <li><a href="#" class="text-[0.72rem] text-white/35 transition-colors duration-250 hover:text-[#fffff0]">Retro Signature</a></li>
+        <li><a href="#" class="text-[0.72rem] text-white/35 transition-colors duration-250 hover:text-[#fffff0]">Street Essentials</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="text-[0.58rem] font-bold tracking-[0.3em] uppercase text-[#fffff0] border-l-2 border-emerald-500 pl-3 mb-5.5">Support</h4>
+      <ul class="list-none flex flex-col gap-3">
+        <li><a href="#" class="text-[0.72rem] text-white/35 transition-colors duration-250 hover:text-[#fffff0]">Track Order</a></li>
+        <li><a href="#" class="text-[0.72rem] text-white/35 transition-colors duration-250 hover:text-[#fffff0]">Returns Policy</a></li>
+        <li><a href="#" class="text-[0.72rem] text-white/35 transition-colors duration-250 hover:text-[#fffff0]">Help Center</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="text-[0.58rem] font-bold tracking-[0.3em] uppercase text-[#fffff0] border-l-2 border-emerald-500 pl-3 mb-5.5">Company</h4>
+      <ul class="list-none flex flex-col gap-3">
+        <li><a href="#" class="text-[0.72rem] text-white/35 transition-colors duration-250 hover:text-[#fffff0]">About Us</a></li>
+        <li><a href="#" class="text-[0.72rem] text-white/35 transition-colors duration-250 hover:text-[#fffff0]">Privacy Policy</a></li>
+        <li><a href="#" class="text-[0.72rem] text-white/35 transition-colors duration-250 hover:text-[#fffff0]">Terms of Service</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="border-t border-white/10 py-[1.6rem] px-10 text-center text-[0.52rem] tracking-[0.35em] font-semibold uppercase text-white/20">© 2026 Outfito. All rights reserved.</div>
+</footer>
 
 </body>
 </html>

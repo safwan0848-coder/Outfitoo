@@ -257,17 +257,89 @@
   .coupon-apply-btn {
     background: var(--accent);
     color: #000;
-    border: none;
+    border: 1.5px solid transparent;
     border-radius: 8px;
     padding: 8px 16px;
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
+    white-space: nowrap;
   }
   .coupon-apply-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(59,223,176,0.3);
+  }
+  /* State when this coupon is already applied */
+  .coupon-applied-state {
+    background: transparent !important;
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+  }
+  .coupon-applied-state:hover {
+    background: rgba(248,113,113,0.08) !important;
+    color: var(--error) !important;
+    border-color: var(--error) !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  /* State when user has already exhausted per-user limit */
+  .coupon-used-state {
+    background: transparent !important;
+    color: var(--muted) !important;
+    border-color: var(--border) !important;
+    cursor: not-allowed !important;
+    opacity: 0.65 !important;
+  }
+  .coupon-used-state:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  /* Uses-remaining badge under the coupon description */
+  .coupon-uses-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent);
+    background: rgba(59,223,176,0.1);
+    border: 1px solid rgba(59,223,176,0.25);
+    border-radius: 20px;
+    padding: 2px 8px;
+    letter-spacing: 0.3px;
+  }
+  .coupon-uses-exhausted {
+    color: var(--error) !important;
+    background: rgba(248,113,113,0.08) !important;
+    border-color: rgba(248,113,113,0.25) !important;
+  }
+  /* Dedicated scrollable area inside the coupon modal */
+  .coupon-modal-body {
+    max-height: 340px;
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-right: -4px;
+  }
+  /* Make the coupon modal header sticky */
+  #couponModal .modal {
+    overflow: visible !important;
+    display: flex;
+    flex-direction: column;
+    max-height: 82vh;
+    padding: 0;
+  }
+  #couponModal .modal-header {
+    padding: 22px 28px 18px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+  #couponModal .coupon-modal-body {
+    padding: 16px 28px 24px;
+    overflow-y: auto;
+    flex: 1;
   }
 
   .place-order-btn {
@@ -528,30 +600,83 @@
 <div class="modal-overlay" id="couponModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">Available Coupons</div>
+      <div>
+        <div class="modal-title">Available Coupons</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Click a coupon to apply it at checkout</div>
+      </div>
       <button type="button" class="modal-close" onclick="closeCouponModal()"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
+    <div class="coupon-modal-body">
     {% if available_coupons %}
       {% for coupon in available_coupons %}
-      <div class="coupon-card">
+      <div class="coupon-card" id="couponCard-{{ coupon.code }}"
+           style="{% if coupon.code in used_coupon_codes %}opacity:0.75;{% endif %}">
         <div class="coupon-card-left">
           <div class="coupon-code">{{ coupon.code }}</div>
           <div class="coupon-desc">
             {% if coupon.discount_type == 'percentage' %}
-              {{ coupon.discount_value|floatformat:0 }}% OFF up to ₹{{ coupon.max_discount }}
+              {{ coupon.discount_value|floatformat:0 }}% OFF{% if coupon.max_discount %} &middot; max &#8377;{{ coupon.max_discount|floatformat:0 }}{% endif %}
             {% else %}
-              Flat ₹{{ coupon.discount_value|floatformat:0 }} OFF
+              Flat &#8377;{{ coupon.discount_value|floatformat:0 }} OFF
             {% endif %}
           </div>
-          <div class="coupon-min">On minimum purchase of ₹{{ coupon.min_amount|floatformat:0 }}</div>
+          <div class="coupon-min">Min. order &#8377;{{ coupon.min_amount|floatformat:0 }}</div>
+          
+          {# Per-user remaining uses badge — only shown when limit > 1 #}
+          {% if coupon.usage_limit_per_user > 1 %}
+            {% if coupon.code in used_coupon_codes %}
+              <div class="coupon-uses-badge coupon-uses-exhausted">
+                <i class="fa-solid fa-lock" style="font-size:9px;"></i>
+                All {{ coupon.usage_limit_per_user }} uses exhausted
+              </div>
+            {% else %}
+              <div class="coupon-uses-badge" id="usesBadge-{{ coupon.code }}">
+                <i class="fa-solid fa-rotate-left" style="font-size:9px;"></i>
+                {% for code, info in coupon_usage_info.items %}
+                  {% if code == coupon.code %}
+                    {{ info.remaining }} of {{ info.limit }} use{{ info.limit|pluralize }} remaining
+                  {% endif %}
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endif %}
         </div>
-        <button type="button" class="coupon-apply-btn" onclick="applySpecificCoupon('{{ coupon.code|escapejs }}')">Apply</button>
+
+        {% if coupon.code in used_coupon_codes %}
+        {# User exhausted per-user limit #}
+        <button type="button"
+          class="coupon-apply-btn coupon-used-state"
+          disabled
+          title="You have used all {{ coupon.usage_limit_per_user }} allowed uses">
+          <i class="fa-solid fa-lock"></i> Used
+        </button>
+        {% elif applied_coupon_code == coupon.code %}
+        {# Currently applied in this session #}
+        <button type="button"
+          class="coupon-apply-btn coupon-applied-state"
+          data-code="{{ coupon.code|escapejs }}"
+          onclick="applySpecificCoupon('{{ coupon.code|escapejs }}')"
+          title="Click to remove">
+          <i class="fa-solid fa-check"></i> Applied
+        </button>
+        {% else %}
+        <button type="button"
+          class="coupon-apply-btn"
+          data-code="{{ coupon.code|escapejs }}"
+          onclick="applySpecificCoupon('{{ coupon.code|escapejs }}')">
+          Apply
+        </button>
+        {% endif %}
       </div>
       {% endfor %}
     {% else %}
-      <p style="color:var(--muted);font-size:14px;text-align:center;padding:20px 0;">No coupons available right now.</p>
+      <div style="text-align:center;padding:32px 0;">
+        <i class="fa-solid fa-ticket" style="font-size:32px;color:var(--muted);margin-bottom:12px;display:block;"></i>
+        <p style="color:var(--muted);font-size:14px;">No coupons available right now.</p>
+      </div>
     {% endif %}
+    </div>
   </div>
 </div>
 
@@ -701,23 +826,51 @@
         <div class="card">
           <div class="card-title"><i class="fa-solid fa-receipt"></i> Price Summary</div>
 
-          <div class="summary-line"><span>Subtotal</span><span>₹{{ subtotal }}</span></div>
-          <div class="summary-line discount"><span>Discount</span><span>-₹{{ discount }}</span></div>
-          <div class="summary-line"><span>Shipping</span><span style="color:var(--accent);">₹{{ delivery }}</span></div>
+          <div class="summary-line">
+            <span>Subtotal</span>
+            <span id="subtotalDisplay">₹{{ subtotal }}</span>
+          </div>
+
+          {# Coupon savings row — hidden when no coupon applied #}
+          <div class="summary-line discount" id="couponSavingsRow"
+               {% if not applied_coupon_code %}style="display:none;"{% endif %}>
+            <span id="couponSavingsLabel">
+              <i class="fa-solid fa-tag" style="font-size:11px;"></i>
+              {% if applied_coupon_code %}{{ applied_coupon_code }}{% else %}Coupon{% endif %}
+            </span>
+            <span id="discountDisplay" style="color:#4ade80;">-₹{{ discount }}</span>
+          </div>
+
+          <div class="summary-line">
+            <span>Shipping</span>
+            <span id="deliveryDisplay" style="color:var(--accent);">₹{{ delivery }}</span>
+          </div>
 
           <div class="divider"></div>
 
-          <div class="coupon-row" id="couponInputContainer" {% if applied_coupon_code %}style="display:none;"{% endif %}>
-            <input class="coupon-input" type="text" id="couponInput" placeholder="Enter coupon code">
+          {# Coupon input row #}
+          <div class="coupon-row" id="couponInputContainer"
+               {% if applied_coupon_code %}style="display:none;"{% endif %}>
+            <input class="coupon-input" type="text" id="couponInput" placeholder="Enter coupon code"
+                   autocomplete="off" autocapitalize="characters">
             <button type="button" class="coupon-btn" onclick="applyCoupon()">Apply</button>
           </div>
-          <div class="coupon-row" id="couponAppliedContainer" {% if not applied_coupon_code %}style="display:none;"{% endif %}>
-            <div class="coupon-input" style="font-weight:700; color:var(--accent); background:rgba(59,223,176,0.1); border-color:var(--accent); display:flex; align-items:center; gap:8px;">
-              <i class="fa-solid fa-circle-check"></i> <span id="appliedCouponCode">{{ applied_coupon_code }}</span> Applied!
+
+          {# Applied coupon badge #}
+          <div class="coupon-row" id="couponAppliedContainer"
+               {% if not applied_coupon_code %}style="display:none;"{% endif %}>
+            <div class="coupon-input" style="font-weight:700;color:var(--accent);background:rgba(59,223,176,0.1);border-color:var(--accent);display:flex;align-items:center;gap:8px;">
+              <i class="fa-solid fa-circle-check"></i>
+              <span id="appliedCouponCode">{{ applied_coupon_code }}</span> Applied!
             </div>
-            <button type="button" class="coupon-btn" style="color:var(--error); border-color:var(--error);" onclick="removeCoupon()">Remove</button>
+            <button type="button" class="coupon-btn"
+                    style="color:var(--error);border-color:var(--error);"
+                    onclick="removeCoupon()">Remove</button>
           </div>
-          <button type="button" class="view-coupons" onclick="openCouponModal()"><i class="fa-solid fa-tag" style="font-size:11px;"></i> View available coupons</button>
+
+          <button type="button" class="view-coupons" onclick="openCouponModal()">
+            <i class="fa-solid fa-tag" style="font-size:11px;"></i> View available coupons
+          </button>
 
           <div class="divider"></div>
 
@@ -738,7 +891,7 @@
 
           <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:14px;">
             <i class="fa-solid fa-shield-halved" style="color:var(--accent);"></i>
-            Secured checkout · 100% safe &amp; encrypted
+            Secured checkout &middot; 100% safe &amp; encrypted
           </p>
         </div>
       </div>
@@ -865,56 +1018,175 @@ function setPayment(method) {
   document.getElementById('paymentCard').classList.remove('payment-error-border');
 }
 
-/* ── COUPON (fetch integration) ── */
+/* ── COUPON STATE TRACKING ── */
+let currentAppliedCoupon = "{{ applied_coupon_code|escapejs }}";
+
+/* Sync all modal card buttons to reflect the applied coupon */
+function syncModalCards(appliedCode) {
+  document.querySelectorAll('.coupon-apply-btn').forEach(function(btn) {
+    // Never touch permanently-used coupons
+    if (btn.classList.contains('coupon-used-state')) return;
+
+    const code = (btn.dataset.code || '').toUpperCase();
+    if (code && code === appliedCode.toUpperCase()) {
+      btn.classList.add('coupon-applied-state');
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Applied';
+      btn.title = 'Click to remove';
+    } else {
+      btn.classList.remove('coupon-applied-state');
+      btn.innerHTML = 'Apply';
+      btn.title = '';
+    }
+  });
+}
+
+/* Update every DOM element in the price summary */
+function updateSummaryDOM(data) {
+  const savingsRow   = document.getElementById('couponSavingsRow');
+  const savingsLabel = document.getElementById('couponSavingsLabel');
+  const discountEl   = document.getElementById('discountDisplay');
+  const totalEl      = document.getElementById('totalDisplay');
+
+  if (data.coupon_code) {
+    savingsRow.style.display = 'flex';
+    savingsLabel.innerHTML   = '<i class="fa-solid fa-tag" style="font-size:11px;"></i> ' + data.coupon_code;
+    discountEl.textContent   = '-\u20b9' + data.discount.toFixed(2);
+  } else {
+    savingsRow.style.display = 'none';
+    discountEl.textContent   = '-\u20b90.00';
+  }
+
+  if (totalEl) totalEl.textContent = '\u20b9' + data.new_total.toFixed(2);
+}
+
+/* Toggle the coupon input / applied-badge rows */
+function updateCouponUI(code) {
+  const inputEl    = document.getElementById('couponInputContainer');
+  const appliedEl  = document.getElementById('couponAppliedContainer');
+  const codeLabel  = document.getElementById('appliedCouponCode');
+  const codeInput  = document.getElementById('couponInput');
+
+  if (code) {
+    inputEl.style.display   = 'none';
+    appliedEl.style.display = 'flex';
+    codeLabel.textContent   = code;
+  } else {
+    inputEl.style.display   = 'flex';
+    appliedEl.style.display = 'none';
+    codeInput.value = '';
+  }
+}
+
+/* Core AJAX handler — apply (code != '') or remove (code == '') */
+async function processCoupon(code) {
+  try {
+    const response = await fetch("{% url 'apply_coupon' %}", {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+      body:    JSON.stringify({ code: code })
+    });
+    const data = await response.json();
+
+    if (data.success) {
+      currentAppliedCoupon = data.coupon_code || '';
+      updateSummaryDOM(data);
+      updateCouponUI(currentAppliedCoupon);
+      syncModalCards(currentAppliedCoupon);
+
+      // 1. Update the uses badge in the modal
+      if (data.coupon_code && typeof data.remaining !== 'undefined') {
+        updateUsesBadge(data.coupon_code, data.remaining, data.limit || 1);
+      }
+
+      // 2. Show detailed usage messages in a second toast or combined
+      const usageMsg = `You have used this coupon ${data.used_count} times. You can use it ${data.remaining} more times.`;
+      showToast(data.message, 'success');
+      setTimeout(() => showToast(usageMsg, 'info'), 800);
+
+    } else {
+      // If used_count is returned, it means they hit the limit
+      if (typeof data.used_count !== 'undefined' && code) {
+        markCardAsUsed(code);
+      }
+      showToast(data.message, 'error');
+    }
+  } catch (err) {
+    showToast('Error applying coupon. Please try again.', 'error');
+  }
+}
+
+/* Mark a modal coupon card as permanently "Used" */
+function markCardAsUsed(code) {
+  document.querySelectorAll('.coupon-apply-btn').forEach(function(btn) {
+    if ((btn.dataset.code || '').toUpperCase() === code.toUpperCase()) {
+      btn.classList.remove('coupon-applied-state');
+      btn.classList.add('coupon-used-state');
+      btn.innerHTML = '<i class="fa-solid fa-lock"></i> Used';
+      btn.disabled  = true;
+      btn.title     = 'You have already used this coupon';
+      btn.onclick   = null;
+    }
+  });
+  // Dim the card and update badge to exhausted style
+  const card = document.getElementById('couponCard-' + code.toUpperCase()) ||
+               document.getElementById('couponCard-' + code);
+  if (card) {
+    card.style.opacity = '0.7';
+    const badge = card.querySelector('.coupon-uses-badge');
+    if (badge) {
+      badge.classList.add('coupon-uses-exhausted');
+      badge.innerHTML = '<i class="fa-solid fa-lock" style="font-size:9px;"></i> All uses exhausted';
+    }
+  }
+}
+
+/* Update the "X of Y uses remaining" badge in the modal after apply */
+function updateUsesBadge(code, remainingAfter, totalLimit) {
+  // Only relevant when limit > 1
+  if (totalLimit <= 1) return;
+
+  const badge = document.getElementById('usesBadge-' + code.toUpperCase()) ||
+                document.getElementById('usesBadge-' + code);
+  if (!badge) return;
+
+  if (remainingAfter <= 0) {
+    // Exhausted — switch to red style
+    badge.classList.add('coupon-uses-exhausted');
+    badge.innerHTML = '<i class="fa-solid fa-lock" style="font-size:9px;"></i> All ' + totalLimit + ' uses exhausted';
+  } else {
+    const plural = remainingAfter !== 1 ? 's' : '';
+    badge.classList.remove('coupon-uses-exhausted');
+    badge.innerHTML =
+      '<i class="fa-solid fa-rotate-left" style="font-size:9px;"></i> ' +
+      remainingAfter + ' of ' + totalLimit + ' use' + plural + ' remaining';
+  }
+}
+
+/* Manual input + Apply button */
 async function applyCoupon() {
-  const code = document.getElementById('couponInput').value.trim();
-  if (!code) { 
-      showToast('Enter a coupon code first.');
-      return; 
+  const code = document.getElementById('couponInput').value.trim().toUpperCase();
+  if (!code) { showToast('Please enter a coupon code.'); return; }
+  if (code === currentAppliedCoupon.toUpperCase()) {
+    showToast('This coupon is already applied.', 'error'); return;
   }
   await processCoupon(code);
 }
 
-async function removeCoupon() {
-  await processCoupon("");
-}
+/* Remove button */
+async function removeCoupon() { await processCoupon(''); }
 
-async function processCoupon(code) {
-  try {
-      const response = await fetch("{% url 'apply_coupon' %}", {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': '{{ csrf_token }}'
-          },
-          body: JSON.stringify({ code: code })
-      });
-      const data = await response.json();
-      if (data.success) {
-          showToast(data.message, 'success');
-          // Update the DOM instead of reloading
-          const discountLine = document.querySelector('.summary-line.discount span:last-child');
-          if (discountLine) discountLine.textContent = `-₹${data.discount.toFixed(2)}`;
-          
-          const totalDisp = document.getElementById('totalDisplay');
-          if (totalDisp) totalDisp.textContent = `₹${data.new_total.toFixed(2)}`;
-          
-          if (code === "") {
-             document.getElementById('couponInputContainer').style.display = 'flex';
-             document.getElementById('couponAppliedContainer').style.display = 'none';
-             document.getElementById('couponInput').value = "";
-          } else {
-             document.getElementById('couponInputContainer').style.display = 'none';
-             document.getElementById('couponAppliedContainer').style.display = 'flex';
-             document.getElementById('appliedCouponCode').textContent = code;
-          }
-      } else {
-          showToast(data.message, 'error');
-      }
-  } catch(error) {
-      showToast('Error applying coupon. Please try again later.', 'error');
+/* Coupon card in modal */
+async function applySpecificCoupon(code) {
+  closeCouponModal();
+  if (code.toUpperCase() === currentAppliedCoupon.toUpperCase() && currentAppliedCoupon !== '') {
+    await processCoupon('');   // same coupon tapped again → remove
+  } else {
+    await processCoupon(code);
   }
 }
+
+/* Sync cards on first paint */
+document.addEventListener('DOMContentLoaded', function() { syncModalCards(currentAppliedCoupon); });
 
 /* ── VALIDATE & SUBMIT ── */
 function validateAndSubmit() {

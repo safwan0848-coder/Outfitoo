@@ -1,13 +1,16 @@
 from django.shortcuts import render
 from django.core.paginator import Paginator
 from admin_side.products_management.models import Product
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from admin_side.variants_management.models import Variant
-from django.db.models import Q, Min, Max,Count,Avg
+from django.db.models import Q, Min, Max, Count, Avg
 from admin_side.categories_management.models import Category
 from user_side.cart.models import Cart
 from django.views.decorators.cache import never_cache
 from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .models import ProductReview
 
 @never_cache
 def product_list(request):
@@ -395,25 +398,44 @@ def product_detail(request, pk):
             cart_count = cart.items.count()  # ✅ FIX
 
     # ==============================
-    # REVIEWS
+    # REVIEWS (real data)
     # ==============================
+    from user_side.orders.models import Order, OrderItem
 
-    avg_rating = 4.2
-    review_count = 3
+    has_purchased = False
+    has_reviewed  = False
+    existing_review = None
 
-    reviews = [
-        {"user": "Rahul Menon", "rating": 5, "comment": "Great quality product!", "created_at": "March 1, 2025", "helpful_count": 2},
-        {"user": "Aisha Khan", "rating": 4, "comment": "Nice fit and color.", "created_at": "March 5, 2025", "helpful_count": 1},
-        {"user": "Arjun Nair", "rating": 3, "comment": "Average product.", "created_at": "March 10, 2025", "helpful_count": 0},
-    ]
+    if request.user.is_authenticated:
+        # Check if the user has a delivered order containing this product
+        has_purchased = OrderItem.objects.filter(
+            order__user=request.user,
+            variant__product=product,
+            item_status='delivered'
+        ).exists()
 
-    rating_breakdown = [
-        (5, 1, 33),
-        (4, 1, 33),
-        (3, 1, 33),
-        (2, 0, 0),
-        (1, 0, 0),
-    ]
+        existing_review = ProductReview.objects.filter(
+            product=product,
+            user=request.user
+        ).first()
+        has_reviewed = existing_review is not None
+
+    # All reviews for this product
+    all_reviews = ProductReview.objects.filter(product=product).select_related('user')
+    review_count = all_reviews.count()
+
+    # Aggregate rating
+    rating_agg = all_reviews.aggregate(avg=Avg('rating'))
+    avg_rating  = round(rating_agg['avg'] or 0, 1)
+
+    # Breakdown per star level
+    rating_breakdown = []
+    for star in range(5, 0, -1):
+        cnt = all_reviews.filter(rating=star).count()
+        pct = round((cnt / review_count * 100)) if review_count else 0
+        rating_breakdown.append((star, cnt, pct))
+
+    reviews = all_reviews[:10]  # Show latest 10
 
     return render(request, 'user/product_detail.html', {
         'product': product,
@@ -425,10 +447,69 @@ def product_detail(request, pk):
         'selected_color': selected_color,
         'related_products': related_products,
         'cart_count': cart_count,
-        'wishlist_count': wishlist_count,   # ✅ added
-        'in_wishlist': in_wishlist,         # ✅ fixed
-        'avg_rating': avg_rating,
-        'review_count': review_count,
-        'reviews': reviews,
+        'wishlist_count': wishlist_count,
+        'in_wishlist': in_wishlist,
+        # Review data
+        'avg_rating':       avg_rating,
+        'review_count':     review_count,
+        'reviews':          reviews,
         'rating_breakdown': rating_breakdown,
+        'has_purchased':    has_purchased,
+        'has_reviewed':     has_reviewed,
+        'existing_review':  existing_review,
     })
+
+
+@login_required
+def submit_review(request, pk):
+    """POST-only view — securely saves a product review."""
+    if request.method != 'POST':
+        return redirect('product_detail', pk=pk)
+
+    product = get_object_or_404(Product, pk=pk, is_deleted=False, is_listed=True)
+
+    # ── Security guard 1: must have purchased & received the item ──
+    from user_side.orders.models import OrderItem
+    has_purchased = OrderItem.objects.filter(
+        order__user=request.user,
+        variant__product=product,
+        item_status='delivered'
+    ).exists()
+
+    if not has_purchased:
+        messages.error(request, "You can only review products you have purchased and received.")
+        return redirect('product_detail', pk=pk)
+
+    # ── Security guard 2: no duplicate review ──
+    if ProductReview.objects.filter(product=product, user=request.user).exists():
+        messages.error(request, "You have already reviewed this product.")
+        return redirect('product_detail', pk=pk)
+
+    # ── Validate input ──
+    try:
+        rating = int(request.POST.get('rating', 0))
+    except (ValueError, TypeError):
+        rating = 0
+
+    comment = request.POST.get('comment', '').strip()
+    title   = request.POST.get('title', '').strip()[:150]
+
+    if rating < 1 or rating > 5:
+        messages.error(request, "Please select a rating between 1 and 5.")
+        return redirect('product_detail', pk=pk)
+
+    if not comment:
+        messages.error(request, "Review comment cannot be empty.")
+        return redirect('product_detail', pk=pk)
+
+    # ── Save review ──
+    ProductReview.objects.create(
+        product=product,
+        user=request.user,
+        rating=rating,
+        title=title,
+        comment=comment,
+    )
+
+    messages.success(request, "Thank you! Your review has been submitted.")
+    return redirect('product_detail', pk=pk)

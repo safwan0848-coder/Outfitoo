@@ -18,6 +18,57 @@ class Variant(models.Model):
     def __str__(self):
         return self.sku
     
+    @property
+    def get_discounted_price(self):
+        from admin_side.offer_management.models import Offer
+        from django.utils import timezone
+        from decimal import Decimal
+        
+        now = timezone.now().date()
+        base_price = self.price
+        best_discount = Decimal('0.00')
+        
+        # 1. Product Offer
+        product_offer = Offer.objects.filter(
+            apply_to='product',
+            product=self.product,
+            is_active=True,
+            start_date__lte=now,
+            end_date__gte=now,
+            minimum_purchase_amount__lte=base_price
+        ).first()
+        
+        if product_offer:
+            if product_offer.discount_type == 'percentage':
+                discount = (base_price * product_offer.discount_value) / 100
+                if product_offer.maximum_discount_amount:
+                    discount = min(discount, product_offer.maximum_discount_amount)
+            else:
+                discount = product_offer.discount_value
+            best_discount = max(best_discount, discount)
+            
+        # 2. Category Offer
+        category_offer = Offer.objects.filter(
+            apply_to='category',
+            category=self.product.category,
+            is_active=True,
+            start_date__lte=now,
+            end_date__gte=now,
+            minimum_purchase_amount__lte=base_price
+        ).first()
+        
+        if category_offer:
+            if category_offer.discount_type == 'percentage':
+                discount = (base_price * category_offer.discount_value) / 100
+                if category_offer.maximum_discount_amount:
+                    discount = min(discount, category_offer.maximum_discount_amount)
+            else:
+                discount = category_offer.discount_value
+            best_discount = max(best_discount, discount)
+            
+        final_price = base_price - best_discount
+        return max(final_price, Decimal('0.00'))
+
 
     def save(self, *args, **kwargs):
         if self.color:

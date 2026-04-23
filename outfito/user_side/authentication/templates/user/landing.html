@@ -1,475 +1,729 @@
-
-
 {% extends 'base.html' %}
 {% load static %}
+
 {% block content %}
 
-<style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+  <style>
+    :root {
+      --bg:          #05080f;
+      --bg-card:     #0c1221;
+      --bg-alt:      #090e1c;
+      --border:      rgba(255,255,255,0.06);
+      --gold:        #10b981;
+      --gold-lt:     #a7f3d0;
+      --accent2:     #059669;
+      --emerald:     #10b981;
+      --ivory:       #eef2ff;
+      --taupe:       #5e7299;
+      --radius-card: 20px;
+      --orbit-r:     340px;
+      --nav-h:       64px;
+    }
+    @media(max-width:1100px){ :root{ --orbit-r:240px; } }
+    @media(max-width:600px){  :root{ --orbit-r:130px; } }
 
-        :root {
-            --emerald-brand: #00845a; /* Matching the exact green from the cart image */
-            --bg-navy: #0a0e1a;
-            --card-dark: #0f1422;
-        }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html.lenis, html.lenis body { height:auto; }
+    .lenis.lenis-smooth { scroll-behavior:auto !important; }
+    .lenis.lenis-stopped { overflow:hidden; }
+
+    body {
+      font-family:'Syne', sans-serif;
+      background:var(--bg);
+      color:var(--ivory);
+      overflow-x:hidden;
+    }
+    img { display:block; }
+    a { text-decoration:none; color:inherit; }
+    ::-webkit-scrollbar { width:3px; }
+    ::-webkit-scrollbar-track { background:var(--bg); }
+    ::-webkit-scrollbar-thumb { background:linear-gradient(to bottom,var(--gold),var(--accent2)); border-radius:2px; }
+
+    /* ── ANNOUNCEMENT BAR ── */
+    #announce-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1001;
+      background: linear-gradient(90deg, #0d1b3e 0%, #0a1628 50%, #0d1b3e 100%);
+      border-bottom: 1px solid rgba(0,212,255,.12);
+      padding: .42rem 1rem;
+      text-align: center;
+      font-size: .58rem; font-weight: 600; letter-spacing: .22em;
+      text-transform: uppercase; color: rgba(255,255,255,.5);
+    }
+    #announce-bar span { color: var(--gold); }
+    #announce-bar strong { color: var(--ivory); font-weight: 700; }
+
+
+    /* ── HERO ── */
+    #hero {
+      position:relative; height:100vh; min-height:700px;
+      overflow:hidden; display:flex; align-items:center; justify-content:center;
+      background:var(--bg);
+    }
+    #hero::before {
+      content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity:.022;
+    }
+    .hero-glow {
+      position:absolute; inset:0; z-index:0; pointer-events:none;
+      background:radial-gradient(ellipse 55% 65% at 50% 55%, rgba(16,185,129,.07) 0%, transparent 70%),
+                 radial-gradient(ellipse 80% 50% at 30% 80%, rgba(8,12,24,.4) 0%, transparent 70%);
+    }
+    .hero-scene {
+      position:absolute; inset:0; z-index:2;
+      display:flex; align-items:center; justify-content:center;
+      perspective:1400px; transform-style:preserve-3d;
+    }
+    .ring {
+      position:absolute; top:50%; left:50%; border-radius:50%;
+      border:1px solid rgba(16,185,129,.18);
+      transform:translate(-50%,-50%) rotateX(72deg); pointer-events:none;
+    }
+    .r1{ width:92vw; height:92vw; max-width:1100px; max-height:1100px; border-color:rgba(16,185,129,.08); animation:rp 5s infinite alternate; }
+    .r2{ width:70vw; height:70vw; max-width:820px;  max-height:820px;  border-color:rgba(16,185,129,.16); animation:rp 5s infinite alternate -1.7s; }
+    .r3{ width:50vw; height:50vw; max-width:580px;  max-height:580px;  border-color:rgba(255,255,255,.05); animation:rp 5s infinite alternate -3.4s; }
+    .r4{ width:30vw; height:30vw; max-width:340px;  max-height:340px;  border-color:rgba(16,185,129,.1);  animation:rp 5s infinite alternate -5s; }
+    @keyframes rp{ 0%{ opacity:.3; } 100%{ opacity:1; } }
+    .ring-dots {
+      position:absolute; top:50%; left:50%; width:80vw; height:80vw;
+      max-width:940px; max-height:940px; border-radius:50%;
+      transform:translate(-50%,-50%) rotateX(72deg); pointer-events:none;
+      animation:rdot 42s linear infinite;
+    }
+    @keyframes rdot{ to{ transform:translate(-50%,-50%) rotateX(72deg) rotateZ(360deg); } }
+    .ring-dots svg{ width:100%; height:100%; }
+
+    .hero-text { position:absolute; text-align:center; z-index:10; pointer-events:none; }
+    .hero-eyebrow {
+      display:block; font-size:.58rem; font-weight:600; letter-spacing:.5em;
+      text-transform:uppercase; color:var(--gold); margin-bottom:1.6rem;
+    }
+    .hero-title {
+      font-family: 'Syne', sans-serif; font-size: clamp(4rem, 10vw, 9rem);
+      font-weight: 800; line-height: 0.85; color: var(--ivory);
+      letter-spacing: -0.04em; text-transform: uppercase;
+      margin: 0;
+    }
+    .hero-title span {
+      display: block;
+      background: linear-gradient(135deg, #fff 0%, var(--gold) 50%, var(--accent2) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 30px rgba(16,185,129,0.3));
+    }
+    .hero-divider { width:56px; height:1px; margin:1.8rem auto; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+    .hero-sub { font-size:.6rem; font-weight:500; letter-spacing:.28em; color:var(--taupe); text-transform:uppercase; }
+
+    /* Hero orbiting cards */
+    .hero-card {
+      position:absolute; width:200px; height:300px;
+      top:50%; left:50%; margin-top:-150px; margin-left:-100px;
+      background:rgba(11,18,32,.65); backdrop-filter:blur(18px) saturate(1.3);
+      border:1px solid rgba(16,185,129,.22);
+      border-radius:90px 90px 18px 18px; padding:7px;
+      will-change:transform; transition:border-color .4s;
+    }
+    .hero-card:hover { border-color:rgba(16,185,129,.55); }
+    .hero-card::before {
+      content:''; position:absolute; inset:0; border-radius:inherit;
+      background:linear-gradient(160deg,rgba(255,255,255,.06) 0%,transparent 40%,rgba(16,185,129,.06) 100%);
+      pointer-events:none; z-index:1;
+    }
+    .hero-card::after {
+      content:''; position:absolute; inset:0; border-radius:inherit;
+      box-shadow:0 0 0 1px rgba(255,255,255,.04) inset, 0 24px 60px rgba(0,0,0,.75);
+      pointer-events:none; z-index:2;
+    }
+    .hero-card .card-img-wrap {
+      width:100%; height:100%; border-radius:83px 83px 13px 13px; overflow:hidden; position:relative;
+    }
+    .hero-card .card-img-wrap img {
+      width:100%; height:100%; object-fit:cover;
+      filter:contrast(1.07) brightness(.88) saturate(.96);
+      transition:transform .8s cubic-bezier(.22,1,.36,1), filter .8s;
+    }
+    .hero-card:hover .card-img-wrap img { transform:scale(1.07); filter:contrast(1.1) brightness(.97) saturate(1.1); }
+    .card-label {
+      position:absolute; bottom:0; left:0; right:0; padding:.75rem .9rem;
+      background:linear-gradient(to top,rgba(15,23,42,.9) 0%,transparent 100%);
+      color:var(--ivory); font-size:.52rem; letter-spacing:.2em; text-transform:uppercase;
+      opacity:0; transform:translateY(8px); transition:opacity .4s, transform .4s; z-index:3;
+    }
+    .hero-card:hover .card-label { opacity:1; transform:translateY(0); }
+
+    #hc1{ animation:orb1 30s infinite linear; }
+    #hc2{ animation:orb2 30s infinite linear; }
+    #hc3{ animation:orb3 30s infinite linear; }
+    #hc4{ animation:orb4 30s infinite linear; }
+    @keyframes orb1{ 0%{transform:rotateY(0deg)   translateZ(var(--orbit-r)) rotateY(0deg)   } 100%{transform:rotateY(360deg)  translateZ(var(--orbit-r)) rotateY(-360deg) } }
+    @keyframes orb2{ 0%{transform:rotateY(90deg)  translateZ(var(--orbit-r)) rotateY(-90deg) } 100%{transform:rotateY(450deg)  translateZ(var(--orbit-r)) rotateY(-450deg)} }
+    @keyframes orb3{ 0%{transform:rotateY(180deg) translateZ(var(--orbit-r)) rotateY(-180deg)} 100%{transform:rotateY(540deg)  translateZ(var(--orbit-r)) rotateY(-540deg)} }
+    @keyframes orb4{ 0%{transform:rotateY(270deg) translateZ(var(--orbit-r)) rotateY(-270deg)} 100%{transform:rotateY(630deg)  translateZ(var(--orbit-r)) rotateY(-630deg)} }
+
+    /* ── MARQUEE ── */
+    #marquee-strip {
+      background:linear-gradient(90deg,#0d1525,#111827,#0d1525); padding:.65rem 0;
+      overflow:hidden; position:relative; z-index:5;
+      border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+    }
+    .marquee-inner { display:flex; gap:2.8rem; width:max-content; animation:marq 22s linear infinite; }
+    @keyframes marq{ to{ transform:translateX(-50%); } }
+    .marquee-item {
+      font-size:.55rem; letter-spacing:.3em; text-transform:uppercase; color:var(--taupe);
+      white-space:nowrap; display:flex; align-items:center; gap:1.4rem; font-weight:500;
+    }
+    .marquee-dot { width:3px; height:3px; border-radius:50%; background:var(--gold); flex-shrink:0; }
+
+    /* ── BRIDGE ── */
+    #bridge { height:80px; background:var(--bg); }
+
+    /* ── TRENDING ── */
+    /* Product card */
+    .product-card {
+      width:100%; border-radius:var(--radius-card); overflow:hidden;
+      background: rgba(12, 18, 33, 0.5);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      opacity: 0; transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .product-card.visible { opacity: 1; }
+    .product-card:hover {
+      box-shadow: 0 20px 50px rgba(16, 185, 129, 0.15);
+      transform: translateY(-10px) scale(1.02);
+      border-color: rgba(16, 185, 129, 0.3);
+      background: rgba(12, 18, 33, 0.8);
+    }
+    .product-img { width:100%; aspect-ratio:3/4.2; overflow:hidden; position:relative; background:#131f35; }
+    .product-img .img-front,
+    .product-img .img-back {
+      position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+      transition:opacity .6s ease, transform .8s cubic-bezier(.22,1,.36,1);
+    }
+    .product-img .img-front { opacity:1; z-index:2; }
+    .product-img .img-back  { opacity:0; z-index:1; }
+    .product-card:hover .img-front { opacity:0; }
+    .product-card:hover .img-back  { opacity:1; }
+    .product-card:hover .img-front,
+    .product-card:hover .img-back  { transform:scale(1.06); }
+    .product-img-overlay {
+      position:absolute; inset:0;
+      background:linear-gradient(to top,rgba(44,31,20,.6) 0%,transparent 50%);
+      opacity:0; transition:opacity .5s; display:flex; align-items:flex-end; padding:1.2rem; z-index:5;
+    }
+    .product-card:hover .product-img-overlay { opacity:1; }
+    .quick-view {
+      font-size:.52rem; letter-spacing:.25em; text-transform:uppercase; color:#f5f0e8;
+      border:1px solid rgba(255,255,255,.5); padding:.45rem 1.1rem;
+      background:transparent; font-family:'Syne',sans-serif;
+      font-weight:600; transition:all .3s;
+    }
+    .quick-view:hover { background:rgba(255,255,255,.15); border-color:#fff; }
+    .product-tag {
+      position:absolute; top:13px; left:13px; font-size:.48rem; letter-spacing:.2em;
+      text-transform:uppercase; background:var(--gold); color:#080808; padding:.28rem .65rem;
+      font-weight:700; font-family:'Syne',sans-serif; z-index:5;
+    }
+    .product-tag.sold { background:#2c1f14; color:#f5f0e8; }
+    .cart-icon-btn {
+      position:absolute; bottom:13px; right:13px; width:38px; height:38px; border-radius:50%;
+      background:var(--emerald); color:#fff; display:flex; align-items:center; justify-content:center;
+      border:none; cursor:pointer; z-index:10; box-shadow:0 4px 14px rgba(0,0,0,.22);
+      transition:transform .3s cubic-bezier(.175,.885,.32,1.275), filter .3s;
+    }
+    .cart-icon-btn:hover { transform:scale(1.12) rotate(-8deg); filter:brightness(1.25); }
+    .product-info { padding:1.3rem 1.3rem 1.5rem; }
+    .product-brand { font-size:.52rem; letter-spacing:.25em; text-transform:uppercase; color:rgba(255,255,255,.35); margin-bottom:.3rem; font-weight:500; }
+    .product-name {
+      font-family:'Cormorant Garamond', serif; font-size:1.2rem; font-weight:400;
+      color:var(--ivory); margin:.25rem 0 .75rem; line-height:1.2;
+    }
+    .product-footer { display:flex; justify-content:space-between; align-items:center; }
+    .product-price { font-size:.88rem; font-weight:500; color:var(--ivory); }
+    .p-gold { color:var(--gold); font-weight:600; }
+
+    /* ── ANIM LAYER ── */
+    #anim-layer {
+      position:absolute; top:0; left:0; right:0; height:0;
+      overflow:visible; pointer-events:none; z-index:500;
+    }
+    .clone-card {
+      position:absolute; will-change:left,top,width,height,border-radius,opacity;
+      background:rgba(11,18,32,.65); backdrop-filter:blur(18px) saturate(1.3);
+      border:1px solid rgba(59,130,246,.22); padding:7px; overflow:hidden;
+    }
+    .clone-card .card-img-wrap { width:100%; height:100%; overflow:hidden; }
+    .clone-card img { width:100%; height:100%; object-fit:cover; }
 
 
 
-        /* --- CAROUSEL SYSTEM --- */
-        .hero-carousel {
-            position: relative;
-            height: 100vh;
-            width: 100%;
-            overflow: hidden;
-        }
+    /* ── RESPONSIVE ── */
+    @media(max-width:768px){
+      .hero-card { width:130px; height:195px; margin-top:-97px; margin-left:-65px; }
+    }
+  </style>
 
-        .slide {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 1s ease-in-out, transform 1.5s ease;
-            transform: scale(1.1);
-        }
 
-        .slide.active {
-            opacity: 1;
-            visibility: visible;
-            transform: scale(1);
-        }
 
-        .hero-title {
-            font-size: clamp(2.5rem, 8vw, 5.5rem);
-            line-height: 1;
-            letter-spacing: -0.04em;
-            font-weight: 900;
-            text-transform: uppercase;
-        }
-
-        /* --- CATEGORY CARDS (Match Image 1) --- */
-        .category-card {
-            position: relative;
-            height: 480px;
-            border-radius: 12px;
-            overflow: hidden;
-            background: #161b29;
-            cursor: pointer;
-        }
-
-        .category-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .category-card:hover .category-img {
-            transform: scale(1.1);
-        }
-
-        .category-content {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to bottom, transparent 30%, rgba(10, 14, 26, 0.95) 100%);
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
-            padding: 2rem;
-            text-align: center;
-        }
-
-        .shop-btn {
-            background: #ffffff;
-            color: #000000;
-            width: 100%;
-            padding: 0.8rem;
-            border-radius: 6px;
-            font-weight: 800;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            margin-top: 1.5rem;
-            transition: all 0.3s ease;
-            opacity: 0.9;
-        }
-
-        .category-card:hover .shop-btn {
-            background: var(--emerald-brand);
-            color: white;
-            opacity: 1;
-            transform: translateY(-5px);
-        }
-
-        /* --- PRODUCT CARDS (Match Image 8c5cc0) --- */
-        .product-card {
-            background: var(--card-dark);
-            border-radius: 12px;
-            padding: 0;
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .product-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        }
-
-.product-img-box {
-    position: relative;
-    aspect-ratio: 1/1.2;
-    background: #ffffff;
-    overflow: hidden;
-}
-
-.product-img-box img {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: opacity 0.4s ease;
-}
-.img-front { opacity: 1; z-index: 2; }
-.img-back { opacity: 0; z-index: 1; }
-
-.product-card:hover .img-front { opacity: 0; }
-.product-card:hover .img-back { opacity: 1; }
-
-        .product-card:hover .product-img-box img {
-            transform: scale(1.05);
-        }
-
-        /* EXACT CART BUTTON FROM IMAGE 8c5ca2 */
-        .cart-icon-btn {
-            position: absolute;
-            bottom: 12px;
-            right: 12px;
-            width: 38px;
-            height: 38px;
-            background: var(--emerald-brand);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 10;   
-        }
-
-        .cart-icon-btn:hover {
-            transform: scale(1.1) rotate(-8deg);
-            filter: brightness(1.2);
-        }
-
-        .discount-badge {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            background: #2d0a0a; /* Dark maroon/red tag from image */
-            color: white;
-            font-size: 0.7rem;
-            font-weight: 800;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-
-        .price-new {
-            font-weight: 900;
-            font-size: 1.1rem;
-        }
-
-        .price-old {
-            color: #4b5563;
-            text-decoration: line-through;
-            font-size: 0.8rem;
-            margin-right: 8px;
-        }
-
-        /* CUSTOM ANIMATIONS */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .animate-up {
-            animation: fadeInUp 0.8s ease forwards;
-        }
-</style>
-    <!-- HERO CAROUSEL (3 Slides) -->
-    <section class="hero-carousel">
-        <!-- Slide 1 -->
-        <div class="slide active" id="slide-1">
-            <img src="{% static 'images/head1.png' %}" class="w-full h-full object-cover" alt="">
-            <div class="absolute inset-0 bg-black/40"></div>
-            <div class="absolute inset-0 flex items-center px-12">
-                <div class="max-w-4xl animate-up">
-                    <h1 class="hero-title text-white italic">ITS NOT A <br>PRODUCT ITS AN <br><span class="text-emerald-500">IDENTITY</span></h1>
-                    <div class="flex gap-12 mt-10">
-                        <div><p class="text-4xl font-black italic">2.5k+</p><p class="text-[10px] text-gray-400 uppercase font-bold tracking-[0.3em]">New Styles</p></div>
-                        <div><p class="text-4xl font-black italic">15k+</p><p class="text-[10px] text-gray-400 uppercase font-bold tracking-[0.3em]">Active Rebels</p></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Slide 2 -->
-        <div class="slide" id="slide-2">
-            <img src="{% static 'images/Head2.png' %}" class="w-full h-full object-cover" alt="old">
-            <div class="absolute inset-0 bg-black/50"></div>
-            <div class="absolute inset-0 flex items-center px-12">
-                <div class="max-w-4xl">
-                    <h1 class="hero-title text-white italic">VINTAGE <br>REMASTERED <br><span class="text-white/40">ARCHIVE</span></h1>
-                    <button class="mt-8 bg-emerald-600 text-white px-8 py-3 rounded font-black text-xs uppercase tracking-widest hover:bg-white hover:text-black transition">Explore Archive</button>
-                </div>
-            </div>
-        </div>
-        <!-- Slide 3 -->
-        <div class="slide" id="slide-3">
-            <img src="{% static 'images/Head3.png' %}" class="w-full h-full object-cover" alt="">
-            <div class="absolute inset-0 bg-black/40"></div>
-            <div class="absolute inset-0 flex items-center px-12">
-                <div class="max-w-4xl">
-                    <h1 class="hero-title text-white italic">STREET <br>CULTURE <br><span class="text-emerald-500">UNLEASHED</span></h1>
-                </div>
-            </div>
-        </div>
-
-        <!-- Carousel Indicators -->
-        <div class="absolute bottom-10 left-12 flex gap-4 z-20">
-            <button onclick="setSlide(0)" class="w-12 h-1 bg-white/30 rounded overflow-hidden relative"><div id="bar-0" class="h-full bg-emerald-500 w-0"></div></button>
-            <button onclick="setSlide(1)" class="w-12 h-1 bg-white/30 rounded overflow-hidden relative"><div id="bar-1" class="h-full bg-emerald-500 w-0"></div></button>
-            <button onclick="setSlide(2)" class="w-12 h-1 bg-white/30 rounded overflow-hidden relative"><div id="bar-2" class="h-full bg-emerald-500 w-0"></div></button>
-        </div>
-    </section>
-
-    <!-- TRENDING CATEGORIES -->
-    <section id="categories" class="max-w-[1440px] mx-auto px-6 py-24">
-        <div class="flex justify-between items-end mb-12">
-            <div>
-                <h2 class="text-3xl font-black italic uppercase tracking-tighter">Trending Categories</h2>
-                <p class="text-gray-500 text-sm font-medium">Select your favorite category to explore their latest model</p>
-            </div>
-            <a href="{% url 'categories_page' %}" class="text-emerald-500 text-[10px] font-black uppercase flex items-center gap-2">View All Categories <i class="fa-solid fa-arrow-right-long"></i></a>
-        </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-
-{% for category in categories %}
-<div class="category-card">
-    <img src="{{ category.image.url }}" class="category-img">
-
-    <div class="category-content">
-        <h3 class="text-2xl font-black italic uppercase">
-            {{ category.name }}
-        </h3>
-
-        <p class="text-[11px] text-gray-400 mt-1">
-            {{ category.description|truncatechars:60 }}
-        </p>
-
-        <a href="{% url 'user_product_list' %}?category={{ category.id }}">
-            <button class="shop-btn">Shop Collection</button>
-        </a>
+  
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-scene">
+    <div class="ring r1"></div>
+    <div class="ring r2"></div>
+    <div class="ring r3"></div>
+    <div class="ring r4"></div>
+    <div class="ring-dots">
+      <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="200" cy="200" r="194" fill="none"
+      stroke="rgba(59,130,246,0.2)" stroke-dasharray="3 14" stroke-linecap="round"/>
+      </svg>
     </div>
-</div>
-{% endfor %}
 
-</div>
-        </div>
-    </section>
+    <div class="hero-text">
+      <span class="hero-eyebrow">Forging the future of street culture</span>
+      <h1 class="hero-title"><span>OUTFITO</span></h1>
+      <div class="hero-divider"></div>
+      <p class="hero-sub">Identity defined through exclusivity</p>
+    </div>
 
-    <!-- TRENDING PRODUCTS -->
-    <section class="max-w-[1440px] mx-auto px-6 py-24 border-t border-white/5">
-        <div class="flex justify-between items-end mb-12">
-            <div>
-                <h2 class="text-3xl font-black italic uppercase tracking-tighter">Trending Products</h2>
-                <p class="text-gray-500 text-sm font-medium">Discover the hottest items selected just for you</p>
-            </div>
-            <button class="bg-white/5 border border-white/10 px-6 py-2 rounded text-[10px] font-black uppercase hover:bg-white hover:text-black transition">View All</button>
-        </div>
-
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-8">
-
-{% for product in products %}
-{% with variant=product.active_variants|first %}
-
-<div class="product-card">
-
-    <!-- IMAGE BOX -->
-    <div class="product-img-box">
-
-        <!-- FRONT IMAGE -->
+    {% for product in hero_products %}
+    {% with variant=product.active_variants|first %}
+    <div class="hero-card" id="hc{{ forloop.counter }}">
+      <div class="card-img-wrap">
         {% if variant and variant.image %}
-            <img src="{{ variant.image.url }}" class="img-front">
+          <img src="{{ variant.image.url }}" alt="{{ product.name }}">
         {% elif product.image_side %}
-            <img src="{{ product.image_side.url }}" class="img-front">
+          <img src="{{ product.image_side.url }}" alt="{{ product.name }}">
         {% else %}
-            <img src="{% static 'images/default.png' %}" class="img-front">
+          <img src="{% static 'images/default.png' %}" alt="{{ product.name }}">
         {% endif %}
+        <div class="card-label">{{ product.name }}</div>
+      </div>
+    </div>
+    {% endwith %}
+    {% endfor %}
+  </div>
 
-        <!-- BACK IMAGE -->
-        {% if product.image_back %}
-            <img src="{{ product.image_back.url }}" class="img-back">
-        {% endif %}
 
-        <!-- CART BUTTON -->
-        {% if request.user.is_authenticated %}
-<form method="POST" action="{% url 'add_to_cart' variant.id %}">
-    {% csrf_token %}
-    <button type="submit" class="cart-icon-btn">
-        <i class="fa-solid fa-cart-shopping text-xs"></i>
-    </button>
-</form>
-{% else %}
-<a href="{% url 'login' %}?next={{ request.get_full_path }}">
-    <button type="button" class="cart-icon-btn">
-        <i class="fa-solid fa-cart-shopping text-xs"></i>
-    </button>
-</a>
-{% endif %}
+</section>
+
+<!-- MARQUEE -->
+<div id="marquee-strip">
+  <div class="marquee-inner">
+    {% for item in marquee_items %}
+      <div class="marquee-item"><span class="marquee-dot"></span>{{ item }}</div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- BRIDGE -->
+<div id="bridge"></div>
+
+<!-- TRENDING -->
+<section id="trending" class="bg-[#05080f] py-16 pb-36 relative before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-[#10b981]/30 before:to-transparent">
+  <div class="text-center mb-16">
+    <span class="block text-[0.55rem] font-semibold tracking-[0.45em] uppercase text-[#10b981] mb-3.5">Curated Selection</span>
+    <h2 class="font-['Cormorant_Garamond'] text-[clamp(2.4rem,4.5vw,4rem)] font-extralight text-[#eef2ff] leading-tight">Trending <em class="text-[#a7f3d0] italic">Now</em></h2>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7 max-w-[1320px] mx-auto px-6 lg:px-10" id="trendGrid">
+
+    <!-- HERO PRODUCTS -->
+    {% for product in hero_products %}
+    {% with variant=product.active_variants|first %}
+
+    <div class="trend-slot" id="slot{{ forloop.counter }}">
+
+      <!-- CLICKABLE CARD -->
+      <a href="{% url 'product_detail' product.id %}" class="block">
+
+      <div class="product-card">
+
+        <div class="product-img relative">
+
+          {% with offer=product.get_active_offer %}
+          {% if offer %}
+            <div class="absolute top-3 left-3 z-10 bg-[#4a1c1c] text-white text-[12px] font-bold px-2 py-1 rounded">
+              {% if offer.discount_type == 'percentage' %}
+                -{{ offer.discount_value|floatformat:0 }}%
+              {% else %}
+                ₹{{ offer.discount_value|floatformat:0 }} OFF
+              {% endif %}
+            </div>
+          {% endif %}
+          {% endwith %}
+
+          {% if variant and variant.image %}
+            <img class="img-front" src="{{ variant.image.url }}">
+          {% elif product.image_side %}
+            <img class="img-front" src="{{ product.image_side.url }}">
+          {% else %}
+            <img class="img-front" src="{% static 'images/default.png' %}">
+          {% endif %}
+
+          {% if product.image_back %}
+            <img class="img-back" src="{{ product.image_back.url }}">
+          {% endif %}
+
+          <div class="product-img-overlay">
+            <button class="quick-view">Quick View</button>
+          </div>
+
+          {% if forloop.counter == 1 %}
+            <div class="product-tag right-3">New</div>
+          {% elif product.stock == 0 %}
+            <div class="product-tag sold right-3">Sold Out</div>
+          {% endif %}
+
+        </div>
+
+        <div class="product-info">
+          <div class="product-brand">{{ product.category.name }}</div>
+          <div class="product-name">{{ product.name }}</div>
+
+          <div class="product-footer">
+            <div class="product-price">
+              {% if variant %}
+                {% with offer=product.get_active_offer %}
+                {% if offer %}
+                  <span style="color:#7878a0; text-decoration:line-through; font-size:12px; margin-right:4px;">₹{{ variant.price }}</span>
+                  <span class="p-gold" style="font-weight:700;">₹{{ variant.get_discounted_price }}</span>
+                {% else %}
+                  <span class="p-gold">₹{{ variant.price }}</span>
+                {% endif %}
+                {% endwith %}
+              {% else %}
+                <span style="color:#e57373;">Out of stock</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      </a>
+      <!-- END CARD -->
+
+      <!-- VIEW BUTTON (separate to avoid click conflict) -->
+      <a href="{% url 'product_detail' product.id %}"
+         class="absolute bottom-3 right-3 z-20"
+         onclick="event.stopPropagation();">
+        <div class="cart-icon-btn">
+          <i class="fa-solid fa-eye" style="font-size:.7rem"></i>
+        </div>
+      </a>
 
     </div>
 
-    <!-- PRODUCT DETAILS (INSIDE CARD ✅) -->
-    <div class="p-4">
+    {% endwith %}
+    {% endfor %}
 
-        <p class="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-1">
-            {{ product.category.name }}
-        </p>
 
-        <h4 class="font-bold text-sm mb-3">
-            {{ product.name }}
-        </h4>
+    <!-- EXTRA PRODUCTS -->
+    {% for product in extra_products %}
+    {% with variant=product.active_variants|first %}
 
-        <!-- PRICE -->
-        {% if variant %}
-        <div class="flex items-center">
-            <span class="price-new">₹{{ variant.price }}</span>
+    <div class="trend-slot relative">
+
+      <a href="{% url 'product_detail' product.id %}" class="block">
+
+      <div class="product-card visible">
+
+        <div class="product-img relative">
+
+          {% with offer=product.get_active_offer %}
+          {% if offer %}
+            <div class="absolute top-3 left-3 z-10 bg-[#4a1c1c] text-white text-[12px] font-bold px-2 py-1 rounded">
+              {% if offer.discount_type == 'percentage' %}
+                -{{ offer.discount_value|floatformat:0 }}%
+              {% else %}
+                ₹{{ offer.discount_value|floatformat:0 }} OFF
+              {% endif %}
+            </div>
+          {% endif %}
+          {% endwith %}
+
+          {% if variant and variant.image %}
+            <img class="img-front" src="{{ variant.image.url }}">
+          {% elif product.image_side %}
+            <img class="img-front" src="{{ product.image_side.url }}">
+          {% else %}
+            <img class="img-front" src="{% static 'images/default.png' %}">
+          {% endif %}
+
+          {% if product.image_back %}
+            <img class="img-back" src="{{ product.image_back.url }}">
+          {% endif %}
+
         </div>
-        {% else %}
-        <div class="text-red-400 text-xs">
-            Out of stock
+
+        <div class="product-info">
+          <div class="product-brand">{{ product.category.name }}</div>
+          <div class="product-name">{{ product.name }}</div>
+
+          <div class="product-footer">
+            <div class="product-price">
+              {% if variant %}
+                {% with offer=product.get_active_offer %}
+                {% if offer %}
+                  <span style="color:#7878a0; text-decoration:line-through; font-size:12px; margin-right:4px;">₹{{ variant.price }}</span>
+                  <span class="p-gold" style="font-weight:700;">₹{{ variant.get_discounted_price }}</span>
+                {% else %}
+                  <span class="p-gold">₹{{ variant.price }}</span>
+                {% endif %}
+                {% endwith %}
+              {% else %}
+                <span style="color:#e57373;">Out of stock</span>
+              {% endif %}
+            </div>
+          </div>
         </div>
-        {% endif %}
+
+      </div>
+
+      </a>
+
+      <!-- VIEW BUTTON -->
+      <a href="{% url 'product_detail' product.id %}"
+         class="absolute bottom-3 right-3 z-20">
+        <div class="cart-icon-btn">
+          <i class="fa-solid fa-eye" style="font-size:.7rem"></i>
+        </div>
+      </a>
 
     </div>
 
-</div>
+    {% endwith %}
+    {% endfor %}
+  </div>
 
-{% endwith %}
-{% endfor %}
+  <!-- VIEW ALL BUTTON -->
+  <div class="flex justify-center mt-16">
+    <a href="{% url 'user_product_list' %}" class="group relative inline-flex items-center gap-3 px-10 py-4 bg-transparent border border-[#10b981]/30 rounded-full overflow-hidden transition-all hover:border-[#10b981] hover:shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+      <div class="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-emerald-400/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      <span class="relative text-[0.65rem] font-bold tracking-[0.25em] uppercase text-[#eef2ff]">View All Products</span>
+      <span class="material-icons-outlined relative text-[1rem] text-[#10b981] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+    </a>
+  </div>
+</section>
 
-</div>
-    </section>
-
-    <!-- FOOTER -->
-    <footer class="bg-[#05070a] pt-24 pb-10 border-t border-white/5">
-        <div class="max-w-[1440px] mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
-            <div>
-                <div class="flex items-center gap-2 mb-6">
-                    <i class="fa-solid fa-shirt text-emerald-500 text-2xl"></i>
-                    <span class="text-xl font-black italic uppercase">OUTFITO</span>
-                </div>
-                <p class="text-gray-500 text-xs leading-relaxed max-w-xs mb-8">Your trusted destination for genuine street apparel. Identity forged through quality and exclusivity.</p>
-                <div class="flex gap-4">
-                    <i class="fa-brands fa-facebook hover:text-emerald-500 cursor-pointer"></i>
-                    <i class="fa-brands fa-instagram hover:text-emerald-500 cursor-pointer"></i>
-                    <i class="fa-brands fa-tiktok hover:text-emerald-500 cursor-pointer"></i>
-                </div>
-            </div>
-            
-            <div>
-                <h4 class="text-[10px] font-black uppercase tracking-widest mb-6 border-l-2 border-emerald-500 pl-4">Shop By Brand</h4>
-                <ul class="text-[11px] text-gray-500 space-y-3">
-                    <li class="hover:text-white cursor-pointer transition">Limited Drops</li>
-                    <li class="hover:text-white cursor-pointer transition">Retro Signature</li>
-                    <li class="hover:text-white cursor-pointer transition">Street Essentials</li>
-                </ul>
-            </div>
-
-            <div>
-                <h4 class="text-[10px] font-black uppercase tracking-widest mb-6 border-l-2 border-emerald-500 pl-4">Support</h4>
-                <ul class="text-[11px] text-gray-500 space-y-3">
-                    <li class="hover:text-white cursor-pointer transition">Track Order</li>
-                    <li class="hover:text-white cursor-pointer transition">Returns Policy</li>
-                    <li class="hover:text-white cursor-pointer transition">Help Center</li>
-                </ul>
-            </div>
-
-            <div>
-                <h4 class="text-[10px] font-black uppercase tracking-widest mb-6 border-l-2 border-emerald-500 pl-4">Company</h4>
-                <ul class="text-[11px] text-gray-500 space-y-3">
-                    <li class="hover:text-white cursor-pointer transition">About Us</li>
-                    <li class="hover:text-white cursor-pointer transition">Privacy Policy</li>
-                    <li class="hover:text-white cursor-pointer transition">Terms of Service</li>
-                </ul>
-            </div>
+<!-- CATEGORIES -->
+<section id="categories" class="bg-[#05080f] py-24">
+  <div class="max-w-[1320px] mx-auto px-6 lg:px-10">
+    <div class="text-center mb-14">
+      <span class="block text-[0.55rem] font-semibold tracking-[0.45em] uppercase text-[#10b981] mb-3.5">Explore The Vault</span>
+      <h2 class="font-['Cormorant_Garamond'] text-[clamp(2.4rem,4.5vw,4rem)] font-extralight text-[#eef2ff] leading-tight">Browse <em class="text-[#a7f3d0] italic">Categories</em></h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for category in categories %}
+      <div class="relative h-[480px] rounded-[20px] overflow-hidden bg-[#0c1221] border border-white/5 transition-all duration-600 ease-[cubic-bezier(0.23,1,0.32,1)] hover:shadow-[0_30px_60px_rgba(0,0,0,0.6)] hover:border-[#10b981]/20 group">
+        {% if category.image %}
+          <img src="{{ category.image.url }}" alt="{{ category.name }}" class="w-full h-full object-cover transition-all duration-800 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-110 group-hover:brightness-75">
+        {% endif %}
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#05080f]/95 flex flex-col justify-end items-center p-10 text-center">
+          <h3 class="font-['Cormorant_Garamond'] text-[1.8rem] font-light text-[#eef2ff] tracking-[0.04em] mb-1.5">{{ category.name }}</h3>
+          <p class="text-[0.58rem] text-[#f5f0e8]/50 tracking-[0.22em] uppercase mb-5 font-medium">{{ category.description|truncatechars:55 }}</p>
+          <a href="{% url 'user_product_list' %}?category={{ category.id }}" class="w-full">
+            <button class="bg-white text-black w-full py-3 rounded-md font-extrabold text-[0.65rem] uppercase tracking-[0.18em] font-['Syne'] transition-all duration-300 opacity-90 hover:bg-[#10b981] hover:text-white hover:opacity-100 hover:-translate-y-1">Shop Collection</button>
+          </a>
         </div>
-        <div class="text-center py-8 border-t border-white/5 text-[9px] font-bold text-gray-600 uppercase tracking-[0.4em]">
-            © 2024 Outfito. All rights reserved.
-        </div>
-    </footer>
-<script>
-let currentSlide = 0;
-const slides = document.querySelectorAll('.slide');
-const bars = [
-    document.getElementById('bar-0'),
-    document.getElementById('bar-1'),
-    document.getElementById('bar-2')
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+
+
+<div id="anim-layer"></div>
+
+<!-- SCRIPTS -->
+<script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+
+
+
+  <script>
+gsap.registerPlugin(ScrollTrigger);
+
+/* 1. LENIS */
+const lenis = new Lenis({ duration: 1.2, easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+requestAnimationFrame(raf);
+lenis.on('scroll', ScrollTrigger.update);
+gsap.ticker.add(time => lenis.raf(time * 1000));
+gsap.ticker.lagSmoothing(0);
+
+/* 2. PRELOADER */
+
+
+/* 3. PARALLAX — hero scene tilts with mouse (no custom cursor) */
+document.addEventListener('mousemove', e => {
+  const px = (e.clientX / window.innerWidth - .5) * 2;
+  const py = (e.clientY / window.innerHeight - .5) * 2;
+  gsap.to('.hero-scene', { rotationY: px * 9, rotationX: -py * 9, x: px * 28, y: py * 28, duration: 2 });
+});
+
+/* 4. NAVBAR SCROLL */
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('scrolled', window.scrollY > 50);
+});
+
+/* 5. USER DROPDOWN */
+const userBtn = document.getElementById('userMenuBtn');
+const userDD  = document.getElementById('userDropdown');
+if (userBtn && userDD) {
+  userBtn.addEventListener('click', e => { e.stopPropagation(); userDD.classList.toggle('open'); });
+  document.addEventListener('click', e => { if (!userDD.contains(e.target) && e.target !== userBtn) userDD.classList.remove('open'); });
+}
+
+/* 5b. HAMBURGER */
+const hamburger = document.getElementById('navHamburger');
+const mobileMenu = document.getElementById('navMobile');
+if (hamburger && mobileMenu) {
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('open');
+    mobileMenu.classList.toggle('open');
+  });
+}
+
+/* 6. WISHLIST */
+document.querySelectorAll('.wishlist-btn').forEach(btn => btn.addEventListener('click', () => btn.classList.toggle('active')));
+
+/* 7. MORPH ANIMATION */
+const pairs = [
+  { heroId: 'hc1', slotId: 'slot1' },
+  { heroId: 'hc2', slotId: 'slot2' },
+  { heroId: 'hc3', slotId: 'slot3' },
+  { heroId: 'hc4', slotId: 'slot4' },
 ];
+let clones = [], st = null, scrubTl = null;
 
-let autoTimer;
-let progressInterval;
+function initMorphAnim() {
+  if (st)      { st.kill();      st      = null; }
+  if (scrubTl) { scrubTl.kill(); scrubTl = null; }
 
-function setSlide(index) {
+  const layer = document.getElementById('anim-layer');
+  if (!layer) return;
+  layer.innerHTML = '';
+  clones = [];
 
-    slides.forEach(s => s.classList.remove('active'));
-    slides[index].classList.add('active');
+  gsap.set(layer, { position: 'absolute', top: 0, left: 0, right: 0, pointerEvents: 'none', zIndex: 500 });
 
-    currentSlide = index;
+  pairs.forEach(({ heroId, slotId }) => {
+    const heroEl = document.getElementById(heroId);
+    const slotEl = document.getElementById(slotId);
+    if (!heroEl || !slotEl) return;
+    const img = heroEl.querySelector('img');
+    if (!img) return;
 
-    resetBars();
-    startProgress();
+    const clone = document.createElement('div');
+    clone.className = 'clone-card';
+    gsap.set(clone, { position: 'absolute', opacity: 0 });
+    const wrap = document.createElement('div');
+    wrap.className = 'card-img-wrap';
+    wrap.appendChild(img.cloneNode(true));
+    clone.appendChild(wrap);
+    layer.appendChild(clone);
+    clones.push({ clone, heroEl, slotEl });
+  });
 
-    clearTimeout(autoTimer);
+  st = ScrollTrigger.create({
+    trigger: '#trending',
+    start: 'top 85%',
+    end:   'top 15%',
+    scrub: false,
 
-    autoTimer = setTimeout(() => {
-        setSlide((currentSlide + 1) % 3);
-    }, 6000);
+    onEnter() {
+      document.querySelectorAll('.hero-card').forEach(c => c.style.animationPlayState = 'paused');
+      if (scrubTl) scrubTl.kill();
+      scrubTl = gsap.timeline({ paused: true });
 
+      clones.forEach(({ clone, heroEl, slotEl }, i) => {
+        const sRect  = heroEl.getBoundingClientRect();
+        const startW = heroEl.offsetWidth  || 200;
+        const startH = heroEl.offsetHeight || 300;
+        const startCx = sRect.left + sRect.width  / 2 + window.scrollX;
+        const startCy = sRect.top  + sRect.height / 2 + window.scrollY;
+
+        const card  = slotEl.querySelector('.product-card');
+        if (!card) return;
+        const tRect = card.getBoundingClientRect();
+        const endW  = tRect.width  || slotEl.offsetWidth;
+        const endH  = tRect.height || endW * 1.5;
+        const endCx = tRect.left + endW / 2 + window.scrollX;
+        const endCy = tRect.top  + endH / 2 + window.scrollY;
+
+        gsap.set(clone, {
+          left: startCx - startW / 2, top: startCy - startH / 2,
+          width: startW, height: startH,
+          borderRadius: '83px 83px 13px 13px',
+          background: 'rgba(15,23,42,.65)',
+          border: '1px solid rgba(201,168,76,.22)',
+          padding: '7px', opacity: 1,
+        });
+        gsap.set(clone.querySelector('.card-img-wrap'), { borderRadius: '76px 76px 10px 10px' });
+        gsap.to(heroEl, { opacity: 0, duration: .3, overwrite: true });
+
+        scrubTl.to(clone, {
+          left: endCx - endW / 2, top: endCy - endH / 2,
+          width: endW, height: endH, borderRadius: '20px',
+          background: '#1E293B', border: '1px solid rgba(255,255,255,.07)',
+          padding: '0px', ease: 'power2.inOut', duration: 1,
+        }, i * 0.05);
+        scrubTl.to(clone.querySelector('.card-img-wrap'), {
+          borderRadius: '20px', ease: 'power2.inOut', duration: 1,
+        }, '<');
+      });
+    },
+
+    onLeaveBack() {
+      clones.forEach(({ clone, heroEl }) => {
+        gsap.to(clone,  { opacity: 0, duration: .3 });
+        gsap.to(heroEl, { opacity: 1, duration: .3 });
+      });
+      document.querySelectorAll('.hero-card').forEach(c => c.style.animationPlayState = 'running');
+      pairs.forEach(({ slotId }) => {
+        const card = document.querySelector(`#${slotId} .product-card`);
+        if (card) gsap.set(card, { opacity: 0, y: 20, scale: .97 });
+      });
+    },
+
+    onUpdate(self) {
+      if (scrubTl) gsap.to(scrubTl, { progress: self.progress, duration: .5, ease: 'power3.out', overwrite: true });
+    },
+
+    onLeave() {
+      clones.forEach(({ clone, slotEl }) => {
+        gsap.set(clone, { opacity: 0 });
+        const card = slotEl.querySelector('.product-card');
+        if (card) gsap.to(card, { opacity: 1, y: 0, scale: 1, duration: .5, ease: 'power2.out' });
+      });
+    },
+
+    onEnterBack() {
+      clones.forEach(({ clone, slotEl }) => {
+        gsap.set(clone, { opacity: 1 });
+        const card = slotEl.querySelector('.product-card');
+        if (card) gsap.set(card, { opacity: 0, y: 20 });
+      });
+    },
+  });
 }
 
-function resetBars() {
-
-    bars.forEach(b => {
-        if(b) b.style.width = '0%';
-    });
-
-    clearInterval(progressInterval);
-
-}
-
-function startProgress() {
-
-    let width = 0;
-    const bar = bars[currentSlide];
-
-    progressInterval = setInterval(() => {
-
-        if (width >= 100) {
-            clearInterval(progressInterval);
-        } 
-        else {
-            width += 1.67;
-            if(bar) bar.style.width = width + '%';
-        }
-
-    }, 100);
-
-}
-
-// Initialize carousel
-setSlide(0);
-
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { ScrollTrigger.refresh(); initMorphAnim(); }, 200);
+});
+window.addEventListener('load', () => { ScrollTrigger.refresh(); initMorphAnim(); });
 </script>
+
+
 
 {% endblock %}

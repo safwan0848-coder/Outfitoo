@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     'admin_side.variants_management', 
     'admin_side.order_management', 
     'admin_side.coupon_management',
+    'admin_side.offer_management',
+    'admin_side.dashboard',
     
 
     
@@ -67,6 +69,7 @@ INSTALLED_APPS = [
     'user_side.cart',
     'user_side.orders',
     'user_side.payment',
+    'user_side.wallet',
 
 ]
 SITE_ID = 1

@@ -83,6 +83,7 @@ class OrderItem(models.Model):
     cancellation_reason=models.TextField(blank=True, null=True)
     return_reason=models.TextField(blank=True, null=True)
     return_qty=models.PositiveIntegerField(null=True, blank=True)
+    refund_processed=models.BooleanField(default=False)   # ← prevents duplicate refunds
 
     def __str__(self):
         return f"{self.order.order_number} - {self.variant}"

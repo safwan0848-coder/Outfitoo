@@ -1,36 +1,36 @@
 <div class="fixed top-[64px] left-0 w-[260px] h-[calc(100vh-64px)] p-3 overflow-y-auto">
     <!-- GO BACK -->
-    <a href="#" onclick="goBackOrHome(event)" class="nav-item">
+    <a href="#" onclick="goBackOrHome(event)" class="flex items-center gap-3 py-3 px-[18px] rounded-[14px] text-gray-500 no-underline transition-all duration-250 text-sm mb-1.5 hover:bg-white/5 hover:text-white hover:translate-x-[5px]">
         <span class="material-symbols-outlined">arrow_back</span>
         Go Back
     </a>
 
     <a href="{% url 'profile' %}"
-       class="nav-item {% if 'profile' in request.path %}active{% endif %}">
+       class="flex items-center gap-3 py-3 px-[18px] rounded-[14px] no-underline transition-all duration-250 text-sm mb-1.5 hover:bg-white/5 hover:text-white hover:translate-x-[5px] {% if 'profile' in request.path %}bg-emerald-500/15 text-emerald-500 border-r-[3px] border-emerald-500{% else %}text-gray-500{% endif %}">
         <span class="material-symbols-outlined">person</span>
         Profile
     </a>
 
     <a href="{% url 'address-list' %}"
-       class="nav-item {% if 'address' in request.path %}active{% endif %}">
+       class="flex items-center gap-3 py-3 px-[18px] rounded-[14px] no-underline transition-all duration-250 text-sm mb-1.5 hover:bg-white/5 hover:text-white hover:translate-x-[5px] {% if 'address' in request.path %}bg-emerald-500/15 text-emerald-500 border-r-[3px] border-emerald-500{% else %}text-gray-500{% endif %}">
         <span class="material-symbols-outlined">location_on</span>
         Address
     </a>
 
     <a href="{% url 'order_list' %}"
-       class="nav-item {% if 'order' in request.path %}active{% endif %}">
+       class="flex items-center gap-3 py-3 px-[18px] rounded-[14px] no-underline transition-all duration-250 text-sm mb-1.5 hover:bg-white/5 hover:text-white hover:translate-x-[5px] {% if 'order' in request.path %}bg-emerald-500/15 text-emerald-500 border-r-[3px] border-emerald-500{% else %}text-gray-500{% endif %}">
         <span class="material-symbols-outlined">package_2</span>
         Orders
     </a>
 
     <a href="{% url 'wishlist_view' %}"
-       class="nav-item {% if 'wishlist' in request.path %}active{% endif %}">
+       class="flex items-center gap-3 py-3 px-[18px] rounded-[14px] no-underline transition-all duration-250 text-sm mb-1.5 hover:bg-white/5 hover:text-white hover:translate-x-[5px] {% if 'wishlist' in request.path %}bg-emerald-500/15 text-emerald-500 border-r-[3px] border-emerald-500{% else %}text-gray-500{% endif %}">
         <span class="material-symbols-outlined">favorite</span>
         Wishlist
     </a>
 
     <a href="{% url 'wallet' %}"
-       class="nav-item {% if 'wallet' in request.path %}active{% endif %}">
+       class="flex items-center gap-3 py-3 px-[18px] rounded-[14px] no-underline transition-all duration-250 text-sm mb-1.5 hover:bg-white/5 hover:text-white hover:translate-x-[5px] {% if 'wallet' in request.path %}bg-emerald-500/15 text-emerald-500 border-r-[3px] border-emerald-500{% else %}text-gray-500{% endif %}">
         <span class="material-symbols-outlined">account_balance_wallet</span>
         Wallet
     </a>

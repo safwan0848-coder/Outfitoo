@@ -1,0 +1,383 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Outfito Admin – Sales Report</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0a0e1a',
+                            green: '#107c57',
+                            light: '#e8f3ee',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #fcfcfc; }
+        .sidebar { background-color: #fcfcfc; border-right: 1px solid #f3f4f6; }
+        .nav-item { transition: all 0.2s; }
+        .nav-item:hover { background-color: #f3f4f6; }
+        .nav-item.active { background-color: #e8f3ee; color: #107c57; border-left: 3px solid #107c57; }
+        .nav-item.active i { color: #107c57; }
+        .custom-shadow { box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+    </style>
+</head>
+<body class="text-gray-800 font-sans antialiased flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar w-64 flex flex-col justify-between h-full flex-shrink-0 z-20">
+        <div>
+            <!-- Logo -->
+            <div class="p-6">
+                <a href="/" class="flex items-center gap-2">
+                    <span class="text-3xl font-serif font-bold text-brand-green tracking-tight">Outfito</span>
+                </a>
+            </div>
+
+            <!-- Navigation -->
+            <div class="px-4">
+                <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 px-3">Management</div>
+                <nav class="flex flex-col gap-1">
+                    <a href="{% url 'admin_dashboard' %}" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500">
+                        <i class="fa-solid fa-border-all w-5 text-center text-gray-400"></i> Dashboard
+                    </a>
+                    <a href="{% url 'sales_report' %}" class="nav-item active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-brand-green">
+                        <i class="fa-solid fa-chart-line w-5 text-center"></i> Sales Report
+                    </a>
+                    <a href="{% url 'admin_order_list' %}" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500">
+                        <i class="fa-solid fa-bag-shopping w-5 text-center text-gray-400"></i> Orders
+                    </a>
+                    <a href="{% url 'product_list' %}" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500">
+                        <i class="fa-solid fa-shirt w-5 text-center text-gray-400"></i> Products
+                    </a>
+                    <a href="{% url 'category_list' %}" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500">
+                        <i class="fa-solid fa-layer-group w-5 text-center text-gray-400"></i> Categories
+                    </a>
+                    <a href="{% url 'admin-user-management' %}" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500">
+                        <i class="fa-solid fa-users w-5 text-center text-gray-400"></i> Customers
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Admin Profile -->
+        <div class="p-4 border-t border-gray-100">
+            <div class="flex items-center gap-3 px-3 py-2">
+                <div class="w-8 h-8 rounded-full bg-brand-green text-white flex items-center justify-center font-bold text-xs">
+                    {{ request.user.username|make_list|first|upper }}
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-gray-800">{{ request.user.username }}</div>
+                    <div class="text-xs text-gray-400">{{ request.user.email }}</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 h-full overflow-y-auto bg-[#fcfcfc]">
+        <div class="p-8 max-w-7xl mx-auto">
+            
+            <!-- Header -->
+            <header class="flex justify-between items-start lg:items-center mb-8 flex-col lg:flex-row gap-4">
+                <div>
+                    <h1 class="text-2xl font-serif font-bold text-brand-dark mb-1">Sales Report</h1>
+                    <p class="text-sm text-gray-500">High-fashion performance analytics for Outfito</p>
+                </div>
+                
+                <!-- Filters and Export -->
+                <div class="flex items-center gap-3 flex-wrap">
+                    <!-- Filter Form -->
+                    <form method="GET" class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-1 custom-shadow">
+                        <select name="filter" class="text-sm text-gray-600 bg-transparent outline-none cursor-pointer pl-2 pr-1" onchange="this.form.submit()">
+                            <option value="">Custom Date</option>
+                            <option value="today" {% if filter == 'today' %}selected{% endif %}>Today</option>
+                            <option value="week" {% if filter == 'week' %}selected{% endif %}>This Week</option>
+                            <option value="month" {% if filter == 'month' %}selected{% endif %}>This Month</option>
+                            <option value="year" {% if filter == 'year' %}selected{% endif %}>This Year</option>
+                        </select>
+                        <div class="w-px h-5 bg-gray-200"></div>
+                        <input type="date" name="start_date" value="{{ start_date }}" class="text-sm text-gray-600 bg-transparent outline-none cursor-pointer px-1 w-32" {% if filter %}disabled{% endif %}>
+                        <span class="text-gray-400">-</span>
+                        <input type="date" name="end_date" value="{{ end_date }}" class="text-sm text-gray-600 bg-transparent outline-none cursor-pointer px-1 w-32" {% if filter %}disabled{% endif %}>
+                        <button type="submit" class="w-8 h-8 flex items-center justify-center bg-gray-50 hover:bg-gray-100 rounded text-gray-500 transition-colors" {% if filter %}disabled{% endif %} title="Apply Date Range">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </form>
+
+                    <!-- Export Buttons -->
+                    <div class="flex gap-2">
+                        <a href="{% url 'download_sales_report_excel' %}?filter={{ filter }}&start_date={{ start_date }}&end_date={{ end_date }}" class="px-4 py-2 bg-brand-dark hover:bg-gray-800 text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-2 custom-shadow">
+                            <i class="fa-solid fa-download"></i> Excel
+                        </a>
+                        <a href="{% url 'download_sales_report_pdf' %}?filter={{ filter }}&start_date={{ start_date }}&end_date={{ end_date }}" class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-semibold rounded-lg transition-colors flex items-center gap-2 custom-shadow">
+                            <i class="fa-regular fa-file-pdf"></i> PDF
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Stat Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+                <!-- Total Revenue -->
+                <div class="bg-white border border-gray-100 rounded-2xl p-5 custom-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Revenue</div>
+                        <div class="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand-green">
+                            <i class="fa-solid fa-money-bill-wave"></i>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800 mb-1">₹{{ total_revenue|floatformat:"2" }}</div>
+                </div>
+
+                <!-- Total Orders -->
+                <div class="bg-white border border-gray-100 rounded-2xl p-5 custom-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Orders</div>
+                        <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800 mb-1">{{ total_orders }}</div>
+                </div>
+
+                <!-- Products Sold -->
+                <div class="bg-white border border-gray-100 rounded-2xl p-5 custom-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Products Sold</div>
+                        <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800 mb-1">{{ products_sold }}</div>
+                </div>
+
+                <!-- Discounts Given -->
+                <div class="bg-white border border-gray-100 rounded-2xl p-5 custom-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Discounts Given</div>
+                        <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500">
+                            <i class="fa-solid fa-percent"></i>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800 mb-1">₹{{ total_discount|floatformat:"2" }}</div>
+                </div>
+
+                <!-- Coupons Used -->
+                <div class="bg-white border border-gray-100 rounded-2xl p-5 custom-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Coupons Used</div>
+                        <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500">
+                            <i class="fa-solid fa-ticket"></i>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800 mb-1">{{ coupons_used }}</div>
+                </div>
+            </div>
+
+            <!-- Coupon Usage Details Table -->
+            <div class="bg-white border border-gray-100 rounded-2xl p-6 custom-shadow mb-8">
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-gray-800">Coupon Usage Details</h3>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                                <th class="pb-4 font-semibold px-4">Coupon Code</th>
+                                <th class="pb-4 font-semibold px-4">Type</th>
+                                <th class="pb-4 font-semibold px-4">Discount</th>
+                                <th class="pb-4 font-semibold px-4 text-center">Times Used</th>
+                                <th class="pb-4 font-semibold px-4 text-center">Usage Limit</th>
+                                <th class="pb-4 font-semibold px-4 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            {% for coupon in coupon_usage_details %}
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="py-4 px-4">
+                                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-full border border-purple-100">
+                                        <i class="fa-solid fa-tag"></i> {{ coupon.coupon__code }}
+                                    </div>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <div class="inline-flex items-center gap-1 px-2.5 py-1 bg-orange-50 text-orange-600 text-xs font-bold rounded-md border border-orange-100">
+                                        {% if coupon.coupon__discount_type == 'percentage' %}
+                                        <i class="fa-solid fa-percent text-[10px]"></i> Percent
+                                        {% else %}
+                                        <i class="fa-solid fa-indian-rupee-sign text-[10px]"></i> Flat
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="py-4 px-4 text-sm font-bold text-gray-800">
+                                    {% if coupon.coupon__discount_type == 'percentage' %}
+                                        {{ coupon.coupon__discount_value|floatformat:"0" }}%
+                                    {% else %}
+                                        ₹{{ coupon.coupon__discount_value|floatformat:"2" }}
+                                    {% endif %}
+                                </td>
+                                <td class="py-4 px-4 text-sm font-bold text-green-600 text-center">{{ coupon.times_used }}×</td>
+                                <td class="py-4 px-4 text-sm text-gray-500 text-center">
+                                    {% if coupon.coupon__usage_limit %}
+                                        {{ coupon.times_used }}/{{ coupon.coupon__usage_limit }}
+                                    {% else %}
+                                        Unlimited
+                                    {% endif %}
+                                </td>
+                                <td class="py-4 px-4 text-center">
+                                    {% if coupon.coupon__is_active %}
+                                    <span class="px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full border border-green-100">Active</span>
+                                    {% else %}
+                                    <span class="px-3 py-1 bg-red-50 text-red-700 text-xs font-bold rounded-full border border-red-100">Inactive</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="py-8 text-center text-gray-400 text-sm">
+                                    <i class="fa-solid fa-ticket text-3xl mb-3 opacity-50"></i>
+                                    <p>No coupons were used in this period.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination for Coupons -->
+                {% if coupon_usage_details.has_other_pages %}
+                <div class="mt-4 flex items-center justify-between border-t border-gray-100 pt-4 px-2">
+                    <div class="text-xs text-gray-500">
+                        Showing {{ coupon_usage_details.start_index }} to {{ coupon_usage_details.end_index }} of {{ coupon_usage_details.paginator.count }} entries
+                    </div>
+                    <div class="flex gap-1">
+                        {% if coupon_usage_details.has_previous %}
+                        <a href="?page_coupons={{ coupon_usage_details.previous_page_number }}&page_orders={{ request.GET.page_orders|default:1 }}&filter={{ filter }}&start_date={{ start_date }}&end_date={{ end_date }}" class="px-3 py-1 bg-white border border-gray-200 text-gray-500 rounded text-xs hover:bg-gray-50">Prev</a>
+                        {% endif %}
+                        
+                        {% for num in coupon_usage_details.paginator.page_range %}
+                            {% if coupon_usage_details.number == num %}
+                            <span class="px-3 py-1 bg-brand-green text-white rounded text-xs">{{ num }}</span>
+                            {% else %}
+                            <a href="?page_coupons={{ num }}&page_orders={{ request.GET.page_orders|default:1 }}&filter={{ filter }}&start_date={{ start_date }}&end_date={{ end_date }}" class="px-3 py-1 bg-white border border-gray-200 text-gray-500 rounded text-xs hover:bg-gray-50">{{ num }}</a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if coupon_usage_details.has_next %}
+                        <a href="?page_coupons={{ coupon_usage_details.next_page_number }}&page_orders={{ request.GET.page_orders|default:1 }}&filter={{ filter }}&start_date={{ start_date }}&end_date={{ end_date }}" class="px-3 py-1 bg-white border border-gray-200 text-gray-500 rounded text-xs hover:bg-gray-50">Next</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Transactions Table -->
+            <div class="bg-white border border-gray-100 rounded-2xl p-6 custom-shadow">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-gray-800">Recent Transactions</h3>
+                    
+                    <!-- Optional table search/filter (static for now) -->
+                    <div class="flex items-center gap-2">
+                        <div class="relative hidden sm:block">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input type="text" placeholder="Search orders..." class="pl-8 pr-4 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-brand-green text-gray-600 bg-gray-50 w-48">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                                <th class="pb-4 font-semibold px-4">Order ID</th>
+                                <th class="pb-4 font-semibold px-4">Date</th>
+                                <th class="pb-4 font-semibold px-4">Customer</th>
+                                <th class="pb-4 font-semibold px-4">Status</th>
+                                <th class="pb-4 font-semibold px-4">Payment</th>
+                                <th class="pb-4 font-semibold px-4 text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            {% for order in orders %}
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="py-4 px-4">
+                                    <div class="text-sm font-bold text-gray-800 font-mono">{{ order.order_number }}</div>
+                                </td>
+                                <td class="py-4 px-4 text-sm text-gray-500">{{ order.created_at|date:"M d, Y" }}</td>
+                                <td class="py-4 px-4 text-sm font-bold text-gray-800">{{ order.user.username }}</td>
+                                <td class="py-4 px-4">
+                                    {% if order.order_status == 'Delivered' %}
+                                    <span class="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-md">{{ order.order_status }}</span>
+                                    {% elif order.order_status == 'Pending' %}
+                                    <span class="px-2.5 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-md">{{ order.order_status }}</span>
+                                    {% elif order.order_status == 'Cancelled' or order.order_status == 'Returned' %}
+                                    <span class="px-2.5 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-md">{{ order.order_status }}</span>
+                                    {% else %}
+                                    <span class="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-md">{{ order.order_status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-4 px-4 text-sm text-gray-500">{{ order.get_payment_method_display|default:order.payment_method|title }}</td>
+                                <td class="py-4 px-4 text-sm font-bold text-gray-800 text-right">₹{{ order.total_amount|floatformat:"2" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="py-12 text-center text-gray-400 text-sm">
+                                    <i class="fa-solid fa-receipt text-3xl mb-3 opacity-50"></i>
+                                    <p>No transactions found for the selected date range.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination for Orders -->
+                {% if orders.has_other_pages %}
+                <div class="mt-4 flex items-center justify-between border-t border-gray-100 pt-4 px-2">
+                    <div class="text-xs text-gray-500">
+                        Showing {{ orders.start_index }} to {{ orders.end_index }} of {{ orders.paginator.count }} entries
+                    </div>
+                    <div class="flex gap-1">
+                        {% if orders.has_previous %}
+                        <a href="?page_orders={{ orders.previous_page_number }}&page_coupons={{ request.GET.page_coupons|default:1 }}&filter={{ filter }}&start_date={{ start_date }}&end_date={{ end_date }}" class="px-3 py-1 bg-white border border-gray-200 text-gray-500 rounded text-xs hover:bg-gray-50">Prev</a>
+                        {% endif %}
+                        
+                        {% for num in orders.paginator.page_range %}
+                            {% if orders.number == num %}
+                            <span class="px-3 py-1 bg-brand-green text-white rounded text-xs">{{ num }}</span>
+                            {% else %}
+                            <a href="?page_orders={{ num }}&page_coupons={{ request.GET.page_coupons|default:1 }}&filter={{ filter }}&start_date={{ start_date }}&end_date={{ end_date }}" class="px-3 py-1 bg-white border border-gray-200 text-gray-500 rounded text-xs hover:bg-gray-50">{{ num }}</a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if orders.has_next %}
+                        <a href="?page_orders={{ orders.next_page_number }}&page_coupons={{ request.GET.page_coupons|default:1 }}&filter={{ filter }}&start_date={{ start_date }}&end_date={{ end_date }}" class="px-3 py-1 bg-white border border-gray-200 text-gray-500 rounded text-xs hover:bg-gray-50">Next</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,529 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg: #080c18;
+    --surface: #0e1525;
+    --surface2: #131929;
+    --border: rgba(255,255,255,0.07);
+    --accent: #3bdfb0;
+    --accent2: #00c3ff;
+    --text: #e8ecf4;
+    --muted: #6b7a99;
+    --error: #f87171;
+    --success: #4ade80;
+    --warning: #fbbf24;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── PAGE WRAPPER ── */
+  .wallet-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 100px 24px 60px;
+  }
+
+  .page-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px;
+    letter-spacing: 2px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .page-sub { font-size: 14px; color: var(--muted); margin-bottom: 32px; }
+
+  /* ── BALANCE CARD ── */
+  .balance-card {
+    background: linear-gradient(135deg, #0e1f3b 0%, #091525 60%, #0a1e2e 100%);
+    border: 1px solid rgba(59,223,176,0.18);
+    border-radius: 20px;
+    padding: 36px 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .balance-card::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(59,223,176,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .balance-label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .balance-amount {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 64px;
+    line-height: 1;
+    color: var(--text);
+    letter-spacing: 1px;
+  }
+  .balance-amount span { font-size: 36px; color: var(--muted); vertical-align: super; margin-right: 4px; }
+  .balance-note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+  /* ── TOP-UP SECTION ── */
+  .topup-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title i { color: var(--accent); font-size: 15px; }
+
+  /* Quick amounts */
+  .quick-amounts { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+  .quick-btn {
+    padding: 8px 18px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .quick-btn:hover, .quick-btn.active {
+    border-color: var(--accent);
+    background: rgba(59,223,176,0.08);
+    color: var(--accent);
+  }
+
+  /* Input */
+  .input-group { display: flex; gap: 10px; align-items: center; }
+  .amount-input-wrap {
+    flex: 1;
+    position: relative;
+  }
+  .amount-input-wrap span {
+    position: absolute;
+    left: 14px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .amount-input {
+    width: 100%;
+    padding: 13px 14px 13px 32px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .amount-input:focus { border-color: var(--accent); }
+
+  .topup-btn {
+    padding: 13px 28px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #080c18;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    white-space: nowrap;
+  }
+  .topup-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .topup-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .input-hint { font-size: 11px; color: var(--muted); margin-top: 8px; }
+
+  /* ── TRANSACTIONS ── */
+  .txn-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+  }
+  .txn-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  .txn-table th {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .txn-table td {
+    padding: 14px 12px;
+    font-size: 13.5px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    vertical-align: middle;
+  }
+  .txn-table tr:last-child td { border-bottom: none; }
+  .txn-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge-credit {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px; font-weight: 700;
+    background: rgba(74,222,128,0.1);
+    color: var(--success);
+    border: 1px solid rgba(74,222,128,0.2);
+  }
+  .badge-debit {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px; font-weight: 700;
+    background: rgba(248,113,113,0.1);
+    color: var(--error);
+    border: 1px solid rgba(248,113,113,0.2);
+  }
+  .txn-amount-credit { color: var(--success); font-weight: 700; }
+  .txn-amount-debit  { color: var(--error);   font-weight: 700; }
+  .txn-date { color: var(--muted); font-size: 12px; }
+  .txn-desc { color: var(--muted); font-size: 12.5px; }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 0;
+    color: var(--muted);
+  }
+  .empty-state i { font-size: 40px; margin-bottom: 12px; display: block; color: var(--surface2); }
+
+  /* ── PAGINATION ── */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 8px;
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+  }
+  .page-link:hover {
+    color: var(--text);
+    border-color: var(--border);
+    background: rgba(255,255,255,0.05);
+  }
+  .page-link.active {
+    background: rgba(59,223,176,0.1);
+    color: var(--accent);
+    border-color: rgba(59,223,176,0.2);
+  }
+  .page-link.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* ── TOAST ── */
+  .toast-container {
+    position: fixed; bottom: 28px; right: 28px;
+    z-index: 9999; display: flex; flex-direction: column; gap: 10px;
+  }
+  .toast {
+    padding: 13px 20px;
+    border-radius: 12px;
+    font-size: 13.5px;
+    font-weight: 500;
+    min-width: 260px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    animation: slideIn .25s ease;
+  }
+  .toast-success { background:#0e2b1e; color:var(--success); border:1px solid rgba(74,222,128,.25); }
+  .toast-error   { background:#2b0f0f; color:var(--error);   border:1px solid rgba(248,113,113,.25); }
+  .toast-info    { background:#0e1f3b; color:var(--accent);  border:1px solid rgba(59,223,176,.2); }
+  @keyframes slideIn { from{ transform:translateX(30px); opacity:0; } to{ transform:none; opacity:1; } }
+</style>
+
+<div class="wallet-wrapper">
+  <div class="page-title">My Wallet</div>
+  <div class="page-sub">Add funds and manage your balance securely.</div>
+
+  <!-- Balance Card -->
+  <div class="balance-card">
+    <div class="balance-label"><i class="fa-solid fa-wallet" style="margin-right:6px;"></i>Available Balance</div>
+    <div class="balance-amount" id="balanceDisplay">
+      <span>₹</span>{{ wallet.balance|floatformat:2 }}
+    </div>
+    <div class="balance-note">Wallet funds can be used at checkout for instant payment.</div>
+  </div>
+
+  <!-- Top-Up -->
+  <div class="topup-card">
+    <div class="section-title">
+      <i class="fa-solid fa-plus-circle"></i>
+      Add Money
+    </div>
+
+    <div class="quick-amounts">
+      {% for amt in quick_amounts %}
+      <button type="button" class="quick-btn" data-amount="{{ amt }}" onclick="setQuickAmount({{ amt }})">₹{{ amt }}</button>
+      {% endfor %}
+    </div>
+
+    <div class="input-group">
+      <div class="amount-input-wrap">
+        <span>₹</span>
+        <input type="number" id="topupAmount" class="amount-input"
+               placeholder="Enter amount" min="10" max="50000" step="1"/>
+      </div>
+      <button class="topup-btn" id="topupBtn" onclick="initiateTopup()">
+        <i class="fa-solid fa-bolt"></i> Add Money
+      </button>
+    </div>
+    <div class="input-hint">Min ₹10 · Max ₹50,000 per transaction</div>
+  </div>
+
+  <!-- Transaction History -->
+  <div class="txn-card">
+    <div class="section-title">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      Transaction History
+    </div>
+
+    {% if transactions %}
+    <table class="txn-table">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Amount</th>
+          <th>Balance After</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for txn in transactions %}
+        <tr>
+          <td>
+            {% if txn.transaction_type == 'credit' %}
+              <span class="badge-credit"><i class="fa-solid fa-arrow-down-left"></i> Credit</span>
+            {% else %}
+              <span class="badge-debit"><i class="fa-solid fa-arrow-up-right"></i> Debit</span>
+            {% endif %}
+          </td>
+          <td class="txn-desc">{{ txn.description|default:"Wallet transaction" }}</td>
+          <td class="{% if txn.transaction_type == 'credit' %}txn-amount-credit{% else %}txn-amount-debit{% endif %}">
+            {% if txn.transaction_type == 'credit' %}+{% else %}-{% endif %}₹{{ txn.amount|floatformat:2 }}
+          </td>
+          <td style="color:var(--muted);">₹{{ txn.balance_after|floatformat:2 }}</td>
+          <td class="txn-date">{{ txn.created_at|date:"d M Y, h:i A" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    
+    <!-- Pagination Controls -->
+    {% if transactions.has_other_pages %}
+    <div class="pagination">
+      {% if transactions.has_previous %}
+        <a href="?page={{ transactions.previous_page_number }}" class="page-link" title="Previous Page">
+          <i class="fa-solid fa-chevron-left"></i>
+        </a>
+      {% else %}
+        <span class="page-link disabled"><i class="fa-solid fa-chevron-left"></i></span>
+      {% endif %}
+
+      {% for num in transactions.paginator.page_range %}
+        {% if transactions.number == num %}
+          <span class="page-link active">{{ num }}</span>
+        {% elif num > transactions.number|add:'-3' and num < transactions.number|add:'3' %}
+          <a href="?page={{ num }}" class="page-link">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if transactions.has_next %}
+        <a href="?page={{ transactions.next_page_number }}" class="page-link" title="Next Page">
+          <i class="fa-solid fa-chevron-right"></i>
+        </a>
+      {% else %}
+        <span class="page-link disabled"><i class="fa-solid fa-chevron-right"></i></span>
+      {% endif %}
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <div class="empty-state">
+      <i class="fa-solid fa-receipt"></i>
+      <p>No transactions yet. Add money to get started!</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+  const RAZORPAY_KEY = "{{ razorpay_key }}";
+  const CSRF_TOKEN   = "{{ csrf_token }}";
+
+  /* ── Quick Amount Buttons ───────────────────────────────────────── */
+  function setQuickAmount(amt) {
+    document.getElementById('topupAmount').value = amt;
+    document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+
+  /* ── Initiate Top-up ─────────────────────────────────────────────── */
+  async function initiateTopup() {
+    const amountInput = document.getElementById('topupAmount');
+    const amount = parseFloat(amountInput.value);
+    const btn = document.getElementById('topupBtn');
+
+    if (!amount || amount < 10) { showToast('Minimum top-up is ₹10.', 'error'); return; }
+    if (amount > 50000)         { showToast('Maximum top-up is ₹50,000.', 'error'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating order...';
+
+    try {
+      const res  = await fetch("{% url 'create_wallet_order' %}", {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body:    JSON.stringify({ amount })
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        showToast(data.message || 'Failed to create order.', 'error');
+        resetBtn();
+        return;
+      }
+
+      openRazorpay(data);
+    } catch (err) {
+      showToast('Network error. Please try again.', 'error');
+      resetBtn();
+    }
+  }
+
+  /* ── Open Razorpay Checkout ──────────────────────────────────────── */
+  function openRazorpay(data) {
+    const options = {
+      key:         RAZORPAY_KEY,
+      amount:      data.amount_paise,
+      currency:    'INR',
+      name:        'OUTFITO',
+      description: 'Wallet Top-up',
+      order_id:    data.razorpay_order_id,
+      prefill: {
+        email: data.user_email,
+        name:  data.user_name,
+      },
+      theme: { color: '#3bdfb0' },
+      handler: function(response) {
+        verifyPayment(response);
+      },
+      modal: {
+        ondismiss: function() {
+          showToast('Payment cancelled.', 'info');
+          resetBtn();
+        }
+      }
+    };
+    const rzp = new Razorpay(options);
+    rzp.on('payment.failed', function(resp) {
+      showToast('Payment failed: ' + resp.error.description, 'error');
+      resetBtn();
+    });
+    rzp.open();
+  }
+
+  /* ── Verify Payment ──────────────────────────────────────────────── */
+  async function verifyPayment(response) {
+    try {
+      const res = await fetch("{% url 'verify_wallet_payment' %}", {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body:    JSON.stringify({
+          razorpay_order_id:   response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature:  response.razorpay_signature,
+        })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        showToast(data.message, 'success');
+        // Update balance display live
+        const parts = parseFloat(data.new_balance).toFixed(2).split('.');
+        document.getElementById('balanceDisplay').innerHTML =
+          `<span>₹</span>${parseFloat(data.new_balance).toFixed(2)}`;
+        document.getElementById('topupAmount').value = '';
+        document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+        // Reload after 2s to show new transaction
+        setTimeout(() => location.reload(), 2000);
+      } else {
+        showToast(data.message || 'Verification failed.', 'error');
+      }
+    } catch (err) {
+      showToast('Verification error. Contact support if amount was deducted.', 'error');
+    } finally {
+      resetBtn();
+    }
+  }
+
+  function resetBtn() {
+    const btn = document.getElementById('topupBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Add Money';
+  }
+
+  /* ── Toast ───────────────────────────────────────────────────────── */
+  function showToast(msg, type='info') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+  }
+</script>
+{% endblock %}

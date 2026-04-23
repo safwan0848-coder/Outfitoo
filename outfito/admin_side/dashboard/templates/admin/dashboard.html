@@ -1,0 +1,383 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Outfito Admin – Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0a0e1a',
+                            green: '#107c57',
+                            light: '#e8f3ee',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #fcfcfc; }
+        .sidebar { background-color: #fcfcfc; border-right: 1px solid #f3f4f6; }
+        .nav-item { transition: all 0.2s; }
+        .nav-item:hover { background-color: #f3f4f6; }
+        .nav-item.active { background-color: #e8f3ee; color: #107c57; border-left: 3px solid #107c57; }
+        .nav-item.active i { color: #107c57; }
+        .custom-shadow { box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+    </style>
+</head>
+<body class="text-gray-800 font-sans antialiased flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar w-64 flex flex-col justify-between h-full flex-shrink-0 z-20">
+        <div>
+            <!-- Logo -->
+            <div class="p-6">
+                <a href="/" class="flex items-center gap-2">
+                    <span class="text-3xl font-serif font-bold text-brand-green tracking-tight">Outfito</span>
+                </a>
+            </div>
+
+            <!-- Navigation -->
+            <div class="px-4">
+                <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 px-3">Management</div>
+                <nav class="flex flex-col gap-1">
+                    <a href="{% url 'admin_dashboard' %}" class="nav-item active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-brand-green">
+                        <i class="fa-solid fa-border-all w-5 text-center"></i> Dashboard
+                    </a>
+                    <a href="{% url 'sales_report' %}" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500">
+                        <i class="fa-solid fa-chart-line w-5 text-center text-gray-400"></i> Sales Report
+                    </a>
+                    <a href="{% url 'admin_order_list' %}" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500">
+                        <i class="fa-solid fa-bag-shopping w-5 text-center text-gray-400"></i> Orders
+                    </a>
+                    <a href="{% url 'product_list' %}" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500">
+                        <i class="fa-solid fa-shirt w-5 text-center text-gray-400"></i> Products
+                    </a>
+                    <a href="{% url 'category_list' %}" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500">
+                        <i class="fa-solid fa-layer-group w-5 text-center text-gray-400"></i> Categories
+                    </a>
+                    <a href="{% url 'admin-user-management' %}" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500">
+                        <i class="fa-solid fa-users w-5 text-center text-gray-400"></i> Customers
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Admin Profile -->
+        <div class="p-4 border-t border-gray-100">
+            <div class="flex items-center gap-3 px-3 py-2">
+                <div class="w-8 h-8 rounded-full bg-brand-green text-white flex items-center justify-center font-bold text-xs">
+                    {{ request.user.username|make_list|first|upper }}
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-gray-800">{{ request.user.username }}</div>
+                    <div class="text-xs text-gray-400">{{ request.user.email }}</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 h-full overflow-y-auto bg-[#fcfcfc]">
+        <div class="p-8 max-w-7xl mx-auto">
+            
+            <!-- Header -->
+            <header class="flex justify-between items-center mb-8">
+                <h1 class="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+                <div class="flex items-center gap-4">
+                    <a href="{% url 'sales_report' %}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg transition-colors">
+                        View Sales Report
+                    </a>
+                    <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition-colors">
+                        <i class="fa-regular fa-moon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Stat Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Total Revenue -->
+                <div class="bg-white border border-gray-100 rounded-2xl p-5 custom-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Revenue</div>
+                        <i class="fa-solid fa-circle-dollar-to-slot text-gray-300"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800 mb-1">₹{{ total_revenue|floatformat:"2" }}</div>
+                    <div class="text-xs font-semibold text-brand-green flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-trend-up"></i> +All time
+                    </div>
+                </div>
+
+                <!-- Total Orders -->
+                <div class="bg-white border border-gray-100 rounded-2xl p-5 custom-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Orders</div>
+                        <i class="fa-solid fa-cart-shopping text-gray-300"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800 mb-1">{{ total_orders }}</div>
+                    <div class="text-xs font-semibold text-brand-green flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-trend-up"></i> +All time
+                    </div>
+                </div>
+
+                <!-- Products Sold -->
+                <div class="bg-white border border-gray-100 rounded-2xl p-5 custom-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Products Sold</div>
+                        <i class="fa-solid fa-boxes-stacked text-gray-300"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800 mb-1">{{ products_sold }}</div>
+                    <div class="text-xs font-semibold text-brand-green flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-trend-up"></i> +All time
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="bg-white border border-gray-100 rounded-2xl p-5 custom-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">System Status</div>
+                        <i class="fa-regular fa-circle-check text-gray-300"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800 mb-1">Active</div>
+                    <div class="text-xs font-semibold text-brand-green flex items-center gap-1">
+                        <i class="fa-solid fa-server"></i> Running smooth
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts & Lists Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                
+                <!-- Revenue Chart (Spans 2 columns) -->
+                <div class="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-6 custom-shadow flex flex-col">
+                    <div class="flex justify-between items-start mb-6 flex-wrap gap-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">Revenue Overview</h3>
+                            <p class="text-sm text-gray-500">Revenue performance over time</p>
+                        </div>
+                        <form id="chartFilterForm" method="GET" class="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                            <input type="hidden" name="period" id="periodInput" value="{{ request.GET.period|default:'yearly' }}">
+                            <input type="number" name="year" value="{{ selected_year }}" min="2020" max="2100" class="text-xs font-semibold px-2 py-1.5 rounded-md border border-gray-200 w-20 text-center outline-none focus:border-brand-green mr-1" onchange="document.getElementById('chartFilterForm').submit()" placeholder="YYYY" title="Select Year">
+                            
+                            <button type="button" onclick="document.getElementById('periodInput').value='daily'; document.getElementById('chartFilterForm').submit();" class="text-xs font-semibold px-3 py-1.5 rounded-md transition-colors {% if request.GET.period == 'daily' %}bg-brand-green text-white shadow-sm{% else %}text-gray-500 hover:text-gray-700{% endif %}">Daily</button>
+                            <button type="button" onclick="document.getElementById('periodInput').value='weekly'; document.getElementById('chartFilterForm').submit();" class="text-xs font-semibold px-3 py-1.5 rounded-md transition-colors {% if request.GET.period == 'weekly' %}bg-brand-green text-white shadow-sm{% else %}text-gray-500 hover:text-gray-700{% endif %}">Weekly</button>
+                            <button type="button" onclick="document.getElementById('periodInput').value='monthly'; document.getElementById('chartFilterForm').submit();" class="text-xs font-semibold px-3 py-1.5 rounded-md transition-colors {% if request.GET.period == 'monthly' %}bg-brand-green text-white shadow-sm{% else %}text-gray-500 hover:text-gray-700{% endif %}">Monthly</button>
+                            <button type="button" onclick="document.getElementById('periodInput').value='yearly'; document.getElementById('chartFilterForm').submit();" class="text-xs font-semibold px-3 py-1.5 rounded-md transition-colors {% if request.GET.period == 'yearly' or not request.GET.period %}bg-brand-green text-white shadow-sm{% else %}text-gray-500 hover:text-gray-700{% endif %}">Yearly</button>
+                        </form>
+                    </div>
+                    <div class="h-[250px] w-full mt-auto">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Orders (Replaces Stylist Submissions) -->
+                <div class="bg-white border border-gray-100 rounded-2xl p-6 custom-shadow flex flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-gray-800">Recent Orders</h3>
+                        <a href="{% url 'admin_order_list' %}" class="text-xs font-semibold bg-gray-50 hover:bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg border border-gray-200 transition-colors">View more</a>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto pr-2">
+                        <p class="text-xs text-gray-500 mb-4">Latest delivered orders.</p>
+                        
+                        <div class="flex flex-col gap-4">
+                            {% for order in recent_orders %}
+                            <div class="flex items-center justify-between group">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500">
+                                        <i class="fa-solid fa-receipt text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-bold text-gray-800">{{ order.user.username }}</div>
+                                        <div class="text-xs text-gray-500">{{ order.created_at|date:"M d, Y" }}</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-gray-500">₹</div>
+                                    <div class="text-sm font-bold text-gray-800">{{ order.total_amount|floatformat:"2" }}</div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="text-center py-8 text-gray-400 text-sm">No recent orders found.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Top Trending Outfits (Spans 2 columns) -->
+                <div class="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-6 custom-shadow">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">Top Trending Products</h3>
+                            <p class="text-sm text-gray-500">Best performing items all time</p>
+                        </div>
+                        <a href="{% url 'product_list' %}" class="text-sm font-bold text-brand-green hover:underline flex items-center gap-1">
+                            View All Products <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                                    <th class="pb-3 font-semibold">Image</th>
+                                    <th class="pb-3 font-semibold">Product Name</th>
+                                    <th class="pb-3 font-semibold">Category</th>
+                                    <th class="pb-3 font-semibold text-center">Sales</th>
+                                    <th class="pb-3 font-semibold text-right">Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                {% for item in top_products %}
+                                <tr>
+                                    <td class="py-4">
+                                        {% if item.variant__product__image_side %}
+                                        <img src="/media/{{ item.variant__product__image_side }}" alt="{{ item.variant__product__name }}" class="w-12 h-12 rounded-lg object-cover border border-gray-200">
+                                        {% else %}
+                                        <div class="w-12 h-12 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-300">
+                                            <i class="fa-regular fa-image"></i>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-4">
+                                        <div class="text-sm font-bold text-gray-800">{{ item.variant__product__name }}</div>
+                                        <div class="text-xs text-gray-400">ID: {{ item.variant__product__id }}</div>
+                                    </td>
+                                    <td class="py-4 text-sm text-gray-500">{{ item.variant__product__category__category_name }}</td>
+                                    <td class="py-4 text-sm font-bold text-gray-800 text-center">{{ item.total_sales }}</td>
+                                    <td class="py-4 text-sm font-bold text-gray-800 text-right">₹{{ item.total_revenue|floatformat:"0" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="py-8 text-center text-gray-400 text-sm">No sales data available.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Top Categories -->
+                <div class="bg-white border border-gray-100 rounded-2xl p-6 custom-shadow">
+                    <h3 class="text-lg font-bold text-gray-800 mb-1">Top Categories</h3>
+                    <p class="text-sm text-gray-500 mb-6">Sales volume by category</p>
+
+                    <div class="flex flex-col gap-5">
+                        {% for cat in top_categories %}
+                        <div>
+                            <div class="flex justify-between text-sm font-semibold text-gray-800 mb-2">
+                                <span>{{ cat.variant__product__category__category_name }}</span>
+                                <span class="text-gray-500">{{ cat.total_sales }} units</span>
+                            </div>
+                            <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-brand-green rounded-full" style="width: min(100%, {{ cat.total_sales|add:'15' }}%);"></div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-8 text-gray-400 text-sm">No category data.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        
+        let chartLabels = [];
+        let chartData = [];
+        try {
+            chartLabels = JSON.parse('{{ chart_labels|safe }}');
+            chartData = JSON.parse('{{ chart_data|safe }}');
+        } catch(e) {
+            console.error('Error parsing chart data', e);
+        }
+        
+        // Single point logic
+        const displayPointRadius = chartData.length <= 1 ? 4 : 0;
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartLabels.map(l => String(l).toUpperCase().substring(0,3)),
+                datasets: [{
+                    label: 'Revenue',
+                    data: chartData,
+                    borderColor: '#107c57', // brand-green
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0, 
+                    pointRadius: displayPointRadius, 
+                    pointHoverRadius: 5,
+                    pointBackgroundColor: '#107c57'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: { top: 10, right: 10, bottom: 0, left: 10 }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#111827',
+                        padding: 12,
+                        titleFont: { size: 13, weight: 'normal', family: 'Inter' },
+                        bodyFont: { size: 14, weight: 'bold', family: 'Inter' },
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return '₹' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { display: false },
+                        border: { display: false },
+                        grid: {
+                            color: '#f3f4f6',
+                            drawTicks: false,
+                            borderDash: [5, 5]
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#9ca3af',
+                            font: { size: 10, weight: '700', family: 'Inter' },
+                            padding: 10
+                        },
+                        border: { display: false },
+                        grid: { display: false, drawTicks: false }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

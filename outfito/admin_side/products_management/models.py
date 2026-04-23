@@ -26,3 +26,37 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def get_active_offer(self):
+        from admin_side.offer_management.models import Offer
+        from django.utils import timezone
+        
+        now = timezone.now().date()
+        
+        product_offer = Offer.objects.filter(
+            apply_to='product', product=self, is_active=True, 
+            start_date__lte=now, end_date__gte=now
+        ).first()
+        
+        category_offer = Offer.objects.filter(
+            apply_to='category', category=self.category, is_active=True,
+            start_date__lte=now, end_date__gte=now
+        ).first()
+        
+        if not product_offer and not category_offer:
+            return None
+            
+        if product_offer and not category_offer:
+            return product_offer
+            
+        if category_offer and not product_offer:
+            return category_offer
+            
+        # If both exist, prioritize the one with higher value if same type, else product offer
+        if product_offer.discount_type == category_offer.discount_type:
+            if product_offer.discount_value >= category_offer.discount_value:
+                return product_offer
+            return category_offer
+            
+        return product_offer
+

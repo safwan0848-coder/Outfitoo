@@ -459,19 +459,38 @@ def set_new_password(request):
 @never_cache
 def landing_view(request):
 
-    categories = Category.objects.filter(is_deleted=False) \
-                                 .order_by('-created_at')[:3]
+    categories = Category.objects.filter(
+        is_deleted=False
+    ).order_by('-created_at')[:3]
 
     variant_qs = Variant.objects.filter(is_active=True)
 
-    products = Product.objects.filter(is_deleted=False, is_listed=True) \
-        .prefetch_related(
-            Prefetch('variants', queryset=variant_qs, to_attr='active_variants')
-        ).order_by('-created_at')[:4]
+    # ✅ get all valid products
+    all_products = Product.objects.filter(
+        is_deleted=False,
+        is_listed=True
+    ).prefetch_related(
+        Prefetch('variants', queryset=variant_qs, to_attr='active_variants')
+    ).order_by('-created_at')
+
+    # ✅ split for Velour UI
+    hero_products = all_products[:4]
+    grid_products = all_products[4:]
+
+    # ✅ marquee fix
+    marquee_items = [
+        "New Arrivals",
+        "The Vault Collection",
+        "SS 2026",
+        "Limited Edition Pieces",
+        "Free Worldwide Shipping",
+    ]
 
     context = {
         'categories': categories,
-        'products': products,
+        'hero_products': hero_products,
+        'grid_products': grid_products,
+        'marquee_items': marquee_items,
     }
 
     return render(request, 'user/landing.html', context)

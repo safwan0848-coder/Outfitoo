@@ -6,6 +6,8 @@ from django.db.models import Q, Sum
 from django.core.paginator import Paginator
 from user_side.orders.models import Order, OrderItem,ReturnRequest
 from django.views.decorators.http import require_POST
+from user_side.wallet.refund_utils import process_wallet_refund, process_shipping_refund
+from decimal import Decimal
 
 
 def is_admin(user):
@@ -144,6 +146,21 @@ def update_order_status(request, order_id):
             item.item_status = mapped
             item.save()
 
+            # If admin bulk-cancels the order and it was paid online, refund to wallet
+            if mapped == 'cancelled':
+                process_wallet_refund(
+                    order_item  = item,
+                    refund_qty  = item.quantity,
+                    description = f"Admin cancelled order #{order.order_number} — wallet refund",
+                )
+
+    # If the entire order was cancelled, also refund the shipping fee
+    if mapped == 'cancelled':
+        process_shipping_refund(
+            order       = order,
+            description = f"Shipping refund — admin cancelled order #{order.order_number}",
+        )
+
     messages.success(request, f"Order status updated to '{new_status}'.")
 
     return redirect('admin_order_detail', order_id=order_id)
@@ -196,10 +213,47 @@ def approve_return_request(request, return_id):
 def pickup_return_request(request, return_id):
     return_req=get_object_or_404(ReturnRequest, id=return_id)
 
+    # Only allow Picked Up if the request was already Approved
+    if return_req.status != 'Approved':
+        messages.error(request, "Return must be approved before marking as Picked Up.")
+        return redirect('admin_order_detail', order_id=return_req.order.id)
+
     return_req.status='Picked Up'
     return_req.save()
 
-    messages.success(request,f"Return request #{return_req.id} marked as Picked Up.")
+    # ── Trigger wallet refund: pickup_done AND admin_approved are both satisfied ─
+    item  = return_req.item
+    order = return_req.order
+    qty   = item.return_qty if item.return_qty else item.quantity
+
+    # Prorate coupon discount — refund only what the customer actually paid
+    item_gross        = Decimal(str(item.price)) * qty
+    original_subtotal = Decimal(str(order.subtotal or 0))
+    discount          = Decimal(str(order.discount_amount or 0))
+
+    if original_subtotal > 0 and discount > 0:
+        item_share    = item_gross / original_subtotal
+        item_discount = (discount * item_share).quantize(Decimal('0.01'))
+        net_refund    = max(item_gross - item_discount, Decimal('0.00'))
+    else:
+        net_refund = item_gross
+
+    ok, credited = process_wallet_refund(
+        order_item      = item,
+        refund_qty      = qty,
+        description     = f"Return refund — order #{order.order_number} (item picked up)",
+        override_amount = net_refund,
+    )
+
+    if ok:
+        messages.success(
+            request,
+            f"Return #{return_req.id} marked as Picked Up. "
+            f"₹{credited:.2f} has been credited to the customer's wallet."
+        )
+    else:
+        messages.success(request, f"Return request #{return_req.id} marked as Picked Up.")
+
     return redirect('admin_order_detail', order_id=return_req.order.id)
 
 
