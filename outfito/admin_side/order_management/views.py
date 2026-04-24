@@ -4,9 +4,10 @@ from django.views.decorators.cache import never_cache
 from django.contrib import messages
 from django.db.models import Q, Sum
 from django.core.paginator import Paginator
-from user_side.orders.models import Order, OrderItem,ReturnRequest
+from user_side.orders.models import Order, OrderItem, ReturnRequest
 from django.views.decorators.http import require_POST
 from user_side.wallet.refund_utils import process_wallet_refund, process_shipping_refund
+from user_side.wallet.referral_service import process_referral_reward
 from decimal import Decimal
 
 
@@ -162,6 +163,15 @@ def update_order_status(request, order_id):
         )
 
     messages.success(request, f"Order status updated to '{new_status}'.")
+
+    # ── Trigger referral reward on first delivery ──
+    if new_status == 'Delivered':
+        rewarded = process_referral_reward(order)
+        if rewarded:
+            messages.success(
+                request,
+                "✨ Referral reward credited: ₹50 to buyer, ₹100 to referrer."
+            )
 
     return redirect('admin_order_detail', order_id=order_id)
 

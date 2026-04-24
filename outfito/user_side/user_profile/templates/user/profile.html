@@ -3,7 +3,6 @@
 
 {% block dashboard_content %}
 <style>
-
 :root{
 --bg:#06080f;
 --card:#0f172a;
@@ -13,453 +12,579 @@
 --muted:#6b7280;
 }
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
+*{ margin:0; padding:0; box-sizing:border-box; }
 
-
-
-/* HEADER */
-
-
-
-.brand{
-font-family:'Playfair Display',serif;
-font-size:1.4rem;
-letter-spacing:6px;
-font-weight:700;
-padding-left:70px;
-}
-
-.brand a{
-text-decoration:none;
-background:linear-gradient(90deg,#fff,var(--accent));
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
-}
-
-/* MAIN */
-
-
-
-/* SIDEBAR */
-
-
-
+/* ── SIDEBAR NAV ──────────────────────────────────── */
 .nav-item{
-display:flex;
-align-items:center;
-gap:12px;
-padding:12px 18px;
-border-radius:14px;
-color:var(--muted);
-text-decoration:none;
-transition:0.25s;
-font-size:14px;
-margin-bottom:6px;
+  display:flex; align-items:center; gap:12px;
+  padding:12px 18px; border-radius:14px;
+  color:var(--muted); text-decoration:none;
+  transition:0.25s; font-size:14px; margin-bottom:6px;
 }
+.nav-item span{ font-size:20px; }
+.nav-item:hover{ background:rgba(255,255,255,.05); color:#fff; transform:translateX(5px); }
+.nav-item.active{ background:rgba(16,185,129,.15); color:var(--accent); border-right:3px solid var(--accent); }
 
-.nav-item span{
-font-size:20px;
-}
-
-.nav-item:hover{
-background:rgba(255,255,255,.05);
-color:#fff;
-transform:translateX(5px);
-}
-
-.nav-item.active{
-background:rgba(16,185,129,.15);
-color:var(--accent);
-border-right:3px solid var(--accent);
-}
-
-/* PROFILE CARD */
-
+/* ── PROFILE CARD ─────────────────────────────────── */
 .profile-card{
-background:rgba(15,23,42,.85);
-border:1px solid var(--border);
-border-radius:26px;
-padding:50px;
-backdrop-filter:blur(20px);
-box-shadow:0 40px 70px rgba(0,0,0,.7);
-max-width:800px;
-margin:auto;
+  background:rgba(15,23,42,.85); border:1px solid var(--border);
+  border-radius:26px; padding:50px; backdrop-filter:blur(20px);
+  box-shadow:0 40px 70px rgba(0,0,0,.7);
+  max-width:800px; margin:auto;
 }
 
-.avatar-wrap{
-width:120px;
-height:120px;
-margin:auto;
-margin-bottom:20px;
-position:relative;
-}
+/* ── AVATAR ───────────────────────────────────────── */
+.avatar-wrap{ width:120px; height:120px; margin:auto; margin-bottom:20px; position:relative; }
+.avatar-ring{ position:absolute; inset:-3px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); filter:blur(6px); opacity:.6; }
+.avatar{ width:100%; height:100%; border-radius:50%; background:var(--bg); display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; }
+.avatar img{ width:100%; height:100%; object-fit:cover; }
+.avatar span{ font-size:42px; color:var(--muted); }
 
-.avatar-ring{
-position:absolute;
-inset:-3px;
-border-radius:50%;
-background:linear-gradient(135deg,var(--accent),var(--accent2));
-filter:blur(6px);
-opacity:.6;
-}
+/* ── TITLES ───────────────────────────────────────── */
+.title{ font-family:'Playfair Display',serif; font-size:2.1rem; text-align:center; margin-bottom:5px; }
+.member{ text-align:center; font-size:.75rem; letter-spacing:2px; color:var(--muted); }
 
-.avatar{
-width:100%;
-height:100%;
-border-radius:50%;
-background:var(--bg);
-display:flex;
-align-items:center;
-justify-content:center;
-overflow:hidden;
-position:relative;
-}
-
-.avatar img{
-width:100%;
-height:100%;
-object-fit:cover;
-}
-
-.avatar span{
-font-size:42px;
-color:var(--muted);
-}
-
-/* TITLES */
-
-.title{
-font-family:'Playfair Display',serif;
-font-size:2.1rem;
-text-align:center;
-margin-bottom:5px;
-}
-
-.member{
-text-align:center;
-font-size:.75rem;
-letter-spacing:2px;
-color:var(--muted);
-}
-
-/* INFO GRID */
-
-.grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:16px;
-margin-top:35px;
-}
-
+/* ── INFO GRID ────────────────────────────────────── */
+.grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:35px; }
 .card-info{
-background:rgba(255,255,255,.02);
-border:1px solid var(--border);
-border-radius:16px;
-padding:16px 20px;
-transition:.3s;
+  background:rgba(255,255,255,.02); border:1px solid var(--border);
+  border-radius:16px; padding:16px 20px; transition:.3s;
 }
+.card-info:hover{ border-color:var(--accent); background:rgba(255,255,255,.05); }
+.label{ font-size:.65rem; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:4px; }
+.value{ display:flex; align-items:center; gap:8px; font-size:.95rem; }
+.value span{ color:var(--accent); }
 
-.card-info:hover{
-border-color:var(--accent);
-background:rgba(255,255,255,.05);
-}
-
-.label{
-font-size:.65rem;
-text-transform:uppercase;
-letter-spacing:1px;
-color:var(--muted);
-margin-bottom:4px;
-}
-
-.value{
-display:flex;
-align-items:center;
-gap:8px;
-font-size:.95rem;
-}
-
-.value span{
-color:var(--accent);
-}
-
-/* BUTTONS */
-
-/* BUTTONS */
-
-.actions{
-margin-top:40px;
-display:flex;
-justify-content:center;
-gap:14px;
-flex-wrap:wrap;
-}
-
+/* ── BUTTONS ──────────────────────────────────────── */
+.actions{ margin-top:40px; display:flex; justify-content:center; gap:14px; flex-wrap:wrap; }
 .btn-premium{
-background:#fff;
-color:#000;
-border:none;
-padding:12px 26px;
-border-radius:14px;
-font-weight:700;
-font-size:12px;
-letter-spacing:1px;
-text-transform:uppercase;
-display:flex;
-align-items:center;
-gap:6px;
-transition:.25s;
+  background:#fff; color:#000; border:none; padding:12px 26px; border-radius:14px;
+  font-weight:700; font-size:12px; letter-spacing:1px; text-transform:uppercase;
+  display:flex; align-items:center; gap:6px; transition:.25s;
 }
-
-.btn-premium:hover{
-background:var(--accent);
-transform:translateY(-3px);
-box-shadow:0 10px 25px rgba(16,185,129,.35);
-}
-
-/* SECURITY BUTTON (FILLED LIKE EDIT) */
-
-/* EDIT BUTTON */
-
+.btn-premium:hover{ background:var(--accent); transform:translateY(-3px); box-shadow:0 10px 25px rgba(16,185,129,.35); }
 .btn-edit{
-background:linear-gradient(135deg,#facc15,#f59e0b);
-color:#000;
-border:none;
-padding:12px 26px;
-border-radius:14px;
-font-weight:700;
-font-size:12px;
-letter-spacing:1px;
-text-transform:uppercase;
-display:flex;
-align-items:center;
-gap:6px;
-transition:.25s;
+  background:linear-gradient(135deg,#facc15,#f59e0b); color:#000; border:none;
+  padding:12px 26px; border-radius:14px; font-weight:700; font-size:12px;
+  letter-spacing:1px; text-transform:uppercase; display:flex; align-items:center; gap:6px; transition:.25s;
 }
-
-.btn-edit:hover{
-transform:translateY(-3px);
-box-shadow:0 10px 25px rgba(250,204,21,.35);
-}
-
+.btn-edit:hover{ transform:translateY(-3px); box-shadow:0 10px 25px rgba(250,204,21,.35); }
 .btn-security{
-background:linear-gradient(135deg,var(--accent),var(--accent2));
-color:#fff;
-border:none;
-padding:12px 26px;
-border-radius:14px;
-font-weight:700;
-font-size:12px;
-letter-spacing:1px;
-text-transform:uppercase;
-display:flex;
-align-items:center;
-gap:6px;
-transition:.25s;
+  background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none;
+  padding:12px 26px; border-radius:14px; font-weight:700; font-size:12px;
+  letter-spacing:1px; text-transform:uppercase; display:flex; align-items:center; gap:6px; transition:.25s;
 }
-
-.btn-security:hover{
-transform:translateY(-3px);
-box-shadow:0 10px 25px rgba(59,130,246,.35);
-}
-
-/* LOGOUT BUTTON */
-
+.btn-security:hover{ transform:translateY(-3px); box-shadow:0 10px 25px rgba(59,130,246,.35); }
 .btn-logout{
-background:linear-gradient(135deg,#ef4444,#dc2626);
-color:#fff;
-border:none;
-padding:12px 26px;
-border-radius:14px;
-font-weight:700;
-font-size:12px;
-letter-spacing:1px;
-text-transform:uppercase;
-display:flex;
-align-items:center;
-gap:6px;
-transition:.25s;
+  background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border:none;
+  padding:12px 26px; border-radius:14px; font-weight:700; font-size:12px;
+  letter-spacing:1px; text-transform:uppercase; display:flex; align-items:center; gap:6px; transition:.25s;
+}
+.btn-logout:hover{ transform:translateY(-3px); box-shadow:0 10px 25px rgba(239,68,68,.35); }
+
+/* ── MODAL ────────────────────────────────────────── */
+.modal-bg{ position:fixed; inset:0; background:rgba(0,0,0,.85); display:none; align-items:center; justify-content:center; backdrop-filter:blur(8px); }
+.modal-box{ background:var(--card); border:1px solid var(--border); border-radius:20px; padding:40px; text-align:center; max-width:420px; }
+
+/* ── FOOTER ───────────────────────────────────────── */
+.footer{ border-top:1px solid var(--border); text-align:center; font-size:10px; letter-spacing:2px; padding:20px; color:var(--muted); }
+
+/* ── NEW SECTION CARDS ────────────────────────────── */
+.section-card{
+  background:rgba(15,23,42,.85); border:1px solid var(--border);
+  border-radius:20px; padding:28px; backdrop-filter:blur(16px);
+  transition:.3s;
+}
+.section-card:hover{ border-color:rgba(16,185,129,.3); }
+.section-title{
+  font-size:.65rem; text-transform:uppercase; letter-spacing:2px;
+  color:var(--accent); margin-bottom:16px; display:flex; align-items:center; gap:8px;
+}
+.section-title .mat{ font-size:16px; }
+
+/* referral code pill */
+.ref-code{
+  font-family:monospace; font-size:1.4rem; font-weight:700; letter-spacing:4px;
+  color:#fff; background:rgba(255,255,255,.05); border:1px solid var(--border);
+  border-radius:12px; padding:10px 20px; text-align:center; margin-bottom:14px;
+}
+.ref-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+.ref-btn{
+  flex:1; min-width:100px; padding:9px 14px; border-radius:10px; border:none;
+  font-size:11px; font-weight:700; letter-spacing:.8px; text-transform:uppercase;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px; transition:.2s;
+}
+.ref-btn-copy{ background:rgba(16,185,129,.15); color:var(--accent); border:1px solid rgba(16,185,129,.3); }
+.ref-btn-copy:hover{ background:rgba(16,185,129,.25); }
+.ref-btn-share{ background:rgba(59,130,246,.15); color:#93c5fd; border:1px solid rgba(59,130,246,.3); }
+.ref-btn-share:hover{ background:rgba(59,130,246,.25); }
+.ref-meta{ font-size:.75rem; color:var(--muted); margin-top:10px; }
+
+/* wallet balance */
+.wallet-amount{
+  font-size:2rem; font-weight:700;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  margin-bottom:4px;
+}
+.wallet-label{ font-size:.7rem; color:var(--muted); letter-spacing:1px; text-transform:uppercase; }
+.txn-list{ margin-top:14px; display:flex; flex-direction:column; gap:7px; }
+.txn-row{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 12px; border-radius:10px; background:rgba(255,255,255,.03);
+  border:1px solid var(--border); font-size:.78rem;
+}
+.txn-amount-cr{ color:var(--accent); font-weight:600; }
+.txn-amount-db{ color:#f87171; font-weight:600; }
+
+/* orders */
+.order-row{
+  display:flex; flex-direction:column; gap:4px;
+  padding:10px 14px; border-radius:10px;
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  font-size:.8rem; transition:.2s;
+}
+.order-row:hover{ border-color:rgba(16,185,129,.25); }
+.order-top{ display:flex; justify-content:space-between; align-items:center; }
+.order-id{ color:#fff; font-weight:600; }
+.order-amount{ color:var(--accent); font-weight:700; }
+.order-bottom{ display:flex; justify-content:space-between; align-items:center; color:var(--muted); }
+.status-badge{
+  font-size:10px; font-weight:600; letter-spacing:.5px; padding:2px 8px;
+  border-radius:20px; text-transform:uppercase;
+}
+.status-delivered{ background:rgba(16,185,129,.15); color:var(--accent); }
+.status-cancelled{ background:rgba(239,68,68,.15); color:#f87171; }
+.status-pending   { background:rgba(250,204,21,.15); color:#fde68a; }
+.status-shipped   { background:rgba(59,130,246,.15); color:#93c5fd; }
+.status-out       { background:rgba(168,85,247,.15); color:#d8b4fe; }
+
+/* coupon pills */
+.coupon-count{ font-size:2.2rem; font-weight:700; color:#fde68a; margin-bottom:4px; }
+.coupon-list{ display:flex; flex-direction:column; gap:7px; margin-top:14px; }
+.coupon-pill{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 14px; border-radius:10px;
+  background:rgba(250,204,21,.06); border:1px solid rgba(250,204,21,.2); font-size:.8rem;
+}
+.coupon-code{ font-family:monospace; font-weight:700; color:#fde68a; letter-spacing:2px; }
+.coupon-off{ color:var(--muted); font-size:.72rem; }
+
+/* stats row */
+.stats-row{ display:flex; gap:12px; margin-top:14px; }
+.stat-box{ flex:1; background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:10px; padding:10px 12px; text-align:center; }
+.stat-num{ font-size:1.4rem; font-weight:700; color:var(--accent); }
+.stat-lbl{ font-size:.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+
+/* responsive tweaks */
+@media(max-width:768px){
+  .profile-card{ padding:28px 18px; }
+  .grid{ grid-template-columns:1fr; }
+  .grid .card-info[style*="span 2"]{ grid-column:span 1; }
+  .ref-code{ font-size:1.1rem; letter-spacing:2px; }
+  .wallet-amount{ font-size:1.6rem; }
+  .actions{ flex-direction:column; align-items:stretch; }
+  .actions a, .actions button{ justify-content:center; }
 }
 
-.btn-logout:hover{
-transform:translateY(-3px);
-box-shadow:0 10px 25px rgba(239,68,68,.35);
-}
-/* MODAL */
-
-.modal-bg{
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.85);
-display:none;
-align-items:center;
-justify-content:center;
-backdrop-filter:blur(8px);
-}
-
-.modal-box{
-background:var(--card);
-border:1px solid var(--border);
-border-radius:20px;
-padding:40px;
-text-align:center;
-max-width:420px;
-}
-
-/* FOOTER */
-
-.footer{
-border-top:1px solid var(--border);
-text-align:center;
-font-size:10px;
-letter-spacing:2px;
-padding:20px;
-color:var(--muted);
-}
-
+/* custom thin scrollbar for section boxes */
+.prof-scroll::-webkit-scrollbar{ width:4px; }
+.prof-scroll::-webkit-scrollbar-track{ background:rgba(255,255,255,.03); border-radius:4px; }
+.prof-scroll::-webkit-scrollbar-thumb{ background:rgba(16,185,129,.35); border-radius:4px; }
+.prof-scroll::-webkit-scrollbar-thumb:hover{ background:rgba(16,185,129,.6); }
+.prof-scroll{ scrollbar-width:thin; scrollbar-color:rgba(16,185,129,.35) rgba(255,255,255,.03); }
 </style>
 
+<div class="pb-8">
+
+  <!-- ── EXISTING PROFILE CARD (unchanged) ──────────────── -->
+  <div class="profile-card">
+
+    <div class="avatar-wrap">
+      <div class="avatar-ring"></div>
+      <div class="avatar">
+        {% if profile.profile_image %}
+          <img src="{{ profile.profile_image.url }}">
+        {% elif profile.google_image %}
+          <img src="{{ profile.google_image }}">
+        {% else %}
+          <span class="material-symbols-outlined">person</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="title">Account Profile</div>
+    <div class="member">MEMBER SINCE {{ user.date_joined|date:"Y" }}</div>
+
+    <div class="grid">
+
+      <div class="card-info">
+        <div class="label">Identity</div>
+        <div class="value">
+          <span class="material-symbols-outlined">verified_user</span>
+          {{ user.username }}
+        </div>
+      </div>
+
+      <div class="card-info">
+        <div class="label">Email</div>
+        <div class="value">
+          <span class="material-symbols-outlined">alternate_email</span>
+          {{ user.email }}
+        </div>
+      </div>
+
+      <div class="card-info" style="grid-column:span 2">
+        <div class="label">Phone</div>
+        <div class="value">
+          <span class="material-symbols-outlined">phone_iphone</span>
+          {{ profile.phone|default:"Unlinked Account" }}
+        </div>
+      </div>
+
+    </div>
+
+    <div class="actions">
+      <a href="{% url 'edit-profile' %}" class="btn-edit">
+        <span class="material-symbols-outlined">edit_square</span>Edit
+      </a>
+      {% if not profile.google_image %}
+      <a href="{% url 'change-password' %}" class="btn-security">
+        <span class="material-symbols-outlined">key</span>Security
+      </a>
+      {% endif %}
+      <button class="btn-logout" onclick="openLogout()">
+        <span class="material-symbols-outlined">logout</span>Logout
+      </button>
+    </div>
+
+  </div><!-- /profile-card -->
+
+  <!-- ── NEW SECTIONS  — 2 × 2 BOX GRID ──────────────── -->
+  <div style="max-width:800px;margin:24px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+    <!-- ╔══════════════╗  BOX 1 — REFERRAL ══════════════╗ -->
+    <div class="section-card" style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="section-title" style="margin-bottom:0;">
+        <span class="material-symbols-outlined" style="font-size:17px;color:var(--accent);">card_giftcard</span>
+        Referral Code
+      </div>
+
+      <!-- Code pill -->
+      <div style="font-family:monospace;font-size:1.35rem;font-weight:800;letter-spacing:4px;
+                  color:#fff;background:rgba(255,255,255,.05);border:1px solid var(--border);
+                  border-radius:12px;padding:10px 0;text-align:center;" id="refCodeDisplay">
+        {{ referral_code }}
+      </div>
+
+      <!-- Buttons -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button onclick="copyCode()" style="padding:9px 0;border-radius:10px;border:1px solid rgba(16,185,129,.3);
+          background:rgba(16,185,129,.1);color:#10b981;font-size:11px;font-weight:800;
+          letter-spacing:.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:.2s;">
+          <span class="material-symbols-outlined" style="font-size:13px;">content_copy</span> Copy
+        </button>
+        <button onclick="shareLink()" style="padding:9px 0;border-radius:10px;border:1px solid rgba(59,130,246,.3);
+          background:rgba(59,130,246,.1);color:#93c5fd;font-size:11px;font-weight:800;
+          letter-spacing:.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:.2s;">
+          <span class="material-symbols-outlined" style="font-size:13px;">share</span> Share
+        </button>
+      </div>
+
+      <!-- Meta -->
+      <div style="font-size:.72rem;color:var(--muted);line-height:1.6;">
+        🎉 <strong style="color:#fff;">{{ referral_count }}</strong> friend{{ referral_count|pluralize }} referred &nbsp;·&nbsp;
+        You earn <strong style="color:var(--accent);">₹100</strong>, they get <strong style="color:#93c5fd;">₹50</strong>
+      </div>
+
+      <input type="hidden" id="refLink" value="{{ referral_link }}">
+    </div>
+    <!-- ╚══════════════╝ -->
+
+    <!-- ╔══════════════╗  BOX 2 — WALLET ════════════════╗ -->
+    <div class="section-card" style="display:flex;flex-direction:column;gap:12px;">
+
+      <div class="section-title" style="margin-bottom:0;">
+        <span class="material-symbols-outlined" style="font-size:17px;color:var(--accent);">account_balance_wallet</span>
+        Wallet
+      </div>
+
+      <!-- Balance -->
+      <div style="text-align:center;padding:14px 0;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:14px;flex-shrink:0;">
+        <div style="font-size:1.9rem;font-weight:800;
+                    background:linear-gradient(90deg,var(--accent),var(--accent2));
+                    -webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+          ₹{{ wallet_balance|floatformat:2 }}
+        </div>
+        <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Available Balance</div>
+      </div>
+
+      <!-- Transactions label -->
+      <div style="font-size:.6rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+        <span>Recent Transactions</span>
+        <span style="color:var(--accent);">{{ all_transactions|length }}</span>
+      </div>
+
+      <!-- Scrollable transactions list -->
+      <div class="prof-scroll" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;">
+        {% for txn in all_transactions %}
+        <div style="display:flex;justify-content:space-between;align-items:center;
+                    padding:7px 10px;border-radius:8px;flex-shrink:0;
+                    background:rgba(255,255,255,.02);border:1px solid var(--border);font-size:.75rem;">
+          <div style="min-width:0;">
+            <div style="color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;">{{ txn.description|default:txn.get_transaction_type_display|truncatechars:24 }}</div>
+            <div style="font-size:.6rem;color:var(--muted);margin-top:1px;">{{ txn.created_at|date:"d M · H:i" }}</div>
+          </div>
+          <span style="font-weight:700;white-space:nowrap;margin-left:8px;{% if txn.transaction_type == 'debit' %}color:#f87171;{% else %}color:#10b981;{% endif %}">
+            {% if txn.transaction_type == 'debit' %}-{% else %}+{% endif %}₹{{ txn.amount|floatformat:0 }}
+          </span>
+        </div>
+        {% empty %}
+        <p style="color:var(--muted);font-size:.75rem;text-align:center;padding:12px 0;">No transactions yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+    <!-- ╚══════════════╝ -->
+
+
+    <!-- ╔══════════════╗  BOX 3 — ORDERS ════════════════╗ -->
+    <div class="section-card" style="display:flex;flex-direction:column;gap:12px;">
+
+      <div class="section-title" style="margin-bottom:0;">
+        <span class="material-symbols-outlined" style="font-size:17px;color:var(--accent);">inventory_2</span>
+        Orders
+      </div>
+
+      <!-- Stats pills: Total | Delivered -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;flex-shrink:0;">
+        <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:1.5rem;font-weight:800;color:var(--accent);">{{ total_orders }}</div>
+          <div style="font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Total</div>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:1.5rem;font-weight:800;color:#10b981;">{{ delivered_orders }}</div>
+          <div style="font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Delivered</div>
+        </div>
+      </div>
+
+      <!-- Label row -->
+      <div style="font-size:.6rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+        <span>Recent Orders</span>
+        <span id="ord-page-info" style="color:var(--accent);"></span>
+      </div>
+
+      <!-- Paginated order list -->
+      <div id="ord-list" style="display:flex;flex-direction:column;gap:6px;min-height:80px;">
+        <!-- filled by JS -->
+      </div>
+
+      <!-- Mini paginator -->
+      <div id="ord-pager" style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;margin-top:2px;">
+        <button id="ord-prev" onclick="ordPage(-1)"
+                style="padding:4px 12px;border-radius:8px;border:1px solid var(--border);
+                       background:rgba(255,255,255,.04);color:var(--muted);font-size:11px;font-weight:700;
+                       cursor:pointer;transition:.2s;" disabled>‹ Prev</button>
+        <div id="ord-dots" style="display:flex;gap:5px;align-items:center;"></div>
+        <button id="ord-next" onclick="ordPage(1)"
+                style="padding:4px 12px;border-radius:8px;border:1px solid var(--border);
+                       background:rgba(255,255,255,.04);color:var(--muted);font-size:11px;font-weight:700;
+                       cursor:pointer;transition:.2s;">Next ›</button>
+      </div>
+
+    </div>
+    <!-- ╚══════════════╝ -->
+
+    <!-- hidden order data for JS -->
+    <script id="ord-data" type="application/json">
+    [{% for order in all_orders %}{"num":"{{ order.order_number|slice:':14' }}","amt":"{{ order.total_amount|floatformat:0|cut:'-' }}","date":"{{ order.created_at|date:'d M Y' }}","status":"{{ order.order_status }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+    </script>
 
 
 
 
+    <!-- ╔══════════════╗  BOX 4 — COUPONS ═══════════════╗ -->
+    <div class="section-card" style="display:flex;flex-direction:column;gap:12px;">
 
-<div>
+      <div class="section-title" style="margin-bottom:0;">
+        <span class="material-symbols-outlined" style="font-size:17px;color:#fde68a;">confirmation_number</span>
+        Coupons
+      </div>
 
-<div class="profile-card">
+      <!-- Count pill -->
+      <div style="text-align:center;padding:12px 0;background:rgba(250,204,21,.05);border:1px solid rgba(250,204,21,.2);border-radius:14px;flex-shrink:0;">
+        <div style="font-size:1.9rem;font-weight:800;color:#fde68a;">{{ coupons_count }}</div>
+        <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Active Offers</div>
+      </div>
 
-<div class="avatar-wrap">
+      <!-- Label -->
+      <div style="font-size:.6rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);flex-shrink:0;">All Available Codes</div>
 
-<div class="avatar-ring"></div>
+      <!-- Scrollable coupons list -->
+      <div class="prof-scroll" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">
+        {% for coupon in all_coupons %}
+        <div style="border-radius:10px;padding:9px 12px;flex-shrink:0;
+                    background:rgba(250,204,21,.04);border:1px solid rgba(250,204,21,.18);">
+          <!-- Row 1: code + discount -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+            <span style="font-family:monospace;font-weight:800;color:#fde68a;letter-spacing:2px;font-size:.8rem;">{{ coupon.code }}</span>
+            <span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(250,204,21,.15);color:#fde68a;">
+              {% if coupon.discount_type == 'percentage' %}{{ coupon.discount_value|floatformat:0 }}% OFF
+              {% else %}₹{{ coupon.discount_value|floatformat:0 }} OFF{% endif %}
+            </span>
+          </div>
+          <!-- Row 2: min amount + expiry -->
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:.65rem;color:var(--muted);">
+            <span>Min ₹{{ coupon.min_amount|floatformat:0 }}</span>
+            <span>Exp: {{ coupon.expiry_date|date:"d M Y" }}</span>
+          </div>
+        </div>
+        {% empty %}
+        <p style="color:var(--muted);font-size:.75rem;text-align:center;padding:12px 0;">No active coupons.</p>
+        {% endfor %}
+      </div>
+    </div>
+    <!-- ╚══════════════╝ -->
 
-<div class="avatar">
 
-{% if profile.profile_image %}
-<img src="{{ profile.profile_image.url }}">
+  </div><!-- /2×2 grid -->
 
-{% elif profile.google_image %}
-<img src="{{ profile.google_image }}">
+</div><!-- /pb-8 -->
 
-{% else %}
-<span class="material-symbols-outlined">person</span>
-{% endif %}
-
-</div>
-
-</div>
-
-<div class="title">Account Profile</div>
-
-<div class="member">
-MEMBER SINCE {{ user.date_joined|date:"Y" }}
-</div>
-
-<div class="grid">
-
-<div class="card-info">
-<div class="label">Identity</div>
-<div class="value">
-<span class="material-symbols-outlined">verified_user</span>
-{{ user.username }}
-</div>
-</div>
-
-<div class="card-info">
-<div class="label">Email</div>
-<div class="value">
-<span class="material-symbols-outlined">alternate_email</span>
-{{ user.email }}
-</div>
-</div>
-
-<div class="card-info" style="grid-column:span 2">
-<div class="label">Phone</div>
-<div class="value">
-<span class="material-symbols-outlined">phone_iphone</span>
-{{ profile.phone|default:"Unlinked Account" }}
-</div>
-</div>
-
-</div>
-
-<div class="actions">
-
-<a href="{% url 'edit-profile' %}" class="btn-edit">
-<span class="material-symbols-outlined">edit_square</span>Edit
-</a>
-
-{% if not profile.google_image %}
-<a href="{% url 'change-password' %}" class="btn-security">
-<span class="material-symbols-outlined">key</span>Security
-</a>
-{% endif %}
-
-<button class="btn-logout" onclick="openLogout()">
-<span class="material-symbols-outlined">logout</span>Logout
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
+<!-- ── LOGOUT MODAL (unchanged) ──────────────────── -->
 <div id="logoutModal" class="modal-bg">
-
-<div class="modal-box">
-
-<h5 class="mb-3">Logout from account?</h5>
-
-<form method="POST" action="{% url 'logout' %}">
-{% csrf_token %}
-
-<div style="display:flex;gap:10px;justify-content:center;margin-top:20px">
-
-<button type="button" class="btn-ghost" onclick="closeLogout()">Cancel</button>
-
-<button type="submit" class="btn-premium" style="background:#ef4444;color:white">Logout</button>
-
+  <div class="modal-box">
+    <h5 class="mb-3">Logout from account?</h5>
+    <form method="POST" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:20px">
+        <button type="button" class="btn-ghost" onclick="closeLogout()">Cancel</button>
+        <button type="submit" class="btn-premium" style="background:#ef4444;color:white">Logout</button>
+      </div>
+    </form>
+  </div>
 </div>
 
-</form>
+<div class="footer">OUTFITO PREMIUM STORE • GLOBAL SECURITY</div>
 
-</div>
-
-</div>
-
-<div class="footer">
-OUTFITO PREMIUM STORE • GLOBAL SECURITY
-</div>
 <script>
+/* ── Auto-dismiss messages ── */
 setTimeout(() => {
-    document.querySelectorAll('.error-text, .success-text, .warning-text')
-    .forEach(el => {
-        el.style.opacity = "0";
-        setTimeout(() => el.remove(), 400);
-    });
+  document.querySelectorAll('.error-text, .success-text, .warning-text')
+    .forEach(el => { el.style.opacity = "0"; setTimeout(() => el.remove(), 400); });
 }, 3000);
 
-function openLogout(){
-document.getElementById("logoutModal").style.display="flex";
+/* ── Logout modal ── */
+function openLogout(){ document.getElementById("logoutModal").style.display="flex"; }
+function closeLogout(){ document.getElementById("logoutModal").style.display="none"; }
+
+/* ── Copy referral code ── */
+function copyCode(){
+  const code = document.getElementById('refCodeDisplay').innerText.trim();
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = event.currentTarget;
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">check_circle</span> Copied!';
+    btn.style.background = 'rgba(16,185,129,.35)';
+    setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; }, 2000);
+  }).catch(() => {
+    /* Fallback */
+    const ta = document.createElement('textarea');
+    ta.value = code;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
 }
 
-function closeLogout(){
-document.getElementById("logoutModal").style.display="none";
+/* ── Share referral link ── */
+function shareLink(){
+  const link  = document.getElementById('refLink').value;
+  const code  = document.getElementById('refCodeDisplay').innerText.trim();
+  if (navigator.share) {
+    navigator.share({
+      title: 'Join Outfito!',
+      text : `Use my referral code ${code} and get ₹50 off your first order! 🎁`,
+      url  : link,
+    }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(link).then(() => {
+      const btn = event.currentTarget;
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">check_circle</span> Link Copied!';
+      setTimeout(() => { btn.innerHTML = orig; }, 2000);
+    });
+  }
 }
 
+/* ── Orders mini-paginator ── */
+(function(){
+  const dataEl = document.getElementById('ord-data');
+  if (!dataEl) return;
+  const orders = JSON.parse(dataEl.textContent || '[]');
+  const PER    = 3;
+  let   cur    = 0;
+  const total  = Math.ceil(orders.length / PER);
+
+  const STATUS_COLORS = {
+    'Delivered':       'background:rgba(16,185,129,.15);color:#10b981;',
+    'Cancelled':       'background:rgba(239,68,68,.15);color:#f87171;',
+    'Shipped':         'background:rgba(59,130,246,.15);color:#93c5fd;',
+    'Out for Delivery':'background:rgba(168,85,247,.15);color:#d8b4fe;',
+  };
+  const DEFAULT_COLOR = 'background:rgba(250,204,21,.15);color:#fde68a;';
+
+  function render(){
+    const list    = document.getElementById('ord-list');
+    const info    = document.getElementById('ord-page-info');
+    const prevBtn = document.getElementById('ord-prev');
+    const nextBtn = document.getElementById('ord-next');
+    const dots    = document.getElementById('ord-dots');
+    if (!list) return;
+
+    const slice = orders.slice(cur * PER, cur * PER + PER);
+
+    if (!orders.length) {
+      list.innerHTML = '<p style="color:#6b7280;font-size:.75rem;text-align:center;padding:16px 0;">No orders yet.</p>';
+      document.getElementById('ord-pager').style.display = 'none';
+      return;
+    }
+
+    list.innerHTML = slice.map(o => {
+      const sc = STATUS_COLORS[o.status] || DEFAULT_COLOR;
+      return `
+      <div style="border-radius:10px;padding:9px 12px;
+                  background:rgba(255,255,255,.02);border:1px solid #1f2937;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-family:monospace;font-size:.75rem;font-weight:700;color:#e2e8f0;">#${o.num}</span>
+          <span style="font-size:.8rem;font-weight:800;color:#10b981;">₹${o.amt}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:.65rem;color:#6b7280;">${o.date}</span>
+          <span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;${sc}">${o.status}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    info.textContent = `${cur * PER + 1}–${Math.min(cur * PER + PER, orders.length)} of ${orders.length}`;
+
+    prevBtn.disabled = (cur === 0);
+    nextBtn.disabled = (cur >= total - 1);
+    prevBtn.style.opacity = prevBtn.disabled ? '.35' : '1';
+    nextBtn.style.opacity = nextBtn.disabled ? '.35' : '1';
+
+    /* dots */
+    dots.innerHTML = Array.from({length: total}, (_, i) =>
+      `<span onclick="ordGoto(${i})" style="width:${i===cur?'18px':'6px'};height:6px;border-radius:9999px;
+        background:${i===cur?'#10b981':'rgba(255,255,255,.2)'};
+        cursor:pointer;transition:all .25s;display:inline-block;"></span>`
+    ).join('');
+  }
+
+  window.ordPage = d => { cur = Math.max(0, Math.min(cur + d, total - 1)); render(); };
+  window.ordGoto = i => { cur = i; render(); };
+  render();
+})();
 </script>
 {% endblock %}
-
-
-
-
-
-

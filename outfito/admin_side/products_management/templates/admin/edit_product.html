@@ -1,15 +1,8 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Outfito | Edit Product</title>
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css"/>
+{% extends 'admin_base.html' %}
+{% block title %}Outfito | Edit Product{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css"/>
 
   <style>
     :root {
@@ -290,37 +283,9 @@
     @media(max-width:640px)  { .main-content{padding:1rem} .inner-grid-2{grid-template-columns:1fr} .action-row{flex-direction:column;padding:1rem} .img-grid{grid-template-columns:1fr 1fr} .img-slot{height:160px} .page-heading-row{flex-direction:column;align-items:flex-start;gap:.5rem} }
     @media(max-width:400px)  { .img-grid{grid-template-columns:1fr} .img-slot{height:180px} }
   </style>
-</head>
-<body>
+{% endblock %}
+{% block content %}
 
-<!-- ══ SIDEBAR ══ -->
-<aside class="sidebar">
-  <div class="sidebar-brand"><h1>Outfito</h1></div>
-  <nav class="sidebar-nav">
-    <span class="nav-section-label">Management</span>
-    <a class="nav-item" href="#"><span class="material-icons-outlined">grid_view</span>Dashboard</a>
-    <a class="nav-item" href="#"><span class="material-icons-outlined">shopping_bag</span>Orders</a>
-    <a class="nav-item active" href="{% url 'product_list' %}"><span class="material-icons-outlined">inventory_2</span>Products</a>
-    <a class="nav-item" href="{% url 'category_list' %}"><span class="material-icons-outlined">category</span>Categories</a>
-    <a class="nav-item" href="#"><span class="material-icons-outlined">confirmation_number</span>Coupons</a>
-    <a class="nav-item" href="#"><span class="material-icons-outlined">local_offer</span>Offers</a>
-    <a class="nav-item" href="#"><span class="material-icons-outlined">group</span>Customers</a>
-  </nav>
-  <div class="sidebar-footer">
-    <div class="user-card">
-      <img class="user-avatar"
-           src="{% if request.user.profile_image %}{{ request.user.profile_image.url }}{% else %}https://ui-avatars.com/api/?name={{ request.user.get_full_name|urlencode }}&background=064e3b&color=fff{% endif %}"
-           alt="{{ request.user.get_full_name }}"/>
-      <div>
-        <div class="user-name">{{ request.user.get_full_name }}</div>
-        <div class="user-role">Administrator</div>
-      </div>
-    </div>
-  </div>
-</aside>
-
-<!-- ══ MAIN ══ -->
-<main class="main-content">
   <nav class="breadcrumb-nav">
     <a href="{% url 'product_list' %}">Product Management</a>
     <span class="sep">/</span>
@@ -381,11 +346,9 @@
               <label class="field-label" for="id_name">
                 Product Name <span style="color:#dc2626">*</span>
               </label>
-              {# Use old (POST repopulation) first, fall back to product.name #}
-              <input class="f-input" type="text" id="id_name" name="name"
+              <input class="f-input {% if form.name.errors %}err{% endif %}" type="text" id="id_name" name="name"
                      placeholder="e.g. Patch Work Edition"
-                     value="{{ product.name }}"
-
+                     value="{{ form.name.value|default_if_none:'' }}"
                      maxlength="120"/>
               <div class="char-count" id="nameCount">0 / 80</div>
               <div class="field-hint" id="hint_name">
@@ -400,10 +363,10 @@
                 Product Description
                 <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0;font-size:.68rem;"> — optional</span>
               </label>
-              <textarea class="f-textarea" id="id_description" name="description"
+              <textarea class="f-textarea {% if form.description.errors %}err{% endif %}" id="id_description" name="description"
                         placeholder="Describe the fabric, fit, design details, styling tips…"
                         maxlength="2000"
-                        rows="5">{% if old %}{{ old.description }}{% else %}{{ product.description|default:'' }}{% endif %}</textarea>
+                        rows="5">{{ form.description.value|default_if_none:'' }}</textarea>
               <div class="char-count" id="descCount">0 / 2000</div>
               <div class="field-hint" id="hint_description">
                 <span class="material-icons-outlined">error</span>
@@ -530,17 +493,19 @@
                 <div class="color-swatch" id="colorSwatch">
                   <input type="color" id="colorPicker" value="#3b82f6"/>
                 </div>
-                <input class="f-input" type="text" id="id_color" name="color"
+                <input class="f-input {% if form.color.errors %}err{% endif %}" type="text" id="id_color" name="color"
                        placeholder="e.g. Midnight Black, Silk Cream, Navy…"
-                       value="{% if old %}{{ old.color }}{% else %}{{ variant.color }}{% endif %}"/>
+                       value="{{ form.color.value|default_if_none:'' }}"/>
               </div>
               <p class="color-hint-text">
                 <span class="material-icons-outlined">info</span>
                 Pick via wheel or type a name — they sync automatically.
               </p>
-              <div class="field-hint" id="hint_color">
-                <span class="material-icons-outlined">error</span>Color is required
+              {% if form.color.errors %}
+              <div class="field-hint" style="display:block;">
+                <span class="material-icons-outlined">error</span>{{ form.color.errors.0 }}
               </div>
+              {% endif %}
             </div>
 
           </div><!-- /form-col-left -->
@@ -556,65 +521,134 @@
                 <label class="field-label-inner" for="id_product_type">
                   Product Type <span style="color:#dc2626">*</span>
                 </label>
-                {# Use old (POST) first, then variant.product_type #}
-                {% with current_type=old.product_type|default:product.product_type %}
-                <select class="f-select-inner" id="id_product_type" name="product_type">
+                <select class="f-select-inner {% if form.product_type.errors %}err{% endif %}" id="id_product_type" name="product_type">
                   <option value="">Select type…</option>
-                  <option value="shirt"  {% if current_type == 'shirt'  %}selected{% endif %}>Shirt</option>
-                  <option value="pant"   {% if current_type == 'pant'   %}selected{% endif %}>Pant</option>
-                  <option value="tees"   {% if current_type == 'tees'   %}selected{% endif %}>Tees</option>
-                  <option value="shorts" {% if current_type == 'shorts' %}selected{% endif %}>Shorts</option>
+                  <option value="shirt"  {% if form.product_type.value == 'shirt'  %}selected{% endif %}>Shirt</option>
+                  <option value="pant"   {% if form.product_type.value == 'pant'   %}selected{% endif %}>Pant</option>
+                  <option value="tees"   {% if form.product_type.value == 'tees'   %}selected{% endif %}>Tees</option>
+                  <option value="shorts" {% if form.product_type.value == 'shorts' %}selected{% endif %}>Shorts</option>
+                  <option value="coat"   {% if form.product_type.value == 'coat'   %}selected{% endif %}>Coat</option>
                 </select>
-                {% endwith %}
-                <div class="field-hint" id="hint_type" style="margin-top:.4rem;">
-                  <span class="material-icons-outlined">error</span>Please select a product type
+                {% if form.product_type.errors %}
+                <div class="field-hint" style="display:block;margin-top:.4rem;">
+                  <span class="material-icons-outlined">error</span>{{ form.product_type.errors.0 }}
                 </div>
+                {% endif %}
               </div>
 
-              <!-- SIZE PILLS -->
+              <!-- AVAILABLE SIZES (PILLS) -->
               <div class="field-group-inner">
                 <label class="field-label-inner">
-                  Size <span style="color:#dc2626">*</span>
+                  Available Sizes <span style="color:#dc2626">*</span>
                 </label>
-                {# Use old (POST) first, then variant.size #}
-                {% with current_size=old.size|default:variant.size %}
-                <input type="hidden" name="size" id="sizeValue" value="{{ current_size }}"/>
-                <div class="size-pills" id="sizePills">
+                <div class="size-pills" id="multiSizePills">
                   {% for sz in sizes %}
-                    <div class="size-pill {% if current_size == sz %}active{% endif %}"
-                         data-size="{{ sz }}">{{ sz }}</div>
+                  <div class="size-pill" data-size="{{ sz }}">{{ sz }}</div>
                   {% endfor %}
                 </div>
-                {% endwith %}
-                <div class="field-hint" id="hint_size" style="margin-top:.4rem;">
-                  <span class="material-icons-outlined">error</span>Please select a size
-                </div>
+                <p class="color-hint-text" style="margin-top:0.4rem; margin-bottom:0;">
+                  Click sizes to add or remove variants.
+                </p>
               </div>
 
-              <!-- PRICE + STOCK -->
-              <div class="inner-grid-2 field-group-inner">
-                <div>
-                  <label class="field-label-inner" for="id_price">
-                    Price (₹) <span style="color:#dc2626">*</span>
-                  </label>
-                  <input class="f-input-inner" type="number" id="id_price" name="price"
-                         placeholder="0.00" step="0.01" min="0.01"
-                         value="{% if old %}{{ old.price }}{% else %}{{ variant.price }}{% endif %}"/>
-                  <div class="field-hint" id="hint_price">
-                    <span class="material-icons-outlined">error</span>Price must be greater than 0
+              <!-- DYNAMIC VARIANTS TABLE -->
+              <div class="field-group-inner" id="variantsSection" style="display:none;">
+                <label class="field-label-inner" style="margin-bottom:0.5rem;">
+                  Variant Details (Price & Stock) <span style="color:#dc2626">*</span>
+                </label>
+                
+                {{ formset.management_form }}
+                {% if formset.non_form_errors %}
+                  <div class="field-hint" style="color:#dc2626; margin-bottom:0.5rem; display:block;">
+                    <span class="material-icons-outlined">error</span>{{ formset.non_form_errors.0 }}
+                  </div>
+                {% endif %}
+
+                <style>
+                  .variant-delete-checkbox { display: none; }
+                  .variant-row.deleted { display: none !important; }
+                </style>
+
+                <div id="variantsContainer" style="display:flex; flex-direction:column; gap:0.5rem;">
+                  {% for variant_form in formset %}
+                  <div class="variant-row" style="display:flex; gap:0.5rem; align-items:flex-start; background:var(--input-bg); padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius-sm); position:relative;">
+                    
+                    {% for hidden in variant_form.hidden_fields %}
+                      {{ hidden }}
+                    {% endfor %}
+
+                    <div style="flex:1;">
+                      <div style="display:flex; align-items:center; background:var(--section-bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0 0.5rem; height:38px;" class="{% if variant_form.size.errors %}err{% endif %}">
+                        <span class="material-icons-outlined" style="font-size:16px; margin-right:4px; color:var(--text-muted);">straighten</span>
+                        <select name="{{ variant_form.size.html_name }}" id="{{ variant_form.size.id_for_label }}" style="pointer-events:none; appearance:none; background:transparent; border:none; color:var(--text); font-weight:600; width:100%; outline:none;">
+                          <option value="">Size...</option>
+                          {% for sz in sizes %}
+                          <option value="{{ sz }}" {% if variant_form.size.value == sz %}selected{% endif %}>{{ sz }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                      {% if variant_form.size.errors %}
+                      <div class="field-hint" style="display:block; margin-top:4px;"><span class="material-icons-outlined">error</span>{{ variant_form.size.errors.0 }}</div>
+                      {% endif %}
+                    </div>
+
+                    <div style="flex:1;">
+                      <input class="f-input-inner {% if variant_form.price.errors %}err{% endif %}" type="number" name="{{ variant_form.price.html_name }}" id="{{ variant_form.price.id_for_label }}" placeholder="Price ₹" step="0.01" min="0.01" value="{{ variant_form.price.value|default_if_none:'' }}" />
+                      {% if variant_form.price.errors %}
+                      <div class="field-hint" style="display:block;"><span class="material-icons-outlined">error</span>{{ variant_form.price.errors.0 }}</div>
+                      {% endif %}
+                    </div>
+
+                    <div style="flex:1;">
+                      <input class="f-input-inner {% if variant_form.stock.errors %}err{% endif %}" type="number" name="{{ variant_form.stock.html_name }}" id="{{ variant_form.stock.id_for_label }}" placeholder="Stock" min="0" value="{{ variant_form.stock.value|default_if_none:'' }}" />
+                      {% if variant_form.stock.errors %}
+                      <div class="field-hint" style="display:block;"><span class="material-icons-outlined">error</span>{{ variant_form.stock.errors.0 }}</div>
+                      {% endif %}
+                    </div>
+
+                    <button type="button" class="remove-variant-btn" style="background:transparent; color:#dc2626; border:none; cursor:pointer; padding:0.4rem; border-radius:4px; display:inline-flex; align-items:center;">
+                      <span class="material-icons-outlined" style="font-size:16px;">delete</span>
+                      <div class="variant-delete-checkbox">{{ variant_form.DELETE }}</div>
+                    </button>
+                  </div>
+                  {% endfor %}
+                </div>
+                
+                <!-- EMPTY FORM TEMPLATE -->
+                <div id="emptyVariantTemplate" style="display:none;">
+                  <div class="variant-row" style="display:flex; gap:0.5rem; align-items:flex-start; background:var(--input-bg); padding:0.5rem; border:1px solid var(--border); border-radius:var(--radius-sm); position:relative;">
+                    
+                    {% for hidden in formset.empty_form.hidden_fields %}
+                      {{ hidden }}
+                    {% endfor %}
+
+                    <div style="flex:1;">
+                      <div style="display:flex; align-items:center; background:var(--section-bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0 0.5rem; height:38px;">
+                        <span class="material-icons-outlined" style="font-size:16px; margin-right:4px; color:var(--text-muted);">straighten</span>
+                        <select name="{{ formset.empty_form.size.html_name }}" id="{{ formset.empty_form.size.id_for_label }}" style="pointer-events:none; appearance:none; background:transparent; border:none; color:var(--text); font-weight:600; width:100%; outline:none;">
+                          <option value="">Size...</option>
+                          {% for sz in sizes %}
+                          <option value="{{ sz }}">{{ sz }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style="flex:1;">
+                      <input class="f-input-inner" type="number" name="{{ formset.empty_form.price.html_name }}" id="{{ formset.empty_form.price.id_for_label }}" placeholder="Price ₹" step="0.01" min="0.01" />
+                    </div>
+
+                    <div style="flex:1;">
+                      <input class="f-input-inner" type="number" name="{{ formset.empty_form.stock.html_name }}" id="{{ formset.empty_form.stock.id_for_label }}" placeholder="Stock" min="0" />
+                    </div>
+
+                    <button type="button" class="remove-variant-btn" style="background:transparent; color:#dc2626; border:none; cursor:pointer; padding:0.4rem; border-radius:4px; display:inline-flex; align-items:center;">
+                      <span class="material-icons-outlined" style="font-size:16px;">delete</span>
+                      <div class="variant-delete-checkbox">{{ formset.empty_form.DELETE }}</div>
+                    </button>
                   </div>
                 </div>
-                <div>
-                  <label class="field-label-inner" for="id_stock">
-                    Stock <span style="color:#dc2626">*</span>
-                  </label>
-                  <input class="f-input-inner" type="number" id="id_stock" name="stock"
-                         placeholder="0" min="0"
-                         value="{% if old %}{{ old.stock }}{% else %}{{ variant.stock }}{% endif %}"/>
-                  <div class="field-hint" id="hint_stock">
-                    <span class="material-icons-outlined">error</span>Stock cannot be negative
-                  </div>
-                </div>
+
               </div>
 
               <!-- ACTIVE TOGGLE -->
@@ -623,9 +657,8 @@
                   <span class="status-dot"></span>Active / Listed
                 </span>
                 <label class="toggle-switch">
-                  {# On POST error: check if 'is_active' was 'on'. On GET: use variant.is_active #}
-                  <input type="checkbox" name="is_active" id="id_is_active"
-                         {% if old %}{% if old.is_active == 'on' %}checked{% endif %}{% else %}{% if variant.is_active %}checked{% endif %}{% endif %}/>
+                  <input type="checkbox" name="is_listed" id="id_is_listed"
+                         {% if form.is_listed.value == True or form.is_listed.value == 'on' or form.is_listed.value is None %}checked{% endif %}/>
                   <div class="toggle-track"><div class="toggle-thumb"></div></div>
                 </label>
               </div>
@@ -636,21 +669,20 @@
               <label class="field-label" for="id_category">
                 Category <span style="color:#dc2626">*</span>
               </label>
-              {# Use old (POST) first, then product.category.id #}
-              {% with current_cat=old.category|default:product.category.id|stringformat:"s" %}
-              <select class="f-select" id="id_category" name="category">
+              <select class="f-select {% if form.category.errors %}err{% endif %}" id="id_category" name="category">
                 <option value="">Select Category</option>
                 {% for cat in categories %}
                 <option value="{{ cat.id }}"
-                  {% if current_cat == cat.id|stringformat:"s" %}selected{% endif %}>
+                  {% if form.category.value == cat.id|stringformat:"s" or form.category.value == cat.id %}selected{% endif %}>
                   {{ cat.category_name }}
                 </option>
                 {% endfor %}
               </select>
-              {% endwith %}
-              <div class="field-hint" id="hint_category">
-                <span class="material-icons-outlined">error</span>Please select a category
+              {% if form.category.errors %}
+              <div class="field-hint" style="display:block;">
+                <span class="material-icons-outlined">error</span>{{ form.category.errors.0 }}
               </div>
+              {% endif %}
             </div>
 
             <!-- SKU (read-only) -->
@@ -698,12 +730,6 @@
   </div>
 
   <p class="page-footer">© 2024 Outfito Digital Atelier. All Rights Reserved.</p>
-</main>
-
-<button class="theme-fab" id="themeFab" title="Toggle theme">
-  <span class="material-icons-outlined icon-dark">dark_mode</span>
-  <span class="material-icons-outlined icon-light">light_mode</span>
-</button>
 
 <!-- ══ CROP MODAL ══ -->
 <div class="crop-overlay" id="cropOverlay">
@@ -784,10 +810,11 @@
   </div>
 </div>
 
+{% endblock %}
+{% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
-
 <script>
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 const SLOT_LABELS    = ['Cover', 'Side View', 'Back View'];
@@ -1015,20 +1042,8 @@ function validateForm() {
   if (!pt.value) { showHint('hint_type'); ok=false; }
   else { hideHint('hint_type'); }
 
-  if (!$('sizeValue').value) { showHint('hint_size'); ok=false; }
-  else { hideHint('hint_size'); }
-
-  const color = $('id_color');
-  if (!color.value.trim()) { markErr(color); showHint('hint_color'); ok=false; }
-  else { clearErr(color); hideHint('hint_color'); }
-
-  const price = $('id_price');
-  if (!price.value || parseFloat(price.value) <= 0) { markErr(price); showHint('hint_price'); ok=false; }
-  else { clearErr(price); hideHint('hint_price'); }
-
-  const stock = $('id_stock');
-  if (stock.value==='' || parseInt(stock.value) < 0) { markErr(stock); showHint('hint_stock'); ok=false; }
-  else { clearErr(stock); hideHint('hint_stock'); }
+  // Removed individual size/price/stock validation as Django Form handles this and
+  // dynamic rows have their own elements. Image validation remains.
 
   /* Cover: ok if existing kept OR new file uploaded OR cropped blob exists */
   const hasExistingCover = $('keep-0').value === '1';
@@ -1118,10 +1133,116 @@ document.addEventListener('DOMContentLoaded', () => {
     if (this.value) hideHint('hint_type');
   });
 
-  /* Size pills — ensure hidden input matches active pill */
-  $$('#sizePills .size-pill').forEach(p => p.addEventListener('click', () => selectSize(p)));
-  const activePill = document.querySelector('#sizePills .size-pill.active');
-  if (activePill) $('sizeValue').value = activePill.dataset.size;
+  // Dynamic Variants Logic
+  const sizePills = $$('#multiSizePills .size-pill');
+  const variantsContainer = $('variantsContainer');
+  const variantsSection = $('variantsSection');
+  const emptyTemplate = $('emptyVariantTemplate').innerHTML;
+  const totalFormsInput = $('id_variants-TOTAL_FORMS');
+
+  function updateVariantsVisibility() {
+    const visibleRows = variantsContainer.querySelectorAll('.variant-row:not([style*="display: none"])');
+    variantsSection.style.display = visibleRows.length > 0 ? 'block' : 'none';
+  }
+
+  function initPills() {
+    const rows = variantsContainer.querySelectorAll('.variant-row');
+    rows.forEach(row => {
+      const select = row.querySelector('select[name$="-size"]');
+      const deleteBox = row.querySelector('.variant-delete-checkbox input[type="checkbox"]');
+      if (select && select.value && (!deleteBox || !deleteBox.checked)) {
+        const pill = document.querySelector(`#multiSizePills .size-pill[data-size="${select.value}"]`);
+        if (pill) pill.classList.add('active');
+      }
+    });
+    updateVariantsVisibility();
+  }
+
+  sizePills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      const size = pill.dataset.size;
+      const isActive = pill.classList.contains('active');
+      
+      if (isActive) {
+        // Deselect -> mark deleted and hide
+        pill.classList.remove('active');
+        const rows = variantsContainer.querySelectorAll('.variant-row');
+        rows.forEach(row => {
+          const select = row.querySelector('select[name$="-size"]');
+          if (select && select.value === size) {
+            const deleteBox = row.querySelector('.variant-delete-checkbox input[type="checkbox"]');
+            if (deleteBox) {
+              deleteBox.checked = true;
+              row.style.display = 'none';
+            } else {
+              row.remove();
+            }
+          }
+        });
+      } else {
+        // Select -> unhide or create
+        pill.classList.add('active');
+        let found = false;
+        const rows = variantsContainer.querySelectorAll('.variant-row');
+        rows.forEach(row => {
+          const select = row.querySelector('select[name$="-size"]');
+          if (select && select.value === size) {
+            const deleteBox = row.querySelector('.variant-delete-checkbox input[type="checkbox"]');
+            if (deleteBox && deleteBox.checked) {
+              deleteBox.checked = false;
+              row.style.display = 'flex';
+              found = true;
+            }
+          }
+        });
+        
+        if (!found) {
+          let formCount = parseInt(totalFormsInput.value);
+          const newFormHtml = emptyTemplate.replace(/__prefix__/g, formCount);
+          
+          const wrapper = document.createElement('div');
+          wrapper.innerHTML = newFormHtml.trim();
+          const newRow = wrapper.firstChild;
+          
+          const select = newRow.querySelector('select[name$="-size"]');
+          if(select) select.value = size;
+          
+          variantsContainer.appendChild(newRow);
+          totalFormsInput.value = formCount + 1;
+          attachRemoveHandlers(); // attach to new row
+        }
+      }
+      updateVariantsVisibility();
+    });
+  });
+
+  function attachRemoveHandlers() {
+    $$('.remove-variant-btn').forEach(btn => {
+      if (btn.dataset.attached) return;
+      btn.dataset.attached = 'true';
+      
+      btn.addEventListener('click', (e) => {
+        const row = btn.closest('.variant-row');
+        const select = row.querySelector('select[name$="-size"]');
+        if (select && select.value) {
+          const pill = document.querySelector(`#multiSizePills .size-pill[data-size="${select.value}"]`);
+          if (pill) pill.classList.remove('active');
+        }
+        
+        const deleteCheckbox = row.querySelector('.variant-delete-checkbox input[type="checkbox"]');
+        if (deleteCheckbox) {
+            deleteCheckbox.checked = true;
+            row.style.display = 'none';
+        } else {
+            row.remove();
+        }
+        updateVariantsVisibility();
+      });
+    });
+  }
+  
+  attachRemoveHandlers();
+  initPills();
 
   /* Category */
   $('id_category').addEventListener('change', function() {
@@ -1155,12 +1276,6 @@ document.addEventListener('DOMContentLoaded', () => {
   nameEl.addEventListener('input', function() {
     if(this.value.trim().length>=3){clearErr(this);hideHint('hint_name');}
   });
-  $('id_price').addEventListener('input', function() {
-    if(parseFloat(this.value)>0){clearErr(this);hideHint('hint_price');}
-  });
-  $('id_stock').addEventListener('input', function() {
-    if(parseInt(this.value)>=0){clearErr(this);hideHint('hint_stock');}
-  });
 
   /* Form submit */
   $('productForm').addEventListener('submit', function(e) {
@@ -1186,5 +1301,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 </script>
-</body>
-</html>
+{% endblock %}

@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect,get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Profile
 from django.contrib import messages
@@ -16,6 +16,9 @@ from django.contrib.auth.hashers import check_password
 from django.contrib.auth import login
 from django.views.decorators.cache import never_cache
 from django.contrib.messages import get_messages
+from user_side.orders.models import Order
+from user_side.wallet.models import Wallet, WalletTransaction
+from admin_side.coupon_management.models import Coupon
 
 @never_cache
 @login_required(login_url='login')
@@ -27,9 +30,65 @@ def profile(request):
 
     profile, created = Profile.objects.get_or_create(user=request.user)
 
+    # ── Wallet ────────────────────────────────────────────
+    try:
+        wallet_balance = request.user.wallet.balance
+    except Exception:
+        wallet_balance = 0
+
+    all_transactions = WalletTransaction.objects.filter(
+        user=request.user
+    ).order_by('-created_at')[:20]
+
+    recent_transactions = all_transactions[:5]  # kept for backwards compat
+
+    # ── Orders ────────────────────────────────────────────
+    recent_orders = Order.objects.filter(
+        user=request.user
+    ).order_by('-created_at')[:5]
+
+    all_orders = Order.objects.filter(
+        user=request.user
+    ).order_by('-created_at')[:50]
+
+    total_orders     = Order.objects.filter(user=request.user).count()
+    delivered_orders = Order.objects.filter(user=request.user, order_status='Delivered').count()
+
+    # ── Coupons (currently valid & active) ──────────────────
+    now = timezone.now()
+    all_coupons = Coupon.objects.filter(
+        is_active=True,
+        start_date__lte=now,
+        expiry_date__gte=now,
+    ).order_by('expiry_date')
+    active_coupons = all_coupons[:3]   # kept for context
+    coupons_count = all_coupons.count()
+
+    # ── Referral ─────────────────────────────────────────
+    referral_code = request.user.referral_code
+    referral_link = request.build_absolute_uri(f'/signup/?ref={referral_code}')
+    referral_count = request.user.referrals.filter(referral_used=True).count()
+
     context = {
-        "user": request.user,
-        "profile": profile
+        "user":                request.user,
+        "profile":             profile,
+        # wallet
+        "wallet_balance":      wallet_balance,
+        "all_transactions":    all_transactions,
+        "recent_transactions": recent_transactions,
+        # orders
+        "recent_orders":       recent_orders,
+        "all_orders":          all_orders,
+        "total_orders":        total_orders,
+        "delivered_orders":    delivered_orders,
+        # coupons
+        "coupons_count":       coupons_count,
+        "all_coupons":         all_coupons,
+        "active_coupons":      active_coupons,
+        # referral
+        "referral_code":       referral_code,
+        "referral_link":       referral_link,
+        "referral_count":      referral_count,
     }
 
     return render(request, "user/profile.html", context)

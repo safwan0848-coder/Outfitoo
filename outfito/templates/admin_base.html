@@ -1,0 +1,530 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Outfito Admin{% endblock %}</title>
+
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ══════════════════════════════════════════════
+       CSS VARIABLES
+    ══════════════════════════════════════════════ */
+    :root {
+      --primary:          #064e3b;
+      --primary-hover:    #043d2e;
+      --primary-light:    #d1fae5;
+      --accent:           #10b981;
+      --bg:               #fdfcf8;
+      --sidebar-bg:       #f5f1e8;
+      --card-bg:          #ffffff;
+      --border:           #e5e1d8;
+      --text:             #1c1917;
+      --text-muted:       #78716c;
+      --table-hover:      #faf9f6;
+      --shadow-sm:        0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md:        0 4px 16px rgba(0,0,0,.08);
+      --shadow-lg:        0 10px 40px rgba(0,0,0,.12);
+      --radius:           0.625rem;
+      --radius-xl:        1.25rem;
+      --sidebar-width:    260px;
+      --topbar-height:    56px;
+      --font-display:     'Cormorant Garamond', serif;
+      --font-body:        'DM Sans', sans-serif;
+      --tr:               .22s ease;
+    }
+    [data-theme="dark"] {
+      --bg:               #121212;
+      --sidebar-bg:       #1e1e1e;
+      --card-bg:          #1e1e1e;
+      --border:           #2e2e2e;
+      --text:             #e7e5e4;
+      --text-muted:       #a8a29e;
+      --table-hover:      #252525;
+      --shadow-sm:        0 1px 3px rgba(0,0,0,.3);
+      --shadow-md:        0 4px 16px rgba(0,0,0,.4);
+      --shadow-lg:        0 10px 40px rgba(0,0,0,.5);
+      --primary-light:    rgba(6,78,59,.25);
+    }
+
+    /* ══════════════════════════════════════════════
+       RESET
+    ══════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      transition: background var(--tr), color var(--tr);
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* ══════════════════════════════════════════════
+       LAYOUT
+    ══════════════════════════════════════════════ */
+    .app-wrapper {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════════════════════
+       SIDEBAR
+    ══════════════════════════════════════════════ */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      z-index: 200;
+      transition: transform 0.3s ease, background var(--tr), border-color var(--tr);
+    }
+
+    .sidebar-brand {
+      padding: 2rem 1.75rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .sidebar-brand .logo-icon {
+      background: var(--primary);
+      color: white;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 8px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    .sidebar-brand h1 {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 0;
+      line-height: 1;
+    }
+    [data-theme="dark"] .sidebar-brand h1 { color: #6ee7b7; }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: .75rem;
+      overflow-y: auto;
+    }
+
+    .nav-label {
+      font-size: .65rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: .6rem 1rem .4rem;
+      display: block;
+      margin-top: .5rem;
+    }
+
+    .nav-link-item {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .65rem 1rem;
+      border-radius: var(--radius);
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: background var(--tr), color var(--tr);
+      margin-bottom: 2px;
+    }
+    .nav-link-item:hover {
+      background: rgba(6,78,59,.08);
+      color: var(--primary);
+    }
+    [data-theme="dark"] .nav-link-item:hover {
+      background: rgba(110,231,183,.08);
+      color: #6ee7b7;
+    }
+    .nav-link-item.active {
+      background: var(--card-bg);
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+      border-left: 4px solid var(--primary);
+    }
+    [data-theme="dark"] .nav-link-item.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .nav-link-item .material-icons-outlined { font-size: 1.1rem; }
+
+    .nav-submenu {
+      display: flex;
+      flex-direction: column;
+      padding-left: 2.2rem;
+      margin-bottom: .5rem;
+      gap: 2px;
+    }
+    .nav-sublink {
+      font-size: .8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      padding: .4rem .75rem;
+      border-radius: var(--radius);
+      text-decoration: none;
+      transition: all var(--tr);
+    }
+    .nav-sublink:hover { color: var(--primary); background: rgba(6,78,59,.04); }
+    .nav-sublink.active { color: var(--primary); font-weight: 700; }
+    [data-theme="dark"] .nav-sublink:hover { color: #6ee7b7; background: rgba(110,231,183,.1); }
+    [data-theme="dark"] .nav-sublink.active { color: #6ee7b7; }
+
+    /* Logout */
+    .nav-link-item.logout { color: #dc2626; }
+    .nav-link-item.logout:hover { background: #fee2e2; color: #b91c1c; }
+    [data-theme="dark"] .nav-link-item.logout:hover { background: rgba(220,38,38,.15); }
+
+    /* Sidebar Footer */
+    .sidebar-footer {
+      padding: 1rem .75rem;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .6rem .85rem;
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.55);
+    }
+    [data-theme="dark"] .user-card { background: rgba(0,0,0,.25); }
+    .user-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%; object-fit: cover;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+    }
+    .user-name  { font-size: .8rem; font-weight: 600; line-height: 1.2; }
+    .user-email { font-size: .7rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+
+    /* ══════════════════════════════════════════════
+       MAIN CONTENT
+    ══════════════════════════════════════════════ */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      padding: 2.5rem 2.5rem 3rem;
+      min-height: 100vh;
+      transition: margin-left 0.3s ease;
+    }
+
+    /* ══════════════════════════════════════════════
+       MOBILE TOP BAR
+    ══════════════════════════════════════════════ */
+    #mobileTopBar {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--topbar-height);
+      background: var(--sidebar-bg);
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.25rem;
+      z-index: 300;
+      transition: background var(--tr);
+    }
+    #mobileTopBar .brand-name {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    [data-theme="dark"] #mobileTopBar .brand-name { color: #6ee7b7; }
+    #hamburgerBtn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px; height: 40px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-radius: var(--radius);
+      color: var(--text);
+      transition: background var(--tr);
+    }
+    #hamburgerBtn:hover { background: rgba(6,78,59,.08); }
+    #hamburgerBtn .material-icons-outlined { font-size: 1.4rem; }
+
+    /* ══════════════════════════════════════════════
+       SIDEBAR OVERLAY (mobile)
+    ══════════════════════════════════════════════ */
+    #sidebarOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.5);
+      backdrop-filter: blur(2px);
+      z-index: 150;
+      transition: opacity 0.3s ease;
+    }
+    #sidebarOverlay.show { display: block; }
+
+    /* ══════════════════════════════════════════════
+       THEME TOGGLE
+    ══════════════════════════════════════════════ */
+    .theme-toggle {
+      position: fixed; bottom: 1.75rem; right: 1.75rem;
+      width: 46px; height: 46px;
+      border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--text); color: var(--bg);
+      box-shadow: var(--shadow-lg); z-index: 999;
+      transition: background var(--tr), color var(--tr), transform .2s;
+    }
+    .theme-toggle:hover { transform: scale(1.1); }
+    .theme-toggle .material-icons-outlined { font-size: 1.2rem; }
+    .icon-dark  { display: block; }
+    .icon-light { display: none; }
+    [data-theme="dark"] .icon-dark  { display: none; }
+    [data-theme="dark"] .icon-light { display: block; }
+
+    /* ══════════════════════════════════════════════
+       RESPONSIVE — TABLET (900px)
+    ══════════════════════════════════════════════ */
+    @media (max-width: 1024px) {
+      /* Sidebar slides off-screen by default on mobile */
+      .sidebar {
+        transform: translateX(-100%);
+        box-shadow: none;
+      }
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: var(--shadow-lg);
+      }
+      /* Main content takes full width */
+      .main-content {
+        margin-left: 0;
+        padding-top: calc(var(--topbar-height) + 1.5rem);
+      }
+      /* Show mobile top bar */
+      #mobileTopBar { display: flex; }
+    }
+
+    @media (max-width: 600px) {
+      .main-content { padding: calc(var(--topbar-height) + 1rem) 1rem 2rem; }
+    }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+
+<!-- ══════════════════════════════════════════════
+     MOBILE TOP BAR
+══════════════════════════════════════════════ -->
+<div id="mobileTopBar">
+  <button id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Open Menu">
+    <span class="material-icons-outlined" id="hamburgerIcon">menu</span>
+  </button>
+  <span class="brand-name">Outfito</span>
+  <button class="theme-toggle" style="position:static;width:36px;height:36px;box-shadow:none;" onclick="toggleTheme()" title="Toggle theme">
+    <span class="material-icons-outlined icon-dark" style="font-size:1rem;">dark_mode</span>
+    <span class="material-icons-outlined icon-light" style="font-size:1rem;">light_mode</span>
+  </button>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SIDEBAR OVERLAY
+══════════════════════════════════════════════ -->
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- ══════════════════════════════════════════════
+     APP WRAPPER
+══════════════════════════════════════════════ -->
+<div class="app-wrapper">
+
+  <!-- ════ SIDEBAR ════ -->
+  <aside class="sidebar" id="adminSidebar">
+    <div class="sidebar-brand">
+      <div class="logo-icon">
+        <span class="material-icons-outlined" style="font-size:18px;">shopping_bag</span>
+      </div>
+      <h1>Outfito</h1>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="nav-label">Management</span>
+
+      <!-- Dashboard -->
+      <a class="nav-link-item {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}"
+         href="{% url 'admin_dashboard' %}">
+        <span class="material-icons-outlined">dashboard</span>
+        <span>Dashboard</span>
+      </a>
+
+      <!-- Sales Report -->
+      <a class="nav-link-item {% if request.resolver_match.url_name == 'sales_report' %}active{% endif %}"
+         href="{% url 'sales_report' %}">
+        <span class="material-icons-outlined">bar_chart</span>
+        <span>Sales Report</span>
+      </a>
+
+      <!-- Orders -->
+      <a class="nav-link-item {% if request.resolver_match.url_name == 'admin_order_list' or request.resolver_match.url_name == 'admin_order_detail' or request.resolver_match.url_name == 'admin_returns_list' %}active{% endif %}"
+         href="{% url 'admin_order_list' %}" style="margin-bottom:0; border-radius: var(--radius) var(--radius) 0 0;">
+        <span class="material-icons-outlined">receipt_long</span>
+        <span>Orders</span>
+      </a>
+      <div class="nav-submenu">
+        <a class="nav-sublink {% if request.resolver_match.url_name == 'admin_order_list' or request.resolver_match.url_name == 'admin_order_detail' %}active{% endif %}"
+           href="{% url 'admin_order_list' %}">All Orders</a>
+        <a class="nav-sublink {% if request.resolver_match.url_name == 'admin_returns_list' %}active{% endif %}"
+           href="{% url 'admin_returns_list' %}">Returns</a>
+      </div>
+
+      <!-- Products -->
+      <a class="nav-link-item {% if request.resolver_match.url_name == 'product_list' or request.resolver_match.url_name == 'add_product' or request.resolver_match.url_name == 'edit_product' or request.resolver_match.url_name == 'variant_list' or request.resolver_match.url_name == 'add_variant' or request.resolver_match.url_name == 'edit_variant' %}active{% endif %}"
+         href="{% url 'product_list' %}">
+        <span class="material-icons-outlined">inventory_2</span>
+        <span>Products</span>
+      </a>
+
+      <!-- Categories -->
+      <a class="nav-link-item {% if request.resolver_match.url_name == 'category_list' or request.resolver_match.url_name == 'add_category' or request.resolver_match.url_name == 'edit_category' %}active{% endif %}"
+         href="{% url 'category_list' %}">
+        <span class="material-icons-outlined">category</span>
+        <span>Categories</span>
+      </a>
+
+      <!-- Coupons -->
+      <a class="nav-link-item {% if request.resolver_match.url_name == 'coupon_list' or request.resolver_match.url_name == 'add_coupon' or request.resolver_match.url_name == 'edit_coupon' %}active{% endif %}"
+         href="{% url 'coupon_list' %}">
+        <span class="material-icons-outlined">confirmation_number</span>
+        <span>Coupons</span>
+      </a>
+
+      <!-- Offers -->
+      <a class="nav-link-item {% if request.resolver_match.url_name == 'offer_list' or request.resolver_match.url_name == 'add_offer' or request.resolver_match.url_name == 'edit_offer' %}active{% endif %}"
+         href="{% url 'offer_list' %}">
+        <span class="material-icons-outlined">sell</span>
+        <span>Offers</span>
+      </a>
+
+      <!-- Customers -->
+      <a class="nav-link-item {% if request.resolver_match.url_name == 'admin-user-management' %}active{% endif %}"
+         href="{% url 'admin-user-management' %}">
+        <span class="material-icons-outlined">people</span>
+        <span>Customers</span>
+      </a>
+
+      <span class="nav-label">Account</span>
+
+      <!-- Logout -->
+      <a class="nav-link-item logout"
+         href="{% url 'admin_logout' %}"
+         onclick="return confirm('Are you sure you want to logout?')">
+        <span class="material-icons-outlined">logout</span>
+        <span>Logout</span>
+      </a>
+    </nav>
+
+    <!-- User Card -->
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <img class="user-avatar"
+             src="{% if request.user.profile_image %}{{ request.user.profile_image.url }}{% else %}https://ui-avatars.com/api/?name={{ request.user.get_full_name|default:request.user.username|urlencode }}&background=064e3b&color=fff{% endif %}"
+             alt="{{ request.user.get_full_name|default:request.user.username }}" />
+        <div style="min-width:0;">
+          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="user-email">{{ request.user.email|default:"admin@outfito.com" }}</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ════ MAIN CONTENT ════ -->
+  <main class="main-content" id="mainContent">
+    {% block content %}{% endblock %}
+  </main>
+
+</div><!-- /app-wrapper -->
+
+<!-- ══ Desktop Theme Toggle ══ -->
+<button class="theme-toggle" id="desktopThemeToggle" onclick="toggleTheme()" title="Toggle theme">
+  <span class="material-icons-outlined icon-dark">dark_mode</span>
+  <span class="material-icons-outlined icon-light">light_mode</span>
+</button>
+
+<!-- ══════════════════════════════════════════════
+     BASE SCRIPTS
+══════════════════════════════════════════════ -->
+<script>
+  /* ── Theme ── */
+  (function() {
+    const saved = localStorage.getItem('adminTheme');
+    if (saved) document.documentElement.dataset.theme = saved;
+  })();
+
+  function toggleTheme() {
+    const html = document.documentElement;
+    html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('adminTheme', html.dataset.theme);
+  }
+
+  /* ── Mobile Sidebar ── */
+  const sidebar = document.getElementById('adminSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const hamburgerIcon = document.getElementById('hamburgerIcon');
+
+  function toggleSidebar() {
+    const isOpen = sidebar.classList.contains('open');
+    isOpen ? closeSidebar() : openSidebar();
+  }
+
+  function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    if (hamburgerIcon) hamburgerIcon.textContent = 'close';
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+    document.body.style.overflow = '';
+    if (hamburgerIcon) hamburgerIcon.textContent = 'menu';
+  }
+
+  /* Auto-close sidebar on nav link click (mobile) */
+  document.querySelectorAll('.nav-link-item, .nav-sublink').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 1024) closeSidebar();
+    });
+  });
+
+  /* Restore theme on load */
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('adminTheme');
+    if (saved) document.documentElement.dataset.theme = saved;
+  });
+</script>
+
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.views.decorators.cache import never_cache
+from decimal import Decimal
 
 from .models import Cart, CartItem
 from admin_side.variants_management.models import Variant
@@ -108,18 +109,16 @@ def add_to_cart(request, pk):
 @login_required(login_url='login')
 def cart_view(request):
 
-    cart=get_or_create_cart(request.user)
+    cart = get_or_create_cart(request.user)
 
-    items=list(cart.items.select_related('product', 'variant').order_by('id'))
+    items = list(cart.items.select_related('product', 'variant').order_by('id'))
 
-    subtotal= 0
-    discount= 0
-    has_oos= False
-    item_count= 0
+    subtotal = Decimal('0.00')
+    has_oos = False
+    item_count = 0
 
     for item in items:
         v = item.variant
-
         if (
             not v.is_active or
             v.product.is_deleted or
@@ -127,29 +126,34 @@ def cart_view(request):
             v.stock == 0
         ):
             has_oos = True
-        subtotal += item.subtotal
+        
+        item.base_subtotal = v.price * item.quantity
+        subtotal += item.base_subtotal
         item_count += item.quantity
 
-        if (
-            hasattr(v, 'original_price') and
-            v.original_price and
-            v.original_price > v.price
-        ):
-            discount += (v.original_price - v.price) * item.quantity
+    from .utils import calculate_cart_offers
+    offer_data = calculate_cart_offers(items)
+    offer_discount = offer_data['total_offer_discount']
+    
+    # Attach item discounts to items for UI display if needed
+    for item in items:
+        item.offer_discount = offer_data['item_discounts'].get(item.id, Decimal('0.00'))
+        item.final_subtotal = item.base_subtotal - item.offer_discount
 
-    shipping= 0 if subtotal >= 499 else 49
-    total=subtotal - discount + shipping
+    shipping = Decimal('0.00') if (subtotal - offer_discount) >= Decimal('499.00') else Decimal('49.00')
+    total = subtotal - offer_discount + shipping
 
     return render(request, 'user/cart.html', {
         'items':      items,
         'item_count': item_count,
         'subtotal':   subtotal,
-        'discount':   discount,
+        'discount':   offer_discount,
         'shipping':   shipping,
         'total':      total,
-        'savings':    discount,
+        'savings':    offer_discount,
         'has_oos':    has_oos,
         'max_qty':    MAX_QTY,
+        'applied_offers': offer_data['applied_offer_messages'],
     })
 
 @never_cache

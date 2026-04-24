@@ -42,7 +42,8 @@ class Order(models.Model):
     delivery_charge=models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount=models.DecimalField(max_digits=10, decimal_places=2)
     created_at=models.DateTimeField(auto_now_add=True)
-    coupon=models.ForeignKey(Coupon,on_delete=models.SET_NULL,null=True,blank=True)
+    coupon               = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
+    is_referral_rewarded = models.BooleanField(default=False)   # True once referral bonus is credited
     
     @property
     def has_return_request(self):

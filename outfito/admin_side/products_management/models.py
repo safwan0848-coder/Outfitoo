@@ -12,6 +12,7 @@ class Product(models.Model):
     ('pant', 'Pant'),
     ('tees', 'Tees'),
     ('shorts', 'Shorts'),
+    ('coat', 'Coat'),
 ]
     product_type = models.CharField(max_length=20, choices=PRODUCT_TYPES)
 

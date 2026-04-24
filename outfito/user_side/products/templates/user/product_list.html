@@ -171,18 +171,24 @@
 
     /* ══ FILTER TRIGGER BUTTON ══ */
     .vault-filter-trigger {
-        display: inline-flex; align-items: center; gap: 8px;
-        /* FIX: consistent left margin matching content padding */
+        display: flex; align-items: center; gap: 10px;
+        /* Full width on mobile */
+        width: calc(100% - 2rem);
         margin: 14px 1rem;
         background: #111827; color: #e5e7eb;
-        border: 1px solid #1f2937; padding: 9px 18px; border-radius: 8px;
-        font-family: 'Inter', sans-serif; font-size: .73rem; font-weight: 700;
+        border: 1px solid #1f2937; padding: 12px 18px; border-radius: 10px;
+        font-family: 'Inter', sans-serif; font-size: .78rem; font-weight: 700;
         letter-spacing: .06em; text-transform: uppercase;
         cursor: pointer; position: relative;
         transition: border-color .2s, background .2s;
     }
     @media (min-width: 640px) {
-        .vault-filter-trigger { margin: 14px 2.5rem; }
+        /* Inline on desktop */
+        .vault-filter-trigger {
+            width: auto;
+            margin: 14px 2.5rem;
+            padding: 9px 18px;
+        }
     }
     .vault-filter-trigger:hover { border-color: #10b981; background: #0d1520; }
     .filter-active-dot {
@@ -740,6 +746,10 @@
    class="filter-chip {% if type_filter == 'shorts' %}active{% endif %}">
    Shorts
 </a>
+<a href="?type=coat{% if cat_slug %}&category={{ cat_slug }}{% endif %}{% for s in size_filter %}&size={{ s }}{% endfor %}"
+   class="filter-chip {% if type_filter == 'coat' %}active{% endif %}">
+   Coats
+</a>
     <div class="filter-sep"></div>
     <select class="sort-select"
         onchange="window.location.href='?{% if type_filter %}type={{ type_filter }}&{% endif %}{% if cat_slug %}category={{ cat_slug }}&{% endif %}{% for s in size_filter %}size={{ s }}&{% endfor %}sort=' + this.value;">
@@ -753,13 +763,19 @@
 </div>
 
 <!-- ══ FILTER TRIGGER ══ -->
-<button onclick="openFilter()" class="vault-filter-trigger">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+<!-- Full-width on mobile, inline on desktop -->
+<button onclick="openFilter()" class="vault-filter-trigger" id="filterTriggerBtn">
+    <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
         <path d="M1 2.5h12M3 7h8M5 11.5h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
     </svg>
-    Filters
-    {% if cat_slug or type_filter or selected_color or selected_sizes %}
+    <span style="flex:1; text-align:left;">Filters</span>
+    {% if cat_slug or type_filter or size_filter %}
         <span class="filter-active-dot"></span>
+        <span style="font-size:.6rem; color:#10b981; margin-left:2px;">Active</span>
+    {% else %}
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="margin-left:auto;opacity:.4">
+            <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
     {% endif %}
 </button>
 

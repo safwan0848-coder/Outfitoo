@@ -69,16 +69,30 @@ def checkout_view(request):
     cart_items = cart.items.select_related('variant', 'variant__product')
 
     if not cart_items.exists():
-        return redirect('cart')
+        return redirect('cart_view')
 
     addresses = Address.objects.filter(user=request.user).order_by('-is_default', '-created_at')
     default_address = addresses.filter(is_default=True).first()
 
-    subtotal = sum(item.quantity * item.variant.price for item in cart_items)
+    subtotal = Decimal('0.00')
+    for item in cart_items:
+        item.base_subtotal = item.variant.price * item.quantity
+        subtotal += item.base_subtotal
+
+    from user_side.cart.utils import calculate_cart_offers
+    offer_data = calculate_cart_offers(cart_items)
+    offer_discount = offer_data['total_offer_discount']
+    
+    for item in cart_items:
+        item.offer_discount = offer_data['item_discounts'].get(item.id, Decimal('0.00'))
+        item.final_subtotal = item.base_subtotal - item.offer_discount
+
+    # Base subtotal minus offer discount is the effective subtotal for shipping/coupons
+    effective_subtotal = subtotal - offer_discount
 
     tax = 0
-    # Free shipping on orders ≥ ₹1000
-    delivery = 0 if subtotal >= FREE_SHIPPING_THRESHOLD else int(SHIPPING_CHARGE)
+    # Free shipping on orders >= ₹1000
+    delivery = 0 if effective_subtotal >= FREE_SHIPPING_THRESHOLD else int(SHIPPING_CHARGE)
     discount = 0
 
     coupon_id = request.session.get('coupon_id')
@@ -86,12 +100,12 @@ def checkout_view(request):
     if coupon_id:
         try:
             coupon = Coupon.objects.get(id=coupon_id, is_active=True)
-            if subtotal >= coupon.min_amount:
+            if effective_subtotal >= coupon.min_amount:
                 applied_coupon_code = coupon.code
                 if coupon.discount_type == 'fixed':
                     discount = coupon.discount_value
                 else:
-                    calculated = (subtotal * coupon.discount_value) / 100
+                    calculated = (effective_subtotal * coupon.discount_value) / 100
                     if coupon.max_discount:
                         calculated = min(calculated, coupon.max_discount)
                     discount = calculated
@@ -100,7 +114,7 @@ def checkout_view(request):
         except Coupon.DoesNotExist:
             request.session.pop('coupon_id', None)
 
-    total = subtotal + tax + delivery - discount
+    total = effective_subtotal + tax + delivery - discount
 
     today = timezone.now().date()
     available_coupons = Coupon.objects.filter(
@@ -143,6 +157,9 @@ def checkout_view(request):
         "addresses":          addresses,
         "default_address":    default_address,
         "subtotal":           subtotal,
+        "offer_discount":     offer_discount,
+        "applied_offers":     offer_data['applied_offer_messages'],
+        "effective_subtotal": effective_subtotal,
         "tax":                tax,
         "delivery":           delivery,
         "discount":           discount,
@@ -516,8 +533,18 @@ def apply_coupon(request):
             code = data.get('code', '').strip().upper()
             
             cart, _ = Cart.objects.get_or_create(user=request.user)
-            cart_items = cart.items.select_related('variant')
-            subtotal = sum(item.quantity * item.variant.price for item in cart_items)
+            cart_items = list(cart.items.select_related('variant', 'variant__product'))
+            
+            subtotal = Decimal('0.00')
+            for item in cart_items:
+                item.base_subtotal = item.variant.price * item.quantity
+                subtotal += item.base_subtotal
+
+            from user_side.cart.utils import calculate_cart_offers
+            offer_data = calculate_cart_offers(cart_items)
+            offer_discount = offer_data['total_offer_discount']
+            
+            effective_subtotal = subtotal - offer_discount
             
             DELIVERY = 50
 
@@ -530,8 +557,9 @@ def apply_coupon(request):
                     'coupon_code': '',
                     'discount':    0.0,
                     'subtotal':    float(subtotal),
+                    'offer_discount': float(offer_discount),
                     'delivery':    DELIVERY,
-                    'new_total':   float(subtotal + DELIVERY),
+                    'new_total':   float(effective_subtotal + DELIVERY),
                 })
 
             # ── Validate coupon ────────────────────────────────────
@@ -561,7 +589,7 @@ def apply_coupon(request):
                     'message':      "You have reached maximum usage limit for this coupon",
                 })
 
-            if subtotal < coupon.min_amount:
+            if effective_subtotal < coupon.min_amount:
                 return JsonResponse({'success': False, 'message': f'Minimum order of ₹{coupon.min_amount:.0f} required for this coupon.'})
 
             if coupon.usage_limit and coupon.used_count >= coupon.usage_limit:
@@ -569,15 +597,15 @@ def apply_coupon(request):
 
             # ── Calculate discount ─────────────────────────────────
             if coupon.discount_type == 'fixed':
-                discount = min(float(coupon.discount_value), float(subtotal))
+                discount = min(float(coupon.discount_value), float(effective_subtotal))
             else:
-                calculated = (float(subtotal) * float(coupon.discount_value)) / 100
+                calculated = (float(effective_subtotal) * float(coupon.discount_value)) / 100
                 if coupon.max_discount:
                     calculated = min(calculated, float(coupon.max_discount))
                 discount = calculated
 
             request.session['coupon_id'] = coupon.id
-            new_total = max(float(subtotal) + DELIVERY - discount, 0)
+            new_total = max(float(effective_subtotal) + DELIVERY - discount, 0)
             
             # Information for frontend
             remaining_after = max(remaining - 1, 0)
@@ -588,6 +616,7 @@ def apply_coupon(request):
                 'coupon_code': coupon.code,
                 'discount':    round(discount, 2),
                 'subtotal':    float(subtotal),
+                'offer_discount': float(offer_discount),
                 'delivery':    DELIVERY,
                 'new_total':   round(new_total, 2),
                 'used_count':  used_count,
@@ -618,17 +647,31 @@ def place_order(request):
     address = get_object_or_404(Address, id=address_id, user=request.user)
  
     cart = Cart.objects.get(user=request.user)
-    items = cart.items.select_related('variant')
+    items = list(cart.items.select_related('variant', 'variant__product'))
  
-    if not items.exists():
+    if not items:
         messages.error(request, "Cart empty")
-        return redirect('cart')
+        return redirect('cart_view')
  
-    subtotal = sum(i.quantity * i.variant.price for i in items)
-    # Free shipping on orders ≥ ₹1000
-    delivery = 0 if subtotal >= FREE_SHIPPING_THRESHOLD else int(SHIPPING_CHARGE)
+    subtotal = Decimal('0.00')
+    for item in items:
+        item.base_subtotal = item.variant.price * item.quantity
+        subtotal += item.base_subtotal
+
+    from user_side.cart.utils import calculate_cart_offers
+    offer_data = calculate_cart_offers(items)
+    offer_discount = offer_data['total_offer_discount']
+    
+    for item in items:
+        item.offer_discount = offer_data['item_discounts'].get(item.id, Decimal('0.00'))
+        item.final_subtotal = item.base_subtotal - item.offer_discount
+
+    effective_subtotal = subtotal - offer_discount
+
+    # Free shipping on orders >= ₹1000
+    delivery = 0 if effective_subtotal >= FREE_SHIPPING_THRESHOLD else int(SHIPPING_CHARGE)
     tax = 0
-    discount = 0
+    coupon_discount = 0
  
     # coupon
     coupon = None
@@ -636,26 +679,27 @@ def place_order(request):
     if coupon_id:
         try:
             coupon = Coupon.objects.get(id=coupon_id, is_active=True)
-            if subtotal >= coupon.min_amount:
+            if effective_subtotal >= coupon.min_amount:
                 if coupon.discount_type == 'fixed':
-                    discount = coupon.discount_value
+                    coupon_discount = coupon.discount_value
                 else:
-                    calc = (subtotal * coupon.discount_value) / 100
+                    calc = (effective_subtotal * coupon.discount_value) / 100
                     if coupon.max_discount:
                         calc = min(calc, coupon.max_discount)
-                    discount = calc
+                    coupon_discount = calc
             else:
                 coupon = None
         except Coupon.DoesNotExist:
             coupon = None
  
-    total = max(subtotal + delivery + tax - discount, 0)
+    total = max(effective_subtotal + delivery + tax - coupon_discount, 0)
+    total_discount = offer_discount + coupon_discount
  
     # stock check only (no deduction yet)
     for item in items:
         if item.variant.stock < item.quantity:
             messages.error(request, f"Stock issue for {item.variant}")
-            return redirect('cart')
+            return redirect('cart_view')
  
     # ─────────────────────────────────────────────────────────
     # COD — Create order immediately (payment on delivery)
@@ -668,7 +712,7 @@ def place_order(request):
                 payment_method   = 'cod',
                 subtotal         = subtotal,
                 tax_amount       = tax,
-                discount_amount  = discount,
+                discount_amount  = total_discount,
                 coupon           = coupon,
                 delivery_charge  = delivery,
                 total_amount     = total,
@@ -719,7 +763,7 @@ def place_order(request):
                 payment_method   = 'wallet',
                 subtotal         = subtotal,
                 tax_amount       = tax,
-                discount_amount  = discount,
+                discount_amount  = total_discount,
                 coupon           = coupon,
                 delivery_charge  = delivery,
                 total_amount     = total,
@@ -785,7 +829,7 @@ def place_order(request):
             'address_id':        int(address_id),
             'coupon_id':         coupon.id if coupon else None,
             'subtotal':          float(subtotal),
-            'discount':          float(discount),
+            'discount':          float(total_discount),
             'delivery':          float(delivery),
             'tax':               float(tax),
             'total':             float(total),

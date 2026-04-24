@@ -1,322 +1,126 @@
-<!DOCTYPE html>
-<html lang="en" class="light">
-<head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Outfito | Offer Management</title>
+{% extends 'admin_base.html' %}
+{% block title %}Outfito | Offer Management{% endblock %}
+{% block extra_head %}
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Material+Icons+Outlined&display=swap" rel="stylesheet"/>
-<script>
-tailwind.config = {
-  darkMode: 'class',
-  theme: {
-    extend: {
-      colors: {
-        cream:   { DEFAULT: '#faf8f4', 2: '#f3f0ea' },
-        forest:  { DEFAULT: '#1a5c3a', mid: '#2a7a50', light: '#e8f4ee', dim: '#134a2c' },
-        gold:    { DEFAULT: '#b18a4c', light: '#f5edd8', dim: '#8a6a36' },
-        ink:     { DEFAULT: '#0e0e1a', 2: '#3a3a52', 3: '#7878a0', 4: '#a8a8c0' },
-        surface: { DEFAULT: '#ffffff', 2: '#f8f6f1' },
-        sidebar: { DEFAULT: '#f5f1e9' },
-      },
-      fontFamily: {
-        display: ['Cormorant Garamond', 'Georgia', 'serif'],
-        body:    ['DM Sans', 'Helvetica Neue', 'sans-serif'],
-      },
-      boxShadow: {
-        'card': '0 1px 3px rgba(14,14,26,.06), 0 1px 2px rgba(14,14,26,.04)',
-        'card-hover': '0 4px 16px rgba(14,14,26,.09), 0 2px 6px rgba(14,14,26,.05)',
-      },
-    },
-  },
-}
-</script>
-<style>
-  body { font-family: 'DM Sans', sans-serif; -webkit-font-smoothing: antialiased; }
-  .material-icons-outlined { vertical-align: middle; font-size: 19px; line-height: 1; }
-  .nav-active::before {
-    content: '';
-    position: absolute; left: 0; top: 50%;
-    transform: translateY(-50%);
-    width: 3px; height: 58%;
-    background: #1a5c3a;
-    border-radius: 2px;
-  }
-  .dark .nav-active::before { background: #2ecc8e; }
-</style>
-</head>
-
-<body class="bg-cream dark:bg-[#0e0e1a] text-ink dark:text-[#f0ead8] min-h-screen">
-<div class="flex min-h-screen">
-
-  <!-- SIDEBAR (simplified for snippet) -->
-  <aside class="w-[252px] shrink-0 bg-surface dark:bg-[#14141f] border-r border-[#e8e2d8] dark:border-[#22223a] flex flex-col sticky top-0 h-screen overflow-y-auto">
-    <div class="px-7 py-8 border-b border-[#ede8df] dark:border-[#22223a]">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 bg-forest rounded-lg flex items-center justify-center text-white shrink-0">
-          <span class="material-icons-outlined" style="font-size:17px">storefront</span>
-        </div>
-        <span class="font-display text-[22px] font-bold tracking-wide text-forest dark:text-[#2ecc8e]">Outfito</span>
-      </div>
+<script>tailwind.config={theme:{extend:{colors:{cream:{DEFAULT:'#faf8f4',2:'#f3f0ea'},forest:{DEFAULT:'#1a5c3a',mid:'#2a7a50',light:'#e8f4ee',dim:'#134a2c'},gold:{DEFAULT:'#b18a4c',light:'#f5edd8'},ink:{DEFAULT:'#0e0e1a',2:'#3a3a52',3:'#7878a0',4:'#a8a8c0'},surface:{DEFAULT:'#ffffff',2:'#f8f6f1'}},fontFamily:{display:['Cormorant Garamond','serif'],body:['DM Sans','sans-serif']},boxShadow:{'card':'0 1px 3px rgba(14,14,26,.06)','card-hover':'0 4px 16px rgba(14,14,26,.09)'}}}}</script>
+{% endblock %}
+{% block content %}
+<div class="max-w-[1100px] mx-auto">
+  <div class="flex flex-wrap items-start justify-between gap-4 mb-8">
+    <div>
+      <h1 class="font-display text-[46px] font-bold leading-none tracking-tight text-ink mb-2">Offers</h1>
+      <p class="text-[13.5px] text-ink-3">Manage discounts, coupons, and special product offers.</p>
     </div>
-    <nav class="flex-1 px-3 py-6 space-y-0.5">
-      <p class="text-[9.5px] font-bold tracking-[.22em] uppercase text-ink-4 dark:text-[#44445a] px-3 mb-3">Management</p>
-      <a href="#" class="flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-medium text-ink-3 dark:text-[#6868a0] hover:bg-cream-2 dark:hover:bg-[#1a1a2e] transition-colors">
-        <span class="material-icons-outlined">dashboard</span> Dashboard
-      </a>
-      <a href="{% url 'coupon_list' %}" class="flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-medium text-ink-3 dark:text-[#6868a0] hover:bg-cream-2 dark:hover:bg-[#1a1a2e] transition-colors">
-        <span class="material-icons-outlined">confirmation_number</span> Coupons
-      </a>
-      <a href="{% url 'offer_list' %}" class="nav-active relative flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-semibold text-forest dark:text-[#2ecc8e] bg-forest-light dark:bg-[#0d2018] transition-colors">
-        <span class="material-icons-outlined text-forest dark:text-[#2ecc8e]">local_offer</span> Offers
-      </a>
-    </nav>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="flex-1 overflow-y-auto px-12 py-12 min-w-0">
-    <div class="max-w-[1100px] mx-auto">
-
-      <!-- Header -->
-      <div class="flex items-start justify-between gap-6 mb-8">
-        <div>
-          <h1 class="font-display text-[46px] font-bold leading-none tracking-tight text-ink dark:text-[#f0ead8] mb-2">Offers</h1>
-          <p class="text-[13.5px] text-ink-3 dark:text-[#6868a0]">Manage discounts, coupons, and special product offers.</p>
-        </div>
-        <a href="{% url 'add_offer' %}" class="flex items-center gap-2 bg-forest dark:bg-[#2ecc8e] text-white dark:text-[#0e0e1a] px-5 py-2.5 rounded-lg text-[13px] font-semibold shadow-card hover:bg-forest-dim transition-all shrink-0">
-          <span class="material-icons-outlined" style="font-size:17px">add</span>
-          Add Offer
-        </a>
-      </div>
-
-      <!-- Messages -->
-      {% if messages %}
-      <div class="mb-4">
-        {% for message in messages %}
-        <div class="p-4 mb-2 text-sm rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
-          {{ message }}
-        </div>
+    <a href="{% url 'add_offer' %}" class="flex items-center gap-2 bg-forest text-white px-5 py-2.5 rounded-lg text-[13px] font-semibold shadow-card hover:bg-forest-dim transition-all shrink-0">
+      <span class="material-icons-outlined" style="font-size:17px">add</span> Add Offer
+    </a>
+  </div>
+  {% if messages %}
+  <div class="mb-4">
+    {% for message in messages %}
+    <div class="p-4 mb-2 text-sm rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <form method="GET" class="flex gap-4 mb-6 bg-surface border border-[#e8e2d8] p-3 rounded-xl shadow-sm">
+    <div class="relative flex-1">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-4"><span class="material-icons-outlined" style="font-size:18px">search</span></span>
+      <input type="text" name="search" value="{{ search_query }}" placeholder="Search offers..." class="w-full pl-10 pr-4 py-2 text-[13.5px] bg-cream border-none rounded-lg text-ink focus:ring-2 focus:ring-forest/20 outline-none"/>
+    </div>
+    <select name="type" onchange="this.form.submit()" class="bg-cream text-[13.5px] text-ink border-none rounded-lg px-4 py-2 focus:ring-2 focus:ring-forest/20 outline-none cursor-pointer">
+      <option value="">All Types</option>
+      <option value="product" {% if type_filter == 'product' %}selected{% endif %}>Product Offers</option>
+      <option value="category" {% if type_filter == 'category' %}selected{% endif %}>Category Offers</option>
+    </select>
+    <select name="status" onchange="this.form.submit()" class="bg-cream text-[13.5px] text-ink border-none rounded-lg px-4 py-2 focus:ring-2 focus:ring-forest/20 outline-none cursor-pointer">
+      <option value="">All Status</option>
+      <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+      <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+    </select>
+  </form>
+  <div class="bg-surface border border-[#e8e2d8] rounded-2xl shadow-card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead>
+          <tr class="bg-cream-2 border-b border-[#e0dbd0]">
+            <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Offer Name</th>
+            <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Apply To</th>
+            <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Discount &amp; Type</th>
+            <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Min / Max</th>
+            <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Dates</th>
+            <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Status</th>
+            <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[#f0ece4]">
+          {% for offer in offers %}
+          <tr class="hover:bg-cream-2 transition-colors">
+            <td class="px-6 py-5"><p class="font-bold text-[14px] text-ink">{{ offer.offer_name }}</p><p class="text-[11.5px] text-ink-3">{{ offer.applies_to_name }}</p></td>
+            <td class="px-6 py-5"><span class="inline-block px-3 py-1 rounded-full text-[11px] font-semibold {% if offer.apply_to == 'product' %}bg-orange-100 text-orange-700{% else %}bg-blue-100 text-blue-700{% endif %}">{{ offer.get_apply_to_display }}</span></td>
+            <td class="px-6 py-5"><p class="font-bold text-[14px] text-ink">{{ offer.discount_display }}</p><p class="text-[11.5px] text-ink-3">{{ offer.get_discount_type_display }}</p></td>
+            <td class="px-6 py-5"><p class="text-[12.5px] text-ink-2">Min: ₹{{ offer.minimum_purchase_amount }}</p>{% if offer.maximum_discount_amount %}<p class="text-[12.5px] text-ink-2">Max: ₹{{ offer.maximum_discount_amount }}</p>{% endif %}</td>
+            <td class="px-6 py-5"><p class="text-[12.5px] text-ink-2 font-medium">{{ offer.start_date|date:"M d, Y" }}</p><p class="text-[11.5px] text-ink-3">to {{ offer.end_date|date:"M d, Y" }}</p></td>
+            <td class="px-6 py-5"><span id="status-badge-{{ offer.id }}" class="inline-block px-3 py-1 rounded-full text-[11px] font-bold {% if offer.is_active %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-600{% endif %}">{% if offer.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+            <td class="px-6 py-5 text-right">
+              <div class="flex items-center justify-end gap-3">
+                <a href="{% url 'edit_offer' offer.id %}" class="text-ink-3 hover:text-gold transition-colors"><span class="material-icons-outlined" style="font-size:18px">edit</span></a>
+                <button type="button" onclick="openDeleteModal({{ offer.id }})" class="text-ink-3 hover:text-red-500 transition-colors"><span class="material-icons-outlined" style="font-size:18px">delete_outline</span></button>
+                <label class="relative inline-flex items-center cursor-pointer ml-2">
+                  <input type="checkbox" class="sr-only peer" {% if offer.is_active %}checked{% endif %} onchange="toggleOfferStatus({{ offer.id }}, this)">
+                  <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-forest"></div>
+                </label>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="py-16 text-center">
+              <div class="flex flex-col items-center justify-center">
+                <span class="material-icons-outlined text-ink-4 mb-2" style="font-size:48px">local_offer</span>
+                <p class="text-ink-3 text-[14px] mb-4">No offers found.</p>
+                <a href="{% url 'add_offer' %}" class="inline-flex items-center gap-2 bg-forest text-white px-5 py-2.5 rounded-lg text-[13px] font-semibold shadow-card hover:bg-forest-dim transition-all">
+                  <span class="material-icons-outlined" style="font-size:17px">add</span> Add Offer
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if offers.has_other_pages %}
+    <div class="flex items-center justify-between px-6 py-4 border-t border-[#ede8df]">
+      <span class="text-[12px] text-ink-4">Page {{ offers.number }} of {{ offers.paginator.num_pages }}</span>
+      <div class="flex gap-1">
+        {% if offers.has_previous %}<a href="?page={{ offers.previous_page_number }}&search={{ search_query }}&type={{ type_filter }}&status={{ status_filter }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0dbd0] hover:bg-cream-2"><span class="material-icons-outlined" style="font-size:14px">chevron_left</span></a>{% endif %}
+        {% for num in offers.paginator.page_range %}
+          {% if offers.number == num %}<span class="w-8 h-8 flex items-center justify-center rounded-lg bg-ink text-white font-bold text-[12px]">{{ num }}</span>
+          {% else %}<a href="?page={{ num }}&search={{ search_query }}&type={{ type_filter }}&status={{ status_filter }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0dbd0] hover:bg-cream-2 text-[12px] text-ink-3">{{ num }}</a>{% endif %}
         {% endfor %}
+        {% if offers.has_next %}<a href="?page={{ offers.next_page_number }}&search={{ search_query }}&type={{ type_filter }}&status={{ status_filter }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0dbd0] hover:bg-cream-2"><span class="material-icons-outlined" style="font-size:14px">chevron_right</span></a>{% endif %}
       </div>
-      {% endif %}
-
-      <!-- Search & Filter -->
-      <form method="GET" class="flex gap-4 mb-6 bg-surface dark:bg-[#14141f] border border-[#e8e2d8] dark:border-[#22223a] p-3 rounded-xl shadow-sm">
-        <div class="relative flex-1">
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-4">
-            <span class="material-icons-outlined" style="font-size:18px">search</span>
-          </span>
-          <input type="text" name="search" value="{{ search_query }}" placeholder="Search offers..."
-            class="w-full pl-10 pr-4 py-2 text-[13.5px] bg-cream dark:bg-[#0e0e1a] border-none rounded-lg text-ink focus:ring-2 focus:ring-forest/20 outline-none"/>
-        </div>
-        
-        <select name="type" onchange="this.form.submit()" class="bg-cream dark:bg-[#0e0e1a] text-[13.5px] text-ink border-none rounded-lg px-4 py-2 focus:ring-2 focus:ring-forest/20 outline-none cursor-pointer">
-          <option value="">All Types</option>
-          <option value="product" {% if type_filter == 'product' %}selected{% endif %}>Product Offers</option>
-          <option value="category" {% if type_filter == 'category' %}selected{% endif %}>Category Offers</option>
-        </select>
-
-        <select name="status" onchange="this.form.submit()" class="bg-cream dark:bg-[#0e0e1a] text-[13.5px] text-ink border-none rounded-lg px-4 py-2 focus:ring-2 focus:ring-forest/20 outline-none cursor-pointer">
-          <option value="">All Status</option>
-          <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
-          <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
-        </select>
-      </form>
-
-      <!-- Table -->
-      <div class="bg-surface dark:bg-[#14141f] border border-[#e8e2d8] dark:border-[#22223a] rounded-2xl shadow-card overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left">
-            <thead>
-              <tr class="bg-cream-2 dark:bg-[#0e0e1a] border-b border-[#e0dbd0] dark:border-[#1e1e30]">
-                <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Offer Name</th>
-                <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Apply To</th>
-                <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Discount & Type</th>
-                <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Min Purchase / Max</th>
-                <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Start & End Dates</th>
-                <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Status</th>
-                <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-[#f0ece4] dark:divide-[#1e1e30]">
-              {% for offer in offers %}
-              <tr class="hover:bg-cream-2 transition-colors">
-                <td class="px-6 py-5">
-                  <p class="font-bold text-[14px] text-ink">{{ offer.offer_name }}</p>
-                  <p class="text-[11.5px] text-ink-3">Applies to: {{ offer.applies_to_name }}</p>
-                </td>
-                <td class="px-6 py-5">
-                  <span class="inline-block px-3 py-1 rounded-full text-[11px] font-semibold {% if offer.apply_to == 'product' %}bg-orange-100 text-orange-700{% else %}bg-blue-100 text-blue-700{% endif %}">
-                    {{ offer.get_apply_to_display }}
-                  </span>
-                </td>
-                <td class="px-6 py-5">
-                  <p class="font-bold text-[14px] text-ink">{{ offer.discount_display }}</p>
-                  <p class="text-[11.5px] text-ink-3">{{ offer.get_discount_type_display }}</p>
-                </td>
-                <td class="px-6 py-5">
-                  <p class="text-[12.5px] text-ink-2">Min: ₹{{ offer.minimum_purchase_amount }}</p>
-                  {% if offer.maximum_discount_amount %}
-                  <p class="text-[12.5px] text-ink-2">Max: ₹{{ offer.maximum_discount_amount }}</p>
-                  {% endif %}
-                </td>
-                <td class="px-6 py-5">
-                  <p class="text-[12.5px] text-ink-2 font-medium">{{ offer.start_date|date:"M d, Y" }}</p>
-                  <p class="text-[11.5px] text-ink-3">to {{ offer.end_date|date:"M d, Y" }}</p>
-                </td>
-                <td class="px-6 py-5">
-                  <span id="status-badge-{{ offer.id }}" class="inline-block px-3 py-1 rounded-full text-[11px] font-bold {% if offer.is_active %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-600{% endif %}">
-                    {% if offer.is_active %}Active{% else %}Inactive{% endif %}
-                  </span>
-                </td>
-                <td class="px-6 py-5 text-right flex items-center justify-end gap-3">
-                  <a href="{% url 'edit_offer' offer.id %}" class="text-ink-3 hover:text-gold transition-colors">
-                    <span class="material-icons-outlined" style="font-size:18px">edit</span>
-                  </a>
-                  <button type="button" onclick="openDeleteModal({{ offer.id }})" class="text-ink-3 hover:text-red-500 transition-colors">
-                    <span class="material-icons-outlined" style="font-size:18px">delete_outline</span>
-                  </button>
-                  
-                  <!-- Toggle Switch -->
-                  <label class="relative inline-flex items-center cursor-pointer ml-2">
-                    <input type="checkbox" class="sr-only peer" {% if offer.is_active %}checked{% endif %} onchange="toggleOfferStatus({{ offer.id }}, this)">
-                    <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-forest"></div>
-                  </label>
-                </td>
-              </tr>
-              {% empty %}
-              <tr>
-                <td colspan="7" class="py-12 text-center text-ink-4 text-[14px]">No offers found.</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        
-        <!-- Pagination -->
-        {% if offers.has_other_pages %}
-        <div class="flex items-center justify-between px-6 py-4 border-t border-[#ede8df]">
-          <span class="text-[12px] text-ink-4">Showing page {{ offers.number }} of {{ offers.paginator.num_pages }}</span>
-          <div class="flex gap-1">
-            {% if offers.has_previous %}
-            <a href="?page={{ offers.previous_page_number }}&search={{ search_query }}&type={{ type_filter }}&status={{ status_filter }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0dbd0] hover:bg-cream-2 text-[12px]"><span class="material-icons-outlined" style="font-size:14px">chevron_left</span></a>
-            {% endif %}
-            
-            {% for num in offers.paginator.page_range %}
-              {% if offers.number == num %}
-              <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-ink text-white font-bold text-[12px]">{{ num }}</span>
-              {% else %}
-              <a href="?page={{ num }}&search={{ search_query }}&type={{ type_filter }}&status={{ status_filter }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0dbd0] hover:bg-cream-2 text-[12px] text-ink-3">{{ num }}</a>
-              {% endif %}
-            {% endfor %}
-
-            {% if offers.has_next %}
-            <a href="?page={{ offers.next_page_number }}&search={{ search_query }}&type={{ type_filter }}&status={{ status_filter }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0dbd0] hover:bg-cream-2 text-[12px]"><span class="material-icons-outlined" style="font-size:14px">chevron_right</span></a>
-            {% endif %}
-          </div>
-        </div>
-        {% endif %}
-      </div>
-      
     </div>
-  </main>
-</div>
-
-<!-- Delete Modal -->
-<div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity opacity-0">
-  <div class="bg-white rounded-2xl shadow-xl w-[400px] p-8 text-center transform scale-95 transition-transform duration-200" id="deleteModalContent">
-    <div class="w-16 h-16 mx-auto bg-red-50 rounded-full flex items-center justify-center mb-5">
-      <span class="material-icons-outlined text-red-500" style="font-size: 32px;">delete_outline</span>
-    </div>
-    <h3 class="font-display text-[24px] font-bold text-ink mb-2">Are you sure want to delete this offer?</h3>
-    
-    <form method="POST" id="deleteForm" class="flex gap-4 mt-8">
-      {% csrf_token %}
-      <button type="submit" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-700 transition-colors">DELETE</button>
-      <button type="button" onclick="closeDeleteModal()" class="flex-1 bg-[#3a3a3a] text-white font-bold py-3 rounded-xl hover:bg-[#222] transition-colors">CANCEL</button>
-    </form>
+    {% endif %}
   </div>
 </div>
 
+<!-- Delete Modal -->
+<div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm opacity-0">
+  <div class="bg-white rounded-2xl shadow-xl w-[400px] p-8 text-center scale-95 transition-transform duration-200" id="deleteModalContent">
+    <div class="w-16 h-16 mx-auto bg-red-50 rounded-full flex items-center justify-center mb-5"><span class="material-icons-outlined text-red-500" style="font-size:32px">delete_outline</span></div>
+    <h3 class="font-display text-[24px] font-bold text-ink mb-2">Are you sure want to delete this offer?</h3>
+    <form method="POST" id="deleteForm" class="flex gap-4 mt-8">{% csrf_token %}
+      <button type="submit" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-700">DELETE</button>
+      <button type="button" onclick="closeDeleteModal()" class="flex-1 bg-[#3a3a3a] text-white font-bold py-3 rounded-xl hover:bg-[#222]">CANCEL</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
 <script>
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-  }
-
-  function toggleOfferStatus(offerId, checkbox) {
-    const isChecked = checkbox.checked;
-    
-    fetch(`/admin_side/offers/toggle/${offerId}/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken')
-      },
-      body: JSON.stringify({ is_active: isChecked })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        const badge = document.getElementById(`status-badge-${offerId}`);
-        if (data.is_active) {
-          badge.className = 'inline-block px-3 py-1 rounded-full text-[11px] font-bold bg-green-100 text-green-700';
-          badge.innerText = 'Active';
-        } else {
-          badge.className = 'inline-block px-3 py-1 rounded-full text-[11px] font-bold bg-gray-100 text-gray-600';
-          badge.innerText = 'Inactive';
-        }
-      } else {
-        alert(data.error || 'Failed to update status.');
-        checkbox.checked = !isChecked; // revert
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      alert('An error occurred while updating the status.');
-      checkbox.checked = !isChecked; // revert
-    });
-  }
-
-  function openDeleteModal(offerId) {
-    const modal = document.getElementById('deleteModal');
-    const form = document.getElementById('deleteForm');
-    const content = document.getElementById('deleteModalContent');
-    
-    form.action = `/admin_side/offers/delete/${offerId}/`;
-    
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    
-    // trigger animation
-    setTimeout(() => {
-      modal.classList.remove('opacity-0');
-      content.classList.remove('scale-95');
-    }, 10);
-  }
-
-  function closeDeleteModal() {
-    const modal = document.getElementById('deleteModal');
-    const content = document.getElementById('deleteModalContent');
-    
-    modal.classList.add('opacity-0');
-    content.classList.add('scale-95');
-    
-    setTimeout(() => {
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }, 200);
-  }
+function getCookie(name){let v=null;if(document.cookie){const c=document.cookie.split(';');for(let i=0;i<c.length;i++){const k=c[i].trim();if(k.substring(0,name.length+1)===(name+'=')){v=decodeURIComponent(k.substring(name.length+1));break;}}}return v;}
+function toggleOfferStatus(id,cb){const ch=cb.checked;fetch(`/admin_side/offers/toggle/${id}/`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},body:JSON.stringify({is_active:ch})}).then(r=>r.json()).then(d=>{if(d.success){const b=document.getElementById(`status-badge-${id}`);b.className=`inline-block px-3 py-1 rounded-full text-[11px] font-bold ${d.is_active?'bg-green-100 text-green-700':'bg-gray-100 text-gray-600'}`;b.innerText=d.is_active?'Active':'Inactive';}else{alert(d.error||'Failed');cb.checked=!ch;}}).catch(()=>{alert('Error');cb.checked=!ch;});}
+function openDeleteModal(id){const m=document.getElementById('deleteModal'),f=document.getElementById('deleteForm'),c=document.getElementById('deleteModalContent');f.action=`/admin_side/offers/delete/${id}/`;m.classList.remove('hidden');m.classList.add('flex');setTimeout(()=>{m.classList.remove('opacity-0');c.classList.remove('scale-95');},10);}
+function closeDeleteModal(){const m=document.getElementById('deleteModal'),c=document.getElementById('deleteModalContent');m.classList.add('opacity-0');c.classList.add('scale-95');setTimeout(()=>{m.classList.add('hidden');m.classList.remove('flex');},200);}
 </script>
-</body>
-</html>
+{% endblock %}

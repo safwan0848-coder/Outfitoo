@@ -766,7 +766,12 @@
               <div class="item-attr">{{ item.variant.color }} · {{ item.variant.size }}</div>
               <div class="item-qty"><i class="fa-solid fa-xmark" style="font-size:10px;"></i> {{ item.quantity }}</div>
             </div>
-            <div class="item-price">₹{{ item.variant.price }}</div>
+            <div class="item-price">
+                ₹{{ item.variant.price }}
+                {% if item.offer_discount and item.offer_discount > 0 %}
+                <div style="font-size:11px; color:#3bdfb0; margin-top:4px;">-₹{{ item.offer_discount|floatformat:2 }} Offer</div>
+                {% endif %}
+            </div>
           </div>
           {% endfor %}
         {% else %}
@@ -830,6 +835,26 @@
             <span>Subtotal</span>
             <span id="subtotalDisplay">₹{{ subtotal }}</span>
           </div>
+
+          {% if offer_discount and offer_discount > 0 %}
+          <div class="summary-line discount">
+            <span>
+              <i class="fa-solid fa-bolt" style="font-size:11px;"></i> Offer Savings
+            </span>
+            <span style="color:#4ade80;">-₹{{ offer_discount }}</span>
+          </div>
+          {% endif %}
+          
+          {% if applied_offers %}
+          <div style="margin-bottom: 12px; padding: 10px; background: rgba(59,223,176,0.1); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 12px; color: var(--accent);">
+            <strong>Offers Applied:</strong>
+            <ul style="margin-top: 4px; padding-left: 14px;">
+              {% for msg in applied_offers %}
+              <li>{{ msg }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
 
           {# Coupon savings row — hidden when no coupon applied #}
           <div class="summary-line discount" id="couponSavingsRow"

@@ -2,14 +2,21 @@
 
 {% block content %}
 
-<div class="flex flex-1">
-    
-    {% include 'sidebar.html' %}
+<!-- Main Layout Wrapper (Flexbox structure) -->
+<div class="flex flex-1 relative w-full">
 
-    <div class="flex-1 p-6 ml-[260px]">
-        {% block dashboard_content %}
-        {% endblock %}
-    </div>
+    <!-- Sidebar (Hidden on mobile, static naturally-flowing on desktop) -->
+    <aside class="hidden md:block w-[260px] bg-[#080c18] border-r border-white/10 flex-shrink-0 min-h-full">
+        {% include 'sidebar.html' %}
+    </aside>
+
+    <!-- Main Content Area -->
+    <!-- flex-1 so it takes remaining space on desktop, and full width on mobile -->
+    <main class="flex-1 flex flex-col min-w-0 w-full ml-0">
+        <div class="flex-1 p-5 md:p-8">
+            {% block dashboard_content %}{% endblock %}
+        </div>
+    </main>
 
 </div>
 

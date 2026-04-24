@@ -55,7 +55,7 @@
 
     /* ── HERO ── */
     #hero {
-      position:relative; height:100vh; min-height:700px;
+      position:relative; height:calc(100vh - 85px); min-height:700px;
       overflow:hidden; display:flex; align-items:center; justify-content:center;
       background:var(--bg);
     }
@@ -406,14 +406,7 @@
       </a>
       <!-- END CARD -->
 
-      <!-- VIEW BUTTON (separate to avoid click conflict) -->
-      <a href="{% url 'product_detail' product.id %}"
-         class="absolute bottom-3 right-3 z-20"
-         onclick="event.stopPropagation();">
-        <div class="cart-icon-btn">
-          <i class="fa-solid fa-eye" style="font-size:.7rem"></i>
-        </div>
-      </a>
+
 
     </div>
 
@@ -568,11 +561,7 @@ document.addEventListener('mousemove', e => {
   gsap.to('.hero-scene', { rotationY: px * 9, rotationX: -py * 9, x: px * 28, y: py * 28, duration: 2 });
 });
 
-/* 4. NAVBAR SCROLL */
-const navbar = document.getElementById('navbar');
-window.addEventListener('scroll', () => {
-  navbar.classList.toggle('scrolled', window.scrollY > 50);
-});
+/* 4. NAVBAR SCROLL (Removed as standard navbar is used) */
 
 /* 5. USER DROPDOWN */
 const userBtn = document.getElementById('userMenuBtn');

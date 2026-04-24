@@ -250,6 +250,28 @@ text-decoration:none;
 .forgot-link a:hover{
 color:#00d2ff;
 }
+
+/* Referral field */
+.referral-toggle{
+  font-size:12px;
+  color:#9ca3af;
+  text-align:center;
+  margin-bottom:6px;
+  cursor:pointer;
+  transition:color .2s;
+}
+.referral-toggle:hover{ color:#00d2ff; }
+.referral-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10px;font-weight:600;letter-spacing:.6px;
+  text-transform:uppercase;
+  background:linear-gradient(90deg,rgba(59,130,246,.18),rgba(0,210,255,.12));
+  border:1px solid rgba(0,210,255,.25);
+  color:#00d2ff;
+  border-radius:20px;
+  padding:2px 10px;
+  margin-bottom:8px;
+}
 </style>
 </head>
 
@@ -343,6 +365,29 @@ minlength="6">
 
 </div>
 
+<!-- ── Referral Code (optional) ─────────────────── -->
+{% if prefilled_ref %}
+<div class="text-center mb-2">
+  <span class="referral-badge">🎁 Referral Code Applied</span>
+</div>
+<div class="premium-input-group" id="refGroup" style="display:block;">
+{% else %}
+<p class="referral-toggle" onclick="toggleRef()" id="refToggle">
+  🎁 Have a referral code? <span style="color:#00d2ff;">Enter here</span>
+</p>
+<div class="premium-input-group" id="refGroup" style="display:none;">
+{% endif %}
+  <input type="text"
+    name="referral_code"
+    id="referralCode"
+    placeholder=" "
+    maxlength="8"
+    value="{{ prefilled_ref|default:'' }}"
+    oninput="this.value=this.value.toUpperCase()">
+  <label>Referral Code (optional)</label>
+</div>
+<!-- ──────────────────────────────────────────────── -->
+
 <button type="submit" class="premium-btn w-100">
 Create Account →
 </button>
@@ -389,25 +434,27 @@ setTimeout(() => {
 }, 3000);
 
 function togglePassword(id){
-const input=document.getElementById(id);
-input.type=input.type==="password"?"text":"password";
+  const input=document.getElementById(id);
+  input.type=input.type==="password"?"text":"password";
+}
+
+function toggleRef(){
+  const g=document.getElementById('refGroup');
+  const t=document.getElementById('refToggle');
+  const open = g.style.display==='none';
+  g.style.display = open ? 'block' : 'none';
+  if(open && t) t.style.display='none';
 }
 
 const password=document.getElementById("password");
 const confirmPassword=document.getElementById("confirmPassword");
 
 confirmPassword.addEventListener("keyup",function(){
-
-if(password.value!==confirmPassword.value){
-
-confirmPassword.style.borderColor="#ff6b6b";
-
-}else{
-
-confirmPassword.style.borderColor="#00d2ff";
-
-}
-
+  if(password.value!==confirmPassword.value){
+    confirmPassword.style.borderColor="#ff6b6b";
+  }else{
+    confirmPassword.style.borderColor="#00d2ff";
+  }
 });
 </script>
 

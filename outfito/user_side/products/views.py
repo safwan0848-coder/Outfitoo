@@ -171,6 +171,7 @@ def product_list(request):
             pass
 
     sizes = ["XS", "S", "M", "L", "XL", "XXL"]
+    types = ["shirt", "pant", "tees", "shorts", "coat"]
 
     return render(request, 'user/product_list.html', {
         'product_data':      page_obj.object_list,
@@ -187,6 +188,7 @@ def product_list(request):
         'cat_slug':          cat_slug,
         'type_filter':       type_filter,
         'sizes':             sizes,
+        'types':             types,
         'size_filter':       size_filter,
     })
 
@@ -198,17 +200,16 @@ def is_user(user):
 def search_products_ajax(request):
     query = request.GET.get('q', '').strip()
     if not query:
-        return JsonResponse({'products': []})
+        return JsonResponse({'products': [], 'has_more': False, 'query': ''})
 
+    # Fetch 6 so we know if there are more than 5 without a separate count query
     products = Product.objects.filter(
         is_deleted=False,
         is_listed=True,
         category__is_active=True
     ).filter(
-        Q(name__icontains=query) |
-        Q(description__icontains=query) |
-        Q(category__category_name__icontains=query)
-    ).prefetch_related('variants').distinct()[:10]
+        Q(name__icontains=query)
+    ).prefetch_related('variants').distinct()[:6]
 
     results = []
     for product in products:
@@ -232,7 +233,8 @@ def search_products_ajax(request):
             'url': f"/products/products/{product.id}/"
         })
 
-    return JsonResponse({'products': results})
+    has_more = len(results) > 5
+    return JsonResponse({'products': results[:5], 'has_more': has_more, 'query': query})
 
 
 @never_cache
@@ -477,13 +479,11 @@ def submit_review(request, pk):
     ).exists()
 
     if not has_purchased:
-        messages.error(request, "You can only review products you have purchased and received.")
+        messages.error(request, "You can review this product only after purchase and delivery")
         return redirect('product_detail', pk=pk)
 
-    # ── Security guard 2: no duplicate review ──
-    if ProductReview.objects.filter(product=product, user=request.user).exists():
-        messages.error(request, "You have already reviewed this product.")
-        return redirect('product_detail', pk=pk)
+    # ── Fetch existing review if any ──
+    existing_review = ProductReview.objects.filter(product=product, user=request.user).first()
 
     # ── Validate input ──
     try:
@@ -502,14 +502,21 @@ def submit_review(request, pk):
         messages.error(request, "Review comment cannot be empty.")
         return redirect('product_detail', pk=pk)
 
-    # ── Save review ──
-    ProductReview.objects.create(
-        product=product,
-        user=request.user,
-        rating=rating,
-        title=title,
-        comment=comment,
-    )
-
-    messages.success(request, "Thank you! Your review has been submitted.")
+    # ── Save or Update review ──
+    if existing_review:
+        existing_review.rating = rating
+        existing_review.title = title
+        existing_review.comment = comment
+        existing_review.save()
+        messages.success(request, "Your review has been updated successfully.")
+    else:
+        ProductReview.objects.create(
+            product=product,
+            user=request.user,
+            rating=rating,
+            title=title,
+            comment=comment,
+        )
+        messages.success(request, "Thank you! Your review has been submitted.")
+        
     return redirect('product_detail', pk=pk)

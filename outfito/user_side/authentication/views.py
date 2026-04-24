@@ -1,11 +1,11 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from .models import OTP
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 User = get_user_model()
-from django.contrib.auth import authenticate, login,logout
+from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from django.contrib.auth.hashers import make_password,check_password
+from django.contrib.auth.hashers import make_password, check_password
 from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required
 import re
@@ -18,6 +18,7 @@ from admin_side.categories_management.models import Category
 from admin_side.products_management.models import Product
 from admin_side.variants_management.models import Variant
 from django.db.models import Prefetch
+from .referral_utils import assign_referral
 
 
 @never_cache
@@ -26,12 +27,24 @@ def signup_view(request):
     if request.user.is_authenticated:
         return redirect('landing')
 
+    # Capture referral code from URL (?ref=CODE) or preserve from previous GET
+    ref_code = (
+        request.GET.get('ref', '').strip().upper()
+        or request.session.get('ref_code', '')
+    )
+    if ref_code:
+        request.session['ref_code'] = ref_code
+
     if request.method == "POST":
 
         uname = request.POST.get('username')
         email = request.POST.get('email')
         pass1 = request.POST.get('password1')
         pass2 = request.POST.get('password2')
+        # Also accept referral_code from the form field
+        form_ref = request.POST.get('referral_code', '').strip().upper()
+        if form_ref:
+            request.session['ref_code'] = form_ref
 
         if not uname:
             messages.error(request, "Username is required")
@@ -63,7 +76,6 @@ def signup_view(request):
             messages.error(request, "Passwords do not match")
             return redirect('signup')
 
-        # Strong password validation
         if len(pass1) < 8:
             messages.error(request, "Password must be at least 8 characters")
             return redirect('signup')
@@ -80,11 +92,10 @@ def signup_view(request):
             messages.error(request, "Password must contain at least one number")
             return redirect('signup')
 
-        if not re.search(r'[!@#$%^&*(),.?\":{}|<>]', pass1):
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', pass1):
             messages.error(request, "Password must contain at least one special character")
             return redirect('signup')
 
-        
         existing_user = User.objects.filter(email=email).first()
 
         if existing_user:
@@ -94,18 +105,17 @@ def signup_view(request):
             else:
                 existing_user.delete()
 
-
         if User.objects.filter(username=uname).exists():
             messages.error(request, "Username already exists")
             return redirect('signup')
-        
+
         user = User.objects.create_user(
             username=uname,
             email=email,
             password=pass1
         )
 
-        user.is_active = False
+        user.is_active   = False
         user.is_verified = False
         user.save()
 
@@ -125,7 +135,7 @@ def signup_view(request):
         messages.success(request, "OTP sent to your email")
         return redirect('otp_verify')
 
-    return render(request, 'user/signup.html')
+    return render(request, 'user/signup.html', {'prefilled_ref': ref_code})
 
 @never_cache
 def otp_verify(request):
@@ -159,15 +169,24 @@ def otp_verify(request):
             messages.error(request, "Invalid OTP")
             return redirect('otp_verify')
 
-        user.is_active = True
+        user.is_active   = True
         user.is_verified = True
         user.save()
 
         otp.delete()
 
+        # ── Apply referral if one was captured at signup ──
+        ref_code = request.session.pop('ref_code', None)
+        referral_applied = False
+        if ref_code:
+            referral_applied = assign_referral(user, ref_code)
+
         request.session.pop('email', None)
 
-        messages.success(request, "Email verified successfully")
+        if referral_applied:
+            messages.success(request, f"Referral code '{ref_code}' applied! Complete your first order to earn ₹50.")
+        else:
+            messages.success(request, "Email verified successfully")
 
         return redirect('login')
 

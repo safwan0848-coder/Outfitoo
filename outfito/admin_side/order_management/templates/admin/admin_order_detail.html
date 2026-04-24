@@ -1,16 +1,6 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
-
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Outfito Admin – Order #{{ order.order_number }}</title>
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@600;700&display=swap"
-        rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+{% extends 'admin_base.html' %}
+{% block title %}Outfito Admin – Order #{{ order.order_number }}{% endblock %}
+{% block extra_head %}
 
     <style>
         :root {
@@ -1210,65 +1200,9 @@
             border: 1px solid #fca5a5;
         }
     </style>
-</head>
+{% endblock %}
+{% block content %}
 
-<body>
-    <div class="app-wrapper">
-
-        <!-- ─── Sidebar ─── -->
-        <aside class="sidebar">
-            <div class="sidebar-brand">
-                <div class="brand-name">Outfito</div>
-            </div>
-            <nav class="sidebar-nav">
-                <span class="nav-section-label">Management</span>
-                <a href="#" class="nav-item">
-                    <span class="material-icons-outlined">dashboard</span>
-                    Dashboard
-                </a>
-                <a href="javascript:void(0)" class="nav-item active" style="margin-bottom:0; border-radius: var(--radius) var(--radius) 0 0;">
-                    <span class="material-icons-outlined">receipt_long</span>
-                    Orders
-                </a>
-                <div class="nav-submenu">
-                    <a class="nav-sublink active" href="{% url 'admin_order_list' %}">All Orders</a>
-                    <a class="nav-sublink" href="{% url 'admin_returns_list' %}">Returns</a>
-                </div>
-                <a href="#" class="nav-item">
-                    <span class="material-icons-outlined">inventory_2</span>
-                    Products
-                </a>
-                <a href="#" class="nav-item">
-                    <span class="material-icons-outlined">category</span>
-                    Categories
-                </a>
-                <a href="#" class="nav-item">
-                    <span class="material-icons-outlined">local_offer</span>
-                    Coupons
-                </a>
-                <a href="#" class="nav-item">
-                    <span class="material-icons-outlined">auto_awesome</span>
-                    Offers
-                </a>
-                <a href="#" class="nav-item">
-                    <span class="material-icons-outlined">people_outline</span>
-                    Customers
-                </a>
-            </nav>
-            <div class="sidebar-footer">
-                <div class="user-row">
-                    <img class="user-avatar" src="https://ui-avatars.com/api/?name=Admin&background=1a3c2e&color=fff"
-                        alt="Admin">
-                    <div>
-                        <div class="user-name">Admin</div>
-                        <div class="user-role">Super Admin</div>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <!-- ─── Main Content ─── -->
-        <main class="main-content">
 
             <!-- Topbar -->
             <div class="topbar">
@@ -1626,8 +1560,7 @@
                     </div><!-- /right column -->
                 </div><!-- /dash-grid -->
             </div><!-- /main-inner -->
-        </main>
-    </div><!-- /app-wrapper -->
+
 
     {% for item in order.items.all %}
     {% with rr=item.latest_return %}
@@ -1742,6 +1675,8 @@
     {% endwith %}
     {% endfor %}
 
+{% endblock %}
+{% block extra_js %}
     <script>
         /* ── Theme toggle ── */
         function toggleTheme() {
@@ -1766,6 +1701,4 @@
             }
         });
     </script>
-</body>
-
-</html>
+{% endblock %}

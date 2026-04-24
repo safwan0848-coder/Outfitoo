@@ -7,15 +7,28 @@ from django.utils import timezone
 
 
 class User(AbstractUser):
-    email=models.EmailField(unique=True)
-    phone=models.CharField(blank=True,max_length=10)
-    is_verified=models.BooleanField(default=False)
-    is_blocked=models.BooleanField(default=False)
+    email          = models.EmailField(unique=True)
+    phone          = models.CharField(blank=True, max_length=10)
+    is_verified    = models.BooleanField(default=False)
+    is_blocked     = models.BooleanField(default=False)
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    # ── Referral fields ────────────────────────────────────────
+    referral_code  = models.CharField(max_length=8, unique=True, blank=True)
+    referred_by    = models.ForeignKey(
+                        'self', null=True, blank=True,
+                        on_delete=models.SET_NULL,
+                        related_name='referrals'
+                     )
+    referral_used  = models.BooleanField(default=False)   # True once a referrer is linked
 
+    USERNAME_FIELD   = 'email'
+    REQUIRED_FIELDS  = ['username']
 
+    def save(self, *args, **kwargs):
+        if not self.referral_code:
+            from user_side.authentication.referral_utils import generate_referral_code
+            self.referral_code = generate_referral_code()
+        super().save(*args, **kwargs)
 
 class OTP(models.Model):
     user=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)

@@ -30,8 +30,9 @@ class WalletTransaction(models.Model):
     """
 
     TRANSACTION_TYPE_CHOICES = [
-        ('credit', 'Credit'),   # Money added
-        ('debit',  'Debit'),    # Money spent
+        ('credit',         'Credit'),          # Money added
+        ('debit',          'Debit'),           # Money spent
+        ('referral_bonus', 'Referral Bonus'),  # Referral reward
     ]
 
     PAYMENT_STATUS_CHOICES = [
@@ -45,7 +46,7 @@ class WalletTransaction(models.Model):
                                'orders.Order', on_delete=models.SET_NULL,
                                null=True, blank=True, related_name='wallet_transactions'
                            )
-    transaction_type     = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES)
+    transaction_type     = models.CharField(max_length=16, choices=TRANSACTION_TYPE_CHOICES)
     amount               = models.DecimalField(max_digits=10, decimal_places=2)   # Always positive
     balance_after        = models.DecimalField(max_digits=10, decimal_places=2)   # Snapshot after txn
     is_credit            = models.BooleanField(default=False)                      # Kept for compat

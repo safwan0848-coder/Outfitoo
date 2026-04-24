@@ -528,10 +528,13 @@
 
         <!-- Price -->
         <div class="item-price">
-          {% if item.variant.original_price and item.variant.original_price > item.variant.price %}
-          <div class="item-price-orig">₹{{ item.variant.original_price|floatformat:0 }}</div>
+          {% if item.offer_discount and item.offer_discount > 0 %}
+          <div class="item-price-orig" style="color:var(--text-sub); text-decoration:line-through;">₹{{ item.base_subtotal|floatformat:0 }}</div>
+          <div class="item-price-main">₹{{ item.final_subtotal|floatformat:0 }}</div>
+          <div style="font-size:11px; color:var(--accent); margin-top:4px;">-₹{{ item.offer_discount|floatformat:0 }} Offer</div>
+          {% else %}
+          <div class="item-price-main">₹{{ item.base_subtotal|floatformat:0 }}</div>
           {% endif %}
-          <div class="item-price-main">₹{{ item.subtotal|floatformat:0 }}</div>
           {% if item.quantity > 1 %}
           <div class="item-price-sub">₹{{ item.variant.price|floatformat:0 }} × {{ item.quantity }}</div>
           {% endif %}
@@ -567,6 +570,17 @@
       <div class="oos-warning">
         <span class="material-icons-outlined">warning</span>
         Some items are out of stock and must be removed before checkout.
+      </div>
+      {% endif %}
+
+      {% if applied_offers %}
+      <div style="margin-bottom: 12px; padding: 10px; background: rgba(16,185,129,0.1); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 12px; color: var(--accent);">
+        <strong>Offers Applied:</strong>
+        <ul style="margin-top: 4px; padding-left: 14px;">
+          {% for msg in applied_offers %}
+          <li>{{ msg }}</li>
+          {% endfor %}
+        </ul>
       </div>
       {% endif %}
 

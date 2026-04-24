@@ -1,271 +1,83 @@
-
 {% extends 'base.html' %}
 
 {% block content %}
 
- <style>
-    :root {
-      --bg:           #0a0f1a;
-      --bg-card:      #111827;
-      --bg-soft:      #0d1424;
-      --bg-input:     #161f2e;
-      --border:       rgba(255,255,255,0.07);
-      --border-hover: rgba(255,255,255,0.14);
-      --text:         #f8fafc;
-      --text-muted:   #94a3b8;
-      --text-sub:     #4b5563;
-      --primary:      #7c3aed;
-      --accent:       #10b981;
-      --font-display: 'Cormorant Garamond', serif;
-      --font-body:    'DM Sans', sans-serif;
-      --radius:       0.5rem;
-      --radius-lg:    0.875rem;
-      --radius-xl:    1.5rem;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      background: var(--bg); color: var(--text);
-      font-family: var(--font-body); font-size: 14px;
-      line-height: 1.6; min-height: 100vh;
-    }
-    a { text-decoration: none; color: inherit; }
-    img { display: block; max-width: 100%; }
-    button { font-family: var(--font-body); cursor: pointer; }
-
-    /* ── HERO SECTION ── */
-    .hero {
-      position: relative; overflow: hidden;
-      padding: 7rem 2.5rem 4rem;
-      text-align: center;
-      background:
-        radial-gradient(ellipse 70% 50% at 50% -10%, rgba(124,58,237,0.18) 0%, transparent 70%),
-        var(--bg);
-    }
-    .hero::before {
-      content: '';
-      position: absolute; inset: 0;
-      background-image:
-        radial-gradient(circle at 20% 50%, rgba(124,58,237,.06) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(16,185,129,.04) 0%, transparent 40%);
-      pointer-events: none;
-    }
-    .hero-eyebrow {
-      font-size: .65rem; font-weight: 700; letter-spacing: .2em;
-      text-transform: uppercase; color: var(--primary);
-      margin-bottom: 1rem; display: block;
-      animation: fadeUp .6s ease both;
-    }
-    .hero-title {
-      font-family: var(--font-display);
-      font-size: clamp(2.5rem, 5vw, 4rem);
-      font-weight: 700; line-height: 1.05;
-      color: var(--text); letter-spacing: -.02em;
-      margin-bottom: 1.25rem;
-      animation: fadeUp .6s .1s ease both;
-    }
-    .hero-title em { font-style: italic; color: rgba(248,250,252,.65); }
-    .hero-sub {
-      font-size: .9rem; color: var(--text-muted);
-      max-width: 480px; margin: 0 auto;
-      line-height: 1.8;
-      animation: fadeUp .6s .2s ease both;
-    }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── CATEGORIES GRID ── */
-    .categories-section {
-      max-width: 1200px; margin: 0 auto;
-      padding: 3rem 2.5rem 5rem;
-    }
-.cat-grid {
-  display: flex;
-  gap: 20px;
-  overflow-x: auto;
-  padding-bottom: 10px;
-  scroll-snap-type: x mandatory;
-}
-
-/* smooth scroll */
-.cat-grid::-webkit-scrollbar {
-  height: 6px;
-}
-.cat-grid::-webkit-scrollbar-thumb {
-  background: #222;
-  border-radius: 10px;
-}: 1.25rem;
-    }
-
-    .cat-card:first-child {
-      grid-column: 1 / -1;
-      aspect-ratio: 21 / 9;
-    }
-
-    .cat-card {
-      position: relative;
-      aspect-ratio: 3 / 4;
-      border-radius: var(--radius-xl);
-      overflow: hidden;
-      cursor: pointer;
-      display: block;
-      border: 1px solid var(--border);
-      transition: transform .3s ease, border-color .3s ease;
-        min-width: 360px;
-  flex: 0 0 auto;
-  scroll-snap-align: start;
-    }
-    .cat-card:hover { transform: translateY(-6px); border-color: rgba(124,58,237,.4); }
-
-    .cat-bg {
-      position: absolute; inset: 0;
-      background: var(--bg-card);
-      transition: transform .5s cubic-bezier(.25,.46,.45,.94);
-    }
-    .cat-card:hover .cat-bg { transform: scale(1.06); }
-    .cat-bg img {
-      width: 100%; height: 100%;
-      object-fit: cover; object-position: center;
-    }
-    .cat-card:hover .cat-bg img { opacity: .7; }
-
-    .cat-overlay {
-      position: absolute; inset: 0;
-      background: linear-gradient(
-        to top,
-        rgba(10,15,26,0.92) 0%,
-        rgba(10,15,26,0.5) 40%,
-        rgba(10,15,26,0.1) 100%
-      );
-    }
-
-    .cat-content {
-      position: absolute; inset: 0;
-      display: flex; flex-direction: column;
-      justify-content: flex-end;
-      padding: 1.75rem 2rem;
-      z-index: 2;
-    }
-    .cat-eyebrow {
-      font-size: .58rem; font-weight: 700; letter-spacing: .16em;
-      text-transform: uppercase; color: var(--accent);
-      margin-bottom: .4rem; opacity: .85;
-    }
-    .cat-name {
-      font-family: var(--font-display);
-      font-size: 2rem; font-weight: 700;
-      color: var(--text); line-height: 1.1;
-      letter-spacing: -.01em;
-      transform: translateY(4px);
-      transition: transform .3s ease;
-    }
-    .cat-card:hover .cat-name { transform: translateY(0); }
-
-    .cat-meta {
-      display: flex; align-items: center; gap: .6rem;
-      margin-top: .6rem;
-      transform: translateY(8px); opacity: 0;
-      transition: transform .3s .05s ease, opacity .3s .05s ease;
-    }
-    .cat-card:hover .cat-meta { transform: translateY(0); opacity: 1; }
-    .cat-count { font-size: .72rem; color: var(--text-muted); }
-    .cat-arrow {
-      width: 28px; height: 28px; border-radius: 50%;
-      background: rgba(124,58,237,.25); border: 1px solid rgba(124,58,237,.4);
-      display: flex; align-items: center; justify-content: center;
-      margin-left: auto;
-    }
-    .cat-arrow i { font-size: .75rem; color: #a78bfa; }
-
-    .cat-badge {
-      position: absolute; top: 1.1rem; right: 1.1rem; z-index: 3;
-      background: rgba(10,15,26,.7); backdrop-filter: blur(8px);
-      border: 1px solid var(--border);
-      font-size: .62rem; font-weight: 700; letter-spacing: .06em;
-      text-transform: uppercase; color: var(--text-muted);
-      padding: 4px 10px; border-radius: 99px;
-    }
-
-    .grad-1 { background: linear-gradient(135deg, #1a0a3d 0%, #0a0f1a 100%); }
-    .grad-2 { background: linear-gradient(135deg, #0a1f1a 0%, #0a0f1a 100%); }
-    .grad-3 { background: linear-gradient(135deg, #1f0a0a 0%, #0a0f1a 100%); }
-    .grad-4 { background: linear-gradient(135deg, #0a1020 0%, #1a1a2e 100%); }
-    .grad-5 { background: linear-gradient(135deg, #1a1500 0%, #0a0f1a 100%); }
-
-
-    @media (max-width: 768px) {
-      .cat-grid { grid-template-columns: 1fr; }
-      .cat-card { height: 180px; }
-      .categories-section { padding: 2rem 1.25rem 3rem; }
-      .hero { padding: 5rem 1.25rem 2.5rem; }
-    }
-  </style>
-
-<!-- your content -->
-<!-- HERO -->
-<section class="hero">
-  <span class="hero-eyebrow">Our Collections</span>
-  <h1 class="hero-title">Find Your <em>Identity</em></h1>
-  <p class="hero-sub">
-    Curated drops across every style. From old money classics to retro jerseys —
-    discover the collection that speaks your language.
+<!-- HERO SECTION -->
+<section class="relative overflow-hidden px-5 py-16 md:py-24 text-center bg-[#0a0f1a]">
+  <!-- Decorative background elements -->
+  <div class="absolute inset-0 pointer-events-none" style="background-image: radial-gradient(circle at 20% 50%, rgba(124,58,237,.06) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(16,185,129,.04) 0%, transparent 40%);"></div>
+  
+  <span class="block text-[10px] font-bold tracking-[0.2em] uppercase text-[#10b981] mb-4 animate-[fadeUp_0.6s_ease_both]">Our Collections</span>
+  <h1 class="font-['Cormorant_Garamond'] text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-white tracking-tight mb-5 animate-[fadeUp_0.6s_0.1s_ease_both]">Find Your <em class="italic text-white/60">Identity</em></h1>
+  <p class="text-sm md:text-base text-gray-400 max-w-lg mx-auto leading-relaxed animate-[fadeUp_0.6s_0.2s_ease_both]">
+    Curated drops across every style. From old money classics to retro jerseys — discover the collection that speaks your language.
   </p>
 </section>
 
-<!-- CATEGORY GRID -->
-<section class="categories-section">
-  <div class="cat-grid">
+<!-- CATEGORIES GRID SECTION -->
+<section class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+  
+  <!-- Responsive Grid: 1 col on ultra-small mobile, but generally 2 cols on mobile, 3 on tablet, 4 on desktop -->
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
 
     {% for category in categories %}
-    <a href="{% url 'user_product_list' %}?category={{ category.id }}"
-       class="cat-card">
-
-      <!-- Background image or gradient -->
-      <div class="cat-bg {% if not category.image %}grad-{{ forloop.counter|add:0 }}{% endif %}">
+    <a href="{% url 'user_product_list' %}?category={{ category.id }}" class="group relative block rounded-2xl md:rounded-3xl overflow-hidden bg-[#111827] border border-white/5 shadow-xl hover:shadow-[0_20px_40px_rgba(0,0,0,0.6)] transition-all duration-500 hover:-translate-y-2">
+      
+      <!-- Premium Aspect Ratio (Portrait for fashion) -->
+      <div class="relative aspect-[3/4] w-full overflow-hidden">
+        
+        <!-- Image -->
         {% if category.image %}
-          <img src="{{ category.image.url }}" alt="{{ category.category_name }}" loading="lazy"/>
+          <img src="{{ category.image.url }}" alt="{{ category.category_name }}" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"/>
+        {% else %}
+          <div class="w-full h-full bg-gradient-to-br from-[#1a1a2e] to-[#0a0f1a] transition-transform duration-700 ease-out group-hover:scale-110"></div>
         {% endif %}
-      </div>
+        
+        <!-- Gradient Overlay (Darkens the bottom so white text is readable) -->
+        <div class="absolute inset-0 bg-gradient-to-t from-[#05080f] via-[#05080f]/50 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500"></div>
 
-      <!-- Overlay -->
-      <div class="cat-overlay"></div>
+        <!-- Optional: Product Count Badge -->
+        {% if category.product_count %}
+        <div class="absolute top-4 right-4 bg-black/40 backdrop-blur-md border border-white/10 text-white text-[9px] font-bold tracking-widest uppercase px-3 py-1.5 rounded-full z-10 transition-colors group-hover:border-[#10b981]/50">
+          {{ category.product_count }} styles
+        </div>
+        {% endif %}
 
-      <!-- Product count badge -->
-      {% if category.product_count %}
-      <div class="cat-badge">{{ category.product_count }} styles</div>
-      {% endif %}
-
-      <!-- Content -->
-      <div class="cat-content">
-        <div class="cat-eyebrow">Collection</div>
-        <div class="cat-name">{{ category.category_name }}</div>
-        <div class="cat-meta">
-          {% if category.product_count %}
-          <span class="cat-count">{{ category.product_count }} products</span>
-          {% endif %}
-          <div class="cat-arrow">
-            <span class="material-icons-outlined">arrow_forward</span>
+        <!-- Content Overlay at Bottom -->
+        <div class="absolute bottom-0 left-0 w-full p-5 md:p-6 flex flex-col justify-end z-20">
+          <span class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#10b981] mb-1.5 opacity-80 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">Collection</span>
+          
+          <div class="flex items-end justify-between">
+            <h3 class="font-['Cormorant_Garamond'] text-2xl md:text-3xl font-bold text-white leading-none transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300 delay-75">
+              {{ category.category_name }}
+            </h3>
+            
+            <!-- Elegant Arrow -->
+            <div class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 delay-100">
+              <i class="fa-solid fa-arrow-right text-white text-xs"></i>
+            </div>
           </div>
         </div>
+
       </div>
 
     </a>
     {% empty %}
-    <div style="grid-column:1/-1;text-align:center;padding:4rem;color:var(--text-muted);">
-      <span class="material-icons-outlined" style="font-size:2.5rem;display:block;margin-bottom:.75rem;color:var(--text-sub);">category</span>
-      No collections available yet.
+    <!-- Empty State -->
+    <div class="col-span-full text-center py-20 bg-[#111827] rounded-3xl border border-white/10">
+      <span class="material-icons-outlined text-5xl text-gray-600 mb-4 block">category</span>
+      <p class="text-gray-400 text-lg">No collections available yet.</p>
     </div>
     {% endfor %}
 
   </div>
 </section>
 
-
-
-<script>
-
-</script>
+<style>
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
 
 {% endblock %}

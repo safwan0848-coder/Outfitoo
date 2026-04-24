@@ -38,8 +38,12 @@
         <!-- Results dropdown -->
         <div id="desktop-search-results"
              class="absolute top-[calc(100%+12px)] right-0 w-[360px] bg-[#0d1117]/98 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.7)]
-                    opacity-0 pointer-events-none scale-95 transition-all duration-300 origin-top-right overflow-hidden z-[9999]">
-          <div id="desktop-search-content" class="overflow-y-auto max-h-[380px] p-3"></div>
+                    opacity-0 pointer-events-none scale-95 transition-all duration-300 origin-top-right overflow-hidden z-[9999]"
+             style="max-height: 420px; display:flex; flex-direction:column;">
+          <!-- Scrollable list -->
+          <div id="desktop-search-content" class="overflow-y-auto flex-1" style="max-height:360px;"></div>
+          <!-- Sticky See All Results (injected by JS when has_more) -->
+          <div id="desktop-search-footer" style="display:none; flex-shrink:0;"></div>
         </div>
       </div>
 
@@ -170,15 +174,18 @@
   <div class="flex-1 overflow-y-auto px-5 py-7 flex flex-col gap-8">
 
     <!-- Search -->
-    <div class="relative">
+      <div class="relative">
       <div class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 focus-within:border-emerald-500/60 transition-all duration-300">
         <i class="fa-solid fa-magnifying-glass text-emerald-500 text-sm shrink-0"></i>
         <input id="mobile-search-input" type="text" placeholder="Search the collection…" autocomplete="off"
                class="bg-transparent text-sm text-white w-full focus:outline-none placeholder-gray-600">
       </div>
-      <div id="mobile-search-results"
+      <div id="mobile-search-results-wrapper"
            class="absolute top-[calc(100%+8px)] w-full bg-[#111827] border border-white/10 rounded-2xl shadow-2xl
-                  opacity-0 pointer-events-none transition-all duration-200 overflow-hidden z-[99] max-h-72 overflow-y-auto">
+                  opacity-0 pointer-events-none transition-all duration-200 overflow-hidden z-[99]"
+           style="max-height:320px; display:flex; flex-direction:column;">
+        <div id="mobile-search-results" class="overflow-y-auto flex-1" style="max-height:270px;"></div>
+        <div id="mobile-search-footer" style="display:none; flex-shrink:0;"></div>
       </div>
     </div>
 
@@ -240,35 +247,36 @@
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════ -->
-<!--  MOBILE TOP PILL — light cream style matching image            -->
+<!--  MOBILE BOTTOM PILL — floating bottom nav                      -->
 <!-- ════════════════════════════════════════════════════════════════ -->
-<div id="bottomPill" class="fixed top-24 left-1/2 -translate-x-1/2 z-[99999]" style="width:94%;max-width:420px">
+<div id="bottomPill" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[99999]" style="width:92%;max-width:400px">
   <div style="
-    background: rgba(255,253,250,0.9);
-    backdrop-filter: blur(28px) saturate(200%);
-    -webkit-backdrop-filter: blur(28px) saturate(200%);
+    background: rgba(255,253,250,0.93);
+    backdrop-filter: blur(32px) saturate(200%);
+    -webkit-backdrop-filter: blur(32px) saturate(200%);
     border: 1.5px solid rgba(210,200,190,0.5);
     border-radius: 9999px;
-    box-shadow: 0 15px 60px rgba(0,0,0,0.25), 0 4px 15px rgba(0,0,0,0.1);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 8px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.35), 0 2px 12px rgba(0,0,0,0.15);
+    display: flex; align-items: center; justify-content: space-around;
+    padding: 8px 4px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
   ">
 
     <!-- HOME -->
     <a href="/" class="pill-btn {% if request.resolver_match.url_name == 'landing' %}pill-active{% endif %}">
-      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/>
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
-      <span>HOME</span>
+      <span>Home</span>
     </a>
 
     <!-- SEARCH -->
     <button onclick="openMobileMenu(true)" class="pill-btn">
-      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
-      <span>SEARCH</span>
+      <span>Search</span>
     </button>
 
     <!-- WISHLIST -->
@@ -277,22 +285,22 @@
     {% else %}
       <a href="{% url 'login' %}?next={{ request.path }}" class="pill-btn" style="position:relative">
     {% endif %}
-      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
         <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
       </svg>
       {% if wishlist_count > 0 %}
-        <span style="position:absolute;top:2px;right:calc(50% - 18px);background:#059669;color:#fff;font-size:7px;font-weight:900;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px rgba(255,253,250,0.95)">{{ wishlist_count }}</span>
+        <span style="position:absolute;top:0;right:calc(50% - 20px);background:#059669;color:#fff;font-size:7px;font-weight:900;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px rgba(255,253,250,0.93)">{{ wishlist_count }}</span>
       {% endif %}
-      <span>WISHLIST</span>
+      <span>Wishlist</span>
     </a>
 
     <!-- ACCOUNT -->
     <button onclick="openMobileMenu()" class="pill-btn">
-      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
         <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
         <circle cx="12" cy="7" r="4"/>
       </svg>
-      <span>ACCOUNT</span>
+      <span>Account</span>
     </button>
 
     <!-- BAG -->
@@ -301,15 +309,15 @@
     {% else %}
       <a href="{% url 'login' %}?next={{ request.path }}" class="pill-btn" style="position:relative">
     {% endif %}
-      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
         <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
         <line x1="3" y1="6" x2="21" y2="6"/>
         <path d="M16 10a4 4 0 01-8 0"/>
       </svg>
       {% if cart_count > 0 %}
-        <span style="position:absolute;top:2px;right:calc(50% - 20px);background:#059669;color:#fff;font-size:7px;font-weight:900;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px rgba(255,253,250,0.95)">{{ cart_count }}</span>
+        <span style="position:absolute;top:0;right:calc(50% - 20px);background:#059669;color:#fff;font-size:7px;font-weight:900;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px rgba(255,253,250,0.93)">{{ cart_count }}</span>
       {% endif %}
-      <span>BAG</span>
+      <span>Bag</span>
     </a>
 
   </div>
@@ -364,12 +372,12 @@
   button.menu-open .hamburger-icon span:nth-child(2) { opacity: 0; width: 100%; }
   button.menu-open .hamburger-icon span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); width: 100%; }
 
-  /* ── Hide hamburger on desktop, show only on mobile ── */
+  /* ── Hide hamburger on desktop, pill on desktop ── */
   @media (min-width: 1024px) {
     .hamburger-btn { display: none !important; }
     #bottomPill    { display: none !important; }
   }
-  /* Show top pill only below 1024px */
+  /* Mobile: show pill and hamburger */
   @media (max-width: 1023px) {
     .hamburger-btn { display: flex !important; }
     #bottomPill    { display: block !important; }
@@ -425,9 +433,10 @@
   /* ── Bottom pill buttons ────────────────── */
   .pill-btn {
     display: flex; flex-direction: column; align-items: center;
-    gap: 3px; flex: 1; padding: 6px 2px;
-    color: #7c6f65;
-    font-size: 9px; font-weight: 900; letter-spacing: 0.05em; font-family: inherit;
+    gap: 4px; flex: 1; padding: 6px 4px;
+    color: #8b7e75;
+    font-size: 8px; font-weight: 900; letter-spacing: 0.04em; font-family: inherit;
+    text-transform: uppercase;
     transition: color 0.18s, transform 0.18s;
     border: none; background: none; cursor: pointer; text-decoration: none;
     -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none;
@@ -506,49 +515,74 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* ── AJAX Search ──────────────────────────────────── */
-  const setupSearch = (inputId, resultsId) => {
-    const input   = document.getElementById(inputId);
-    const results = document.getElementById(resultsId);
-    if (!input || !results) return;
+  const setupSearch = (inputId, resultsWrapperId, contentId, footerId) => {
+    const input      = document.getElementById(inputId);
+    const resultsBox = document.getElementById(resultsWrapperId);
+    const content    = document.getElementById(contentId);
+    const footer     = footerId ? document.getElementById(footerId) : null;
+    if (!input || !resultsBox || !content) return;
     let timer;
-    input.addEventListener("input", () => {
+
+    const hide = () => {
+      resultsBox.classList.remove('dropdown-show');
+      content.innerHTML = '';
+      if (footer) { footer.style.display = 'none'; footer.innerHTML = ''; }
+    };
+
+    input.addEventListener('input', () => {
       const q = input.value.trim();
       clearTimeout(timer);
-      if (q.length < 2) {
-        results.classList.remove("dropdown-show");
-        results.innerHTML = "";
-        return;
-      }
+      if (q.length < 2) { hide(); return; }
+
       timer = setTimeout(async () => {
-        results.classList.add("dropdown-show");
-        results.innerHTML = '<div style="padding:24px;text-align:center"><i class="fa-solid fa-circle-notch fa-spin" style="color:#10b981;font-size:18px"></i></div>';
+        resultsBox.classList.add('dropdown-show');
+        content.innerHTML = '<div style="padding:24px;text-align:center"><i class="fa-solid fa-circle-notch fa-spin" style="color:#10b981;font-size:18px"></i></div>';
+        if (footer) { footer.style.display = 'none'; footer.innerHTML = ''; }
+
         try {
-          const { products } = await (await fetch(`/products/ajax/search/?q=${encodeURIComponent(q)}`)).json();
+          const data = await (await fetch(`/products/ajax/search/?q=${encodeURIComponent(q)}`)).json();
+          const { products, has_more, query } = data;
+
           if (!products?.length) {
-            results.innerHTML = `<div style="padding:20px;text-align:center;font-size:12px;color:#6b7280">No results for "<strong style="color:#fff">${q}</strong>"</div>`;
+            content.innerHTML = `<div style="padding:20px;text-align:center;font-size:12px;color:#6b7280">No results for "<strong style="color:#fff">${q}</strong>"</div>`;
             return;
           }
-          results.innerHTML = products.map(p => `
-            <a href="${p.url}" style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.2s;text-decoration:none"
-               onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background=''">
-              <img src="${p.image_url||'/static/images/placeholder.png'}" style="width:48px;height:48px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.08);flex-shrink:0">
-              <div>
-                <div style="font-size:13px;font-weight:700;color:#fff">${p.name}</div>
-                <div style="font-size:12px;font-weight:700;color:#10b981;margin-top:2px">&#8377;${p.price}</div>
+
+          content.innerHTML = products.map(p => `
+            <a href="${p.url}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.2s;text-decoration:none"
+               onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+              <img src="${p.image_url||'/static/images/placeholder.png'}" style="width:48px;height:52px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.08);flex-shrink:0" loading="lazy">
+              <div style="min-width:0;flex:1;">
+                <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+                <div style="font-size:12px;font-weight:700;color:#10b981;margin-top:3px">&#8377;${p.price}</div>
               </div>
             </a>`).join('');
+
+          if (has_more && footer) {
+            footer.style.display = 'block';
+            footer.innerHTML = `
+              <a href="/products/?q=${encodeURIComponent(query)}"
+                 style="display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 14px;
+                        font-size:12px;font-weight:800;color:#10b981;text-transform:uppercase;letter-spacing:1.5px;
+                        text-decoration:none;border-top:1px solid rgba(255,255,255,0.07);
+                        background:rgba(16,185,129,0.04);transition:background 0.2s"
+                 onmouseover="this.style.background='rgba(16,185,129,0.1)'" onmouseout="this.style.background='rgba(16,185,129,0.04)'">
+                See all results&nbsp;<i class="fa-solid fa-arrow-right" style="font-size:10px"></i>
+              </a>`;
+          }
         } catch {
-          results.innerHTML = '<div style="padding:20px;text-align:center;font-size:12px;color:#6b7280">Something went wrong</div>';
+          content.innerHTML = '<div style="padding:20px;text-align:center;font-size:12px;color:#6b7280">Something went wrong</div>';
         }
-      }, 280);
+      }, 300);
     });
-    document.addEventListener("click", e => {
-      if (!input.contains(e.target) && !results.contains(e.target))
-        results.classList.remove("dropdown-show");
+
+    document.addEventListener('click', e => {
+      if (!input.closest('div').contains(e.target) && !resultsBox.contains(e.target))
+        hide();
     });
   };
 
-  setupSearch("desktop-search-input", "desktop-search-content");
-  setupSearch("mobile-search-input",  "mobile-search-results");
+  setupSearch('desktop-search-input', 'desktop-search-results', 'desktop-search-content', 'desktop-search-footer');
+  setupSearch('mobile-search-input',  'mobile-search-results-wrapper', 'mobile-search-results', 'mobile-search-footer');
 });
 </script>
