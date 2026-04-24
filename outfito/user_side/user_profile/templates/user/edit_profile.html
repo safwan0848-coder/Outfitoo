@@ -1,513 +1,125 @@
+{% extends 'dashboard_base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>OUTFITO • Edit Profile</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
-
-<style>
-
-:root{
---bg:#06080f;
---card:#0f172a;
---accent:#10b981;
---accent2:#3b82f6;
---border:#1f2937;
---muted:#6b7280;
-}
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
-
-body{
-font-family:'Inter',sans-serif;
-background:
-radial-gradient(circle at 80% 20%,#0f172a,transparent 40%),
-radial-gradient(circle at 20% 80%,#111827,transparent 40%),
-var(--bg);
-color:white;
-min-height:100vh;
-display:flex;
-flex-direction:column;
-}
-
-/* HEADER */
-
-.header{
-height:70px;
-border-bottom:1px solid var(--border);
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 40px;
-backdrop-filter:blur(10px);
-}
-
-.brand{
-font-family:'Playfair Display',serif;
-font-size:1.4rem;
-letter-spacing:6px;
-background:linear-gradient(90deg,#fff,var(--accent));
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
-font-weight:700;
-}
-
-/* MAIN */
-
-.main{
-flex:1;
-padding:40px 0;
-}
-
-.layout{
-display:grid;
-grid-template-columns:260px 1fr;
-gap:40px;
-}
-
-/* SIDEBAR */
-
-.sidebar{
-padding:10px;
-}
-
-.nav-item{
-display:flex;
-align-items:center;
-gap:12px;
-padding:12px 18px;
-border-radius:14px;
-color:var(--muted);
-text-decoration:none;
-transition:0.25s;
-font-size:14px;
-margin-bottom:6px;
-}
-
-.nav-item span{
-font-size:20px;
-}
-
-.nav-item:hover{
-background:rgba(255,255,255,.05);
-color:#fff;
-transform:translateX(5px);
-}
-
-.nav-item.active{
-background:rgba(16,185,129,.15);
-color:var(--accent);
-border-right:3px solid var(--accent);
-}
-
-/* PROFILE CARD */
-
-.profile-card{
-background:rgba(15,23,42,.85);
-border:1px solid var(--border);
-border-radius:26px;
-padding:50px;
-backdrop-filter:blur(20px);
-box-shadow:0 40px 70px rgba(0,0,0,.7);
-max-width:800px;
-margin:auto;
-}
-
-/* HEADER */
-
-.profile-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-flex-wrap:wrap;
-gap:15px;
-margin-bottom:25px;
-}
-
-.profile-header h1{
-font-family:'Playfair Display',serif;
-font-size:2rem;
-}
-
-.profile-header p{
-font-size:13px;
-color:var(--muted);
-}
-
-/* AVATAR */
-
-.avatar-wrap{
-width:120px;
-height:120px;
-margin:auto;
-margin-bottom:25px;
-position:relative;
-cursor:pointer;
-}
-
-.avatar-ring{
-position:absolute;
-inset:-3px;
-border-radius:50%;
-background:linear-gradient(135deg,var(--accent),var(--accent2));
-filter:blur(6px);
-opacity:.6;
-}
-
-.avatar{
-width:100%;
-height:100%;
-border-radius:50%;
-background:var(--bg);
-display:flex;
-align-items:center;
-justify-content:center;
-overflow:hidden;
-position:relative;
-}
-
-.avatar img{
-width:100%;
-height:100%;
-object-fit:cover;
-}
-
-.avatar span{
-font-size:40px;
-color:var(--muted);
-}
-
-.avatar-overlay{
-position:absolute;
-inset:0;
-background:rgba(0,0,0,.45);
-display:flex;
-align-items:center;
-justify-content:center;
-opacity:0;
-transition:.3s;
-}
-
-.avatar-wrap:hover .avatar-overlay{
-opacity:1;
-}
-
-/* FORM */
-
-.form-area{
-margin-top:20px;
-}
-
-.field-label{
-font-size:.65rem;
-letter-spacing:1px;
-text-transform:uppercase;
-color:var(--muted);
-margin-bottom:4px;
-}
-
-.field{
-display:flex;
-align-items:center;
-gap:12px;
-background:rgba(255,255,255,.02);
-border:1px solid var(--border);
-border-radius:16px;
-padding:12px 18px;
-margin-bottom:18px;
-}
-
-.field input{
-background:transparent;
-border:none;
-outline:none;
-color:white;
-width:100%;
-font-size:14px;
-}
-
-/* BUTTONS */
-
-.actions{
-margin-top:30px;
-display:flex;
-gap:12px;
-flex-wrap:wrap;
-}
-
-.btn-premium{
-background:#fff;
-color:#000;
-border:none;
-padding:12px 26px;
-border-radius:14px;
-font-weight:700;
-font-size:12px;
-letter-spacing:1px;
-text-transform:uppercase;
-display:flex;
-align-items:center;
-gap:6px;
-transition:.25s;
-}
-
-.btn-premium:hover{
-background:var(--accent);
-transform:translateY(-3px);
-box-shadow:0 10px 25px rgba(16,185,129,.35);
-}
-
-.btn-ghost{
-border:1px solid var(--border);
-background:transparent;
-color:white;
-padding:12px 26px;
-border-radius:14px;
-font-weight:600;
-font-size:12px;
-text-transform:uppercase;
-}
-
-.btn-ghost:hover{
-border-color:#fff;
-background:rgba(255,255,255,.05);
-}
-
-/* MESSAGES */
-
-.error-msg{
-font-size:12px;
-color:#ff4d4d;
-margin-bottom:12px;
-text-align:center;
-}
-
-.success-msg{
-font-size:12px;
-color:#22c55e;
-margin-bottom:12px;
-text-align:center;
-}
-
-.warning-msg{
-font-size:12px;
-color:#facc15;
-margin-bottom:12px;
-text-align:center;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<div class="header">
-<div class="brand">OUTFITO</div>
-</div>
-
-<div class="main">
-
-<div class="container-xl layout">
-
-<div class="sidebar">
-
-<a href="{% url 'profile' %}" class="nav-item">
-<span class="material-symbols-outlined">person</span>Profile
-</a>
-
-<a href="{% url 'address-list' %}" class="nav-item">
-<span class="material-symbols-outlined">location_on</span>Address
-</a>
-
-<a href="{% url 'order_list' %}" class="nav-item">
-<span class="material-symbols-outlined">package_2</span>Orders
-</a>
-
-<a href="{% url 'wishlist' %}" class="nav-item">
-<span class="material-symbols-outlined">favorite</span>Wishlist
-</a>
-
-<a href="{% url 'wallet' %}" class="nav-item">
-<span class="material-symbols-outlined">account_balance_wallet</span>Wallet
-</a>
-
-</div>
-
-<div>
-
-<form method="POST"
-action="{% url 'edit-profile' %}"
-enctype="multipart/form-data"
-class="profile-card">
-
-{% csrf_token %}
-
-{% if error %}
-<div class="error-msg">{{ error }}</div>
-{% endif %}
-
-{% if messages %}
-    {% for message in messages %}
+{% block dashboard_content %}
+<div class="max-w-4xl mx-auto pb-10">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-2xl font-['Playfair_Display'] font-bold text-white mb-2">Edit Profile</h1>
+    <p class="text-[0.8rem] text-gray-500">Update your account details and preferences.</p>
+  </div>
+
+  <form method="POST" action="{% url 'edit-profile' %}" enctype="multipart/form-data" class="bg-[#0b101e] border border-white/5 rounded-xl p-6 sm:p-10 shadow-sm">
+    {% csrf_token %}
+
+    <!-- Messages -->
+    {% if error %}
+    <div class="bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-lg text-center mb-6 error-msg">
+      {{ error }}
+    </div>
+    {% endif %}
+
+    {% if messages %}
+      {% for message in messages %}
         {% if forloop.last %}
-            <div class="{% if message.tags == 'error' %}error-msg{% elif message.tags == 'success' %}success-msg{% else %}warning-msg{% endif %}">
-                {{ message }}
-            </div>
+          <div class="p-3 rounded-lg text-sm text-center mb-6 {% if message.tags == 'error' %}bg-red-500/10 border border-red-500/20 text-red-400{% elif message.tags == 'success' %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-400{% else %}bg-white/5 border border-white/10 text-gray-300{% endif %} temp-msg">
+            {{ message }}
+          </div>
         {% endif %}
-    {% endfor %}
-{% endif %}
+      {% endfor %}
+    {% endif %}
 
-<div class="profile-header">
+    <!-- Avatar Upload -->
+    <div class="flex flex-col items-center mb-10">
+      <label for="imageUpload" class="relative cursor-pointer group">
+        <div class="relative w-24 h-24 rounded-full overflow-hidden bg-[#06080f] border border-white/10 flex items-center justify-center transition-opacity hover:opacity-80">
+          {% if profile.profile_image %}
+            <img src="{{ profile.profile_image.url }}" id="pfp-preview" class="w-full h-full object-cover">
+          {% elif profile.google_image %}
+            <img src="{{ profile.google_image }}" id="pfp-preview" class="w-full h-full object-cover">
+          {% else %}
+            <img src="{% static 'images/default_user.png' %}" id="pfp-preview" class="w-full h-full object-cover">
+          {% endif %}
+          
+          <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <span class="material-symbols-outlined text-white text-2xl">photo_camera</span>
+          </div>
+        </div>
+      </label>
+      <input type="file" name="profile_image" id="imageUpload" class="hidden" accept="image/*">
+      <span class="text-[0.65rem] text-gray-500 mt-3 uppercase tracking-widest font-semibold">Change Photo</span>
+    </div>
 
-<div>
-<h1>Edit Profile</h1>
-<p>Update your account details</p>
-</div>
+    <!-- Form Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      
+      <!-- Username -->
+      <div>
+        <label class="block text-[0.65rem] uppercase tracking-widest font-semibold text-gray-500 mb-2 pl-1">Username</label>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">person</span>
+          <input type="text" name="username" value="{{ user.username }}" required pattern="^[A-Za-z0-9 ]+$" title="Username can contain letters numbers and spaces" 
+                 class="w-full bg-white/[0.02] border border-white/5 text-gray-300 text-sm rounded-lg py-3 pl-12 pr-4 focus:outline-none focus:border-white/20 transition-colors">
+        </div>
+      </div>
 
-<div class="actions">
+      <!-- Phone -->
+      <div>
+        <label class="block text-[0.65rem] uppercase tracking-widest font-semibold text-gray-500 mb-2 pl-1">Phone Number</label>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">call</span>
+          <input type="text" name="phone" value="{{ profile.phone|default:'' }}" pattern="^[0-9]{10}$" title="Enter a valid 10 digit phone number"
+                 class="w-full bg-white/[0.02] border border-white/5 text-gray-300 text-sm rounded-lg py-3 pl-12 pr-4 focus:outline-none focus:border-white/20 transition-colors">
+        </div>
+      </div>
 
-<a href="{% url 'profile' %}" class="btn-ghost">Cancel</a>
+      <!-- Email (Full width via col-span-2 or just another row) -->
+      <div class="md:col-span-2">
+        <label class="block text-[0.65rem] uppercase tracking-widest font-semibold text-gray-500 mb-2 pl-1">Email Address</label>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">mail</span>
+          {% if profile.google_image %}
+            <input type="email" value="{{ user.email }}" disabled class="w-full bg-black/20 border border-white/5 text-gray-600 text-sm rounded-lg py-3 pl-12 pr-4 cursor-not-allowed">
+            <input type="hidden" name="email" value="{{ user.email }}">
+          {% else %}
+            <input type="email" name="email" value="{{ user.email }}" required class="w-full bg-white/[0.02] border border-white/5 text-gray-300 text-sm rounded-lg py-3 pl-12 pr-4 focus:outline-none focus:border-white/20 transition-colors">
+          {% endif %}
+        </div>
+      </div>
 
-<button type="submit" class="btn-premium">
-<span class="material-symbols-outlined">save</span>
-Save
-</button>
+    </div>
 
-</div>
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-3 mt-10 pt-6 border-t border-white/5">
+      <a href="{% url 'profile' %}" class="px-5 py-2.5 rounded-lg border border-white/10 text-gray-400 text-xs font-semibold uppercase tracking-wider hover:bg-white/5 transition-colors">Cancel</a>
+      <button type="submit" class="px-5 py-2.5 rounded-lg bg-white/10 border border-white/5 text-white text-xs font-semibold uppercase tracking-wider hover:bg-white/20 active:scale-95 transition-all flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm">save</span> Save
+      </button>
+    </div>
 
-</div>
-
-<label for="imageUpload" class="avatar-wrap">
-
-<div class="avatar-ring"></div>
-
-<div class="avatar">
-
-{% if profile.profile_image %}
-<img src="{{ profile.profile_image.url }}" id="pfp-preview">
-
-{% elif profile.google_image %}
-<img src="{{ profile.google_image }}" id="pfp-preview">
-
-{% else %}
-<img src="{% static 'images/default_user.png' %}" id="pfp-preview">
-{% endif %}
-
-<div class="avatar-overlay">
-<span class="material-symbols-outlined">photo_camera</span>
-</div>
-
-</div>
-
-</label>
-
-<input type="file"
-name="profile_image"
-id="imageUpload"
-hidden
-accept="image/*">
-
-<div class="form-area">
-
-<div class="row">
-
-<div class="col-md-6">
-
-<div class="field-label">Username</div>
-
-<div class="field">
-<span class="material-symbols-outlined">person</span>
-<input type="text"
-name="username"
-value="{{ user.username }}"
-required
-pattern="^[A-Za-z0-9 ]+$"
-title="Username can contain letters numbers and spaces">
-</div>
-
-</div>
-
-<div class="col-md-6">
-
-<div class="field-label">Phone</div>
-
-<div class="field">
-<span class="material-symbols-outlined">call</span>
-<input type="text"
-name="phone"
-value="{{ profile.phone }}"
-pattern="^[0-9]{10}$"
-title="Enter a valid 10 digit phone number">
-</div>
-
-</div>
-
-</div>
-
-<div class="field-label">Email Address</div>
-
-<div class="field">
-
-<span class="material-symbols-outlined">mail</span>
-
-{% if profile.google_image %}
-<input type="email" value="{{ user.email }}" disabled>
-<input type="hidden" name="email" value="{{ user.email }}">
-{% else %}
-<input type="email" name="email" value="{{ user.email }}" required>
-{% endif %}
-
-</div>
-
-</div>
-
-</form>
-
-</div>
-
-</div>
-
-</div>
-
+  </form>
 </div>
 
 <script>
+// Auto-dismiss messages
 setTimeout(() => {
-    document.querySelectorAll('.error-text, .success-text, .warning-text')
-    .forEach(el => {
-        el.style.opacity = "0";
-        setTimeout(() => el.remove(), 400);
-    });
+  document.querySelectorAll('.error-msg, .temp-msg').forEach(el => {
+    el.style.transition = 'opacity 0.5s';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 500);
+  });
 }, 3000);
-const imageInput=document.getElementById("imageUpload");
 
-imageInput.addEventListener("change",function(e){
-
-const reader=new FileReader();
-
-reader.onload=function(){
-document.getElementById("pfp-preview").src=reader.result;
-};
-
-reader.readAsDataURL(e.target.files[0]);
-
+// Image Preview
+document.getElementById("imageUpload")?.addEventListener("change", function(e) {
+  if(e.target.files && e.target.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function() {
+      document.getElementById("pfp-preview").src = reader.result;
+    };
+    reader.readAsDataURL(e.target.files[0]);
+  }
 });
-
 </script>
-
-</body>
-</html>
+{% endblock %}
