@@ -676,37 +676,7 @@
     .s-price { font-size: .7rem; color: var(--accent-light); margin-top: 1px; }
     .s-empty { padding: 14px; font-size: .8rem; color: var(--sub); text-align: center; }
 
-    /* ══ TOAST ══ */
-    .toast-wrap {
-        position: fixed; top: 80px; right: 16px;
-        z-index: 9999; display: flex; flex-direction: column; gap: 10px;
-        /* FIX: max-width so toast doesn't stretch across the full mobile screen */
-        max-width: calc(100vw - 32px);
-    }
-    .toast-item {
-        position: relative; display: flex; align-items: center; gap: 10px;
-        /* FIX: min-width replaced with width: 100% + max-width cap for mobile */
-        width: 100%; max-width: 320px;
-        padding: 12px 16px; border-radius: 10px;
-        font-size: 13px; color: #fff; background: rgba(16,185,129,0.95);
-        box-shadow: 0 10px 25px rgba(0,0,0,.4); animation: slideIn 0.3s ease; overflow: hidden;
-    }
-    .toast-close {
-        margin-left: auto; cursor: pointer; font-weight: bold;
-        /* FIX: tap target */
-        padding: 4px; flex-shrink: 0;
-    }
-    .toast-progress {
-        position: absolute; bottom: 0; left: 0; height: 3px; width: 100%;
-        background: rgba(255,255,255,0.4); animation: progressBar 3s linear forwards;
-    }
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    @keyframes progressBar {
-        from { width: 100%; } to { width: 0%; }
-    }
+
 </style>
 
 <div class="hero-banner">

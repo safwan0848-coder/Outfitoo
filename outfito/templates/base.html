@@ -87,7 +87,7 @@
 
 <!-- TOAST NOTIFICATION SYSTEM -->
 {% if messages %}
-<div id="toast-container" class="fixed top-[100px] left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-3 pointer-events-none w-[90%] md:w-auto max-w-[380px]">
+<div id="toast-container" class="fixed top-[97px] left-1/2 -translate-x-1/2 md:left-auto md:right-6 md:-translate-x-0 z-[9000] flex flex-col gap-3 pointer-events-none w-[90%] md:w-auto max-w-[380px]">
   {% for message in messages %}
     <div class="toast-message pointer-events-auto flex items-start p-4 rounded-xl shadow-[0_10px_40px_rgb(0,0,0,0.5)] border translate-y-[-100%] opacity-0 transition-all duration-500 backdrop-blur-md
       {% if message.tags == 'success' %}

@@ -5,23 +5,6 @@
 
 {% block content %}
 
-<!-- TOASTS -->
-{% if messages %}
-<div id="toastWrap" class="fixed top-16 right-3 left-3 sm:left-auto sm:right-4 sm:min-w-[300px] z-[999] flex flex-col gap-2">
-  {% for message in messages %}
-  <div class="toast-item flex items-center gap-3 px-5 py-4 rounded-3xl text-sm font-bold shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl border
-    {% if message.tags == 'success' %}bg-emerald-950/90 border-emerald-500/20 text-emerald-50{% else %}bg-red-950/90 border-red-500/20 text-red-50{% endif %}">
-    <span class="material-icons-outlined text-base flex-shrink-0">
-      {% if message.tags == 'success' %}check_circle{% else %}error_outline{% endif %}
-    </span>
-    <span class="leading-snug flex-1">{{ message }}</span>
-    <button onclick="this.closest('.toast-item').remove()" class="opacity-40 hover:opacity-100 transition-opacity ml-1">
-      <span class="material-icons-outlined text-sm">close</span>
-    </button>
-  </div>
-  {% endfor %}
-</div>
-{% endif %}
 
 <!-- BREADCRUMB -->
 <div class="w-full pt-16 sm:pt-24 pb-3 border-b border-white/5 bg-[#080c15]">
