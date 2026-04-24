@@ -239,6 +239,65 @@
           </div>
         </div>
 
+        <!-- PRODUCT ACTIONS (Moved from bottom) -->
+        <div class="flex flex-col gap-4 mb-8">
+          
+          <!-- Quantity & Desktop Wishlist -->
+          <div class="hidden lg:flex gap-4">
+            <div class="flex items-center h-14 bg-white/5 border border-white/10 rounded-2xl overflow-hidden shrink-0 px-2">
+              <button type="button" onclick="changeQty(-1)" class="w-12 h-full text-gray-500 hover:text-white font-black text-xl transition-colors active:scale-90">−</button>
+              <div id="qtyDisplay" class="w-12 text-center font-black text-white text-base">1</div>
+              <button type="button" onclick="changeQty(1)" class="w-12 h-full text-gray-500 hover:text-white font-black text-xl transition-colors active:scale-90">+</button>
+            </div>
+            <form action="{% url 'toggle_wishlist' product.id %}" method="POST" class="flex-1">
+              {% csrf_token %}
+              <button type="submit" class="w-full h-14 flex items-center justify-center rounded-2xl border-2 font-black text-[11px] uppercase tracking-[0.2em] transition-all group active:scale-95
+                {% if in_wishlist %}text-red-500 border-red-500/20 bg-red-500/5 shadow-[0_0_20px_rgba(239,68,68,0.1)]{% else %}text-gray-500 border-white/10 hover:bg-white/5 hover:text-red-500 hover:border-red-500/20{% endif %}">
+                {% if in_wishlist %}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mr-2 transition-transform group-hover:scale-125">
+                  <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+                </svg>
+                In Wishlist
+                {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 mr-2 transition-transform group-hover:scale-125">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                </svg>
+                Add Wishlist
+                {% endif %}
+              </button>
+            </form>
+          </div>
+
+          <!-- Action Buttons -->
+          {% if display_variant and display_variant.stock > 0 %}
+          <div class="flex flex-col sm:flex-row gap-3">
+            <form method="POST" action="{% url 'add_to_cart' display_variant.id %}" class="w-full">
+              {% csrf_token %}
+              <!-- Quantity is hidden on mobile, defaulting to 1 via JS logic or hidden input -->
+              <input type="hidden" name="quantity" class="mobile-qty-input" value="1">
+              <button type="submit" class="w-full py-3 sm:py-4 h-14 bg-white text-[#080c15] rounded-xl font-semibold text-sm tracking-wide hover:bg-emerald-500 hover:text-[#080c15] active:scale-[0.97] transition-all flex items-center justify-center gap-2 shadow-lg">
+                <span class="material-icons-outlined text-lg">shopping_bag</span>Add to Cart
+              </button>
+            </form>
+            <form method="POST" action="{% url 'add_to_cart' display_variant.id %}" class="w-full">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="buy">
+              <input type="hidden" name="quantity" class="mobile-qty-input" value="1">
+              <button type="submit" class="w-full py-3 sm:py-4 h-14 bg-emerald-600 text-white rounded-xl font-semibold text-sm tracking-wide hover:bg-emerald-500 active:scale-[0.97] transition-all flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(16,185,129,0.25)]">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                  <path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd" />
+                </svg>
+                Buy Now
+              </button>
+            </form>
+          </div>
+          {% else %}
+          <div class="w-full h-14 bg-gray-800/50 border border-white/5 text-gray-600 rounded-xl font-semibold flex items-center justify-center gap-2 cursor-not-allowed">
+            <span class="material-icons-outlined text-lg">remove_shopping_cart</span>Out of Stock
+          </div>
+          {% endif %}
+        </div>
+
         <!-- SIZE -->
         <div class="mb-5">
           <div class="flex items-center justify-between mb-3">
@@ -302,97 +361,12 @@
           </div>
         </div>
 
-        <!-- DESKTOP ACTIONS -->
-        <div class="hidden lg:flex flex-col gap-4 mt-4">
-          <div class="flex gap-4">
-            <div class="flex items-center h-14 bg-white/5 border border-white/10 rounded-2xl overflow-hidden shrink-0 px-2">
-              <button type="button" onclick="changeQty(-1)" class="w-12 h-full text-gray-500 hover:text-white font-black text-xl transition-colors active:scale-90">−</button>
-              <div id="qtyDisplay" class="w-12 text-center font-black text-white text-base">1</div>
-              <button type="button" onclick="changeQty(1)" class="w-12 h-full text-gray-500 hover:text-white font-black text-xl transition-colors active:scale-90">+</button>
-            </div>
-            <form action="{% url 'toggle_wishlist' product.id %}" method="POST" class="flex-1">
-              {% csrf_token %}
-              <button type="submit" class="w-full h-14 flex items-center justify-center rounded-2xl border-2 font-black text-[11px] uppercase tracking-[0.2em] transition-all group active:scale-95
-                {% if in_wishlist %}text-red-500 border-red-500/20 bg-red-500/5 shadow-[0_0_20px_rgba(239,68,68,0.1)]{% else %}text-gray-500 border-white/10 hover:bg-white/5 hover:text-red-500 hover:border-red-500/20{% endif %}">
-                <!-- ✅ FIXED: SVG heart for desktop wishlist button -->
-                {% if in_wishlist %}
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mr-2 transition-transform group-hover:scale-125">
-                  <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
-                </svg>
-                In Wishlist
-                {% else %}
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 mr-2 transition-transform group-hover:scale-125">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                </svg>
-                Add Wishlist
-                {% endif %}
-              </button>
-            </form>
-          </div>
-          {% if display_variant and display_variant.stock > 0 %}
-          <div class="grid grid-cols-2 gap-4">
-            <form method="POST" action="{% url 'add_to_cart' display_variant.id %}">
-              {% csrf_token %}
-              <input type="hidden" name="quantity" id="qtyInput" value="1">
-              <button type="submit" class="w-full h-16 bg-white text-[#080c15] rounded-3xl font-black text-xs uppercase tracking-[0.2em] hover:bg-emerald-500 hover:text-[#080c15] active:scale-[0.97] transition-all duration-300 flex items-center justify-center gap-3 shadow-2xl">
-                <span class="material-icons-outlined text-xl">shopping_bag</span>Add to Bag
-              </button>
-            </form>
-            <form method="POST" action="{% url 'add_to_cart' display_variant.id %}">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="buy">
-              <input type="hidden" name="quantity" value="1">
-              <button type="submit" class="w-full h-16 bg-emerald-600 text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] hover:bg-emerald-500 active:scale-[0.97] transition-all duration-300 shadow-[0_10px_40px_rgba(16,185,129,0.35)] flex items-center justify-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-                  <path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd" />
-                </svg>
-                Buy Now
-              </button>
-            </form>
-          </div>
-          {% else %}
-          <div class="w-full h-14 bg-gray-800/50 border border-white/5 text-gray-600 rounded-2xl font-bold flex items-center justify-center gap-2 cursor-not-allowed">
-            <span class="material-icons-outlined text-lg">remove_shopping_cart</span>Out of Stock
-          </div>
-          {% endif %}
-        </div>
+        <!-- END DESKTOP ACTIONS -->
 
       </div>
     </div>
   </div>
 </section>
-
-<!-- MOBILE STICKY BOTTOM BAR -->
-<div class="lg:hidden fixed bottom-0 inset-x-0 z-[100] transition-transform duration-500" id="stickyBar">
-  <div class="bg-[#070b14]/90 backdrop-blur-3xl border-t border-white/10 px-5 pt-4" style="padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0px));">
-    {% if display_variant and display_variant.stock > 0 %}
-    <div class="flex gap-4">
-      <form method="POST" action="{% url 'add_to_cart' display_variant.id %}" class="flex-1">
-        {% csrf_token %}
-        <input type="hidden" name="quantity" value="1">
-        <button type="submit" style="height:60px;" class="w-full border-2 border-white/10 text-white rounded-[20px] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 active:scale-95 transition-all bg-white/5">
-          <span class="material-icons-outlined text-xl">shopping_bag</span>Bag
-        </button>
-      </form>
-      <form method="POST" action="{% url 'add_to_cart' display_variant.id %}" style="flex:1.5;">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="buy">
-        <input type="hidden" name="quantity" value="1">
-        <button type="submit" style="height:60px;" class="w-full bg-emerald-600 text-[#070b14] rounded-[20px] font-black text-xs uppercase tracking-[0.2em] shadow-[0_15px_40px_rgba(16,185,129,0.35)] flex items-center justify-center gap-2 active:scale-95 transition-all">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-            <path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd" />
-          </svg>
-          Buy Now
-        </button>
-      </form>
-    </div>
-    {% else %}
-    <button disabled style="height:60px;" class="w-full bg-white/5 border border-white/10 text-gray-500 rounded-[20px] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 opacity-50">
-      <span class="material-icons-outlined text-xl">remove_shopping_cart</span>Sold Out
-    </button>
-    {% endif %}
-  </div>
-</div>
 
 <!-- ACCORDION SECTIONS -->
 <section class="w-full bg-[#060a12] border-t border-white/5">
@@ -751,7 +725,7 @@ const maxQty = parseInt('{{ display_variant.stock|default:99 }}') || 99;
 function changeQty(d) {
   qty = Math.max(1, Math.min(maxQty, qty + d));
   const el = document.getElementById('qtyDisplay'); if(el) el.textContent = qty;
-  const inp = document.getElementById('qtyInput'); if(inp) inp.value = qty;
+  document.querySelectorAll('.mobile-qty-input').forEach(inp => inp.value = qty);
 }
 
 /* Desktop zoom origin */
