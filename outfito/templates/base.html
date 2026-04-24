@@ -85,5 +85,80 @@
   <div class="border-t border-white/10 py-6 px-6 md:px-10 text-center text-[0.52rem] tracking-[0.35em] font-semibold uppercase text-white/20">© 2026 Outfito. All rights reserved.</div>
 </footer>
 
+<!-- TOAST NOTIFICATION SYSTEM -->
+{% if messages %}
+<div id="toast-container" class="fixed top-[100px] left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-3 pointer-events-none w-[90%] md:w-auto max-w-[380px]">
+  {% for message in messages %}
+    <div class="toast-message pointer-events-auto flex items-start p-4 rounded-xl shadow-[0_10px_40px_rgb(0,0,0,0.5)] border translate-y-[-100%] opacity-0 transition-all duration-500 backdrop-blur-md
+      {% if message.tags == 'success' %}
+        bg-[#0e2b1e]/90 border-green-500/30 text-green-400
+      {% elif message.tags == 'error' %}
+        bg-[#2b0f0f]/90 border-red-500/30 text-red-400
+      {% elif message.tags == 'warning' %}
+        bg-[#2b220f]/90 border-yellow-500/30 text-yellow-400
+      {% else %}
+        bg-[#0e1f3b]/90 border-blue-500/30 text-blue-400
+      {% endif %}">
+      
+      <!-- Icon -->
+      <div class="flex-shrink-0 mt-0.5 mr-3">
+        {% if message.tags == 'success' %}
+          <i class="fa-solid fa-circle-check text-[1.1rem]"></i>
+        {% elif message.tags == 'error' %}
+          <i class="fa-solid fa-circle-exclamation text-[1.1rem]"></i>
+        {% elif message.tags == 'warning' %}
+          <i class="fa-solid fa-triangle-exclamation text-[1.1rem]"></i>
+        {% else %}
+          <i class="fa-solid fa-circle-info text-[1.1rem]"></i>
+        {% endif %}
+      </div>
+
+      <!-- Message Text -->
+      <div class="flex-1 text-[0.85rem] font-medium pr-4 leading-relaxed text-white">
+        {{ message }}
+      </div>
+
+      <!-- Close Button -->
+      <button onclick="closeToast(this.closest('.toast-message'))" class="flex-shrink-0 text-white/40 hover:text-white transition-colors focus:outline-none ml-2">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+  {% endfor %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const toasts = document.querySelectorAll('.toast-message');
+    
+    // Animate In
+    setTimeout(() => {
+        toasts.forEach((toast, index) => {
+            setTimeout(() => {
+                toast.classList.remove('translate-y-[-100%]', 'opacity-0');
+            }, index * 100); // Staggered animation
+        });
+    }, 50);
+
+    // Auto-dismiss after 4 seconds
+    toasts.forEach((toast, index) => {
+        setTimeout(() => {
+            closeToast(toast);
+        }, 4000 + (index * 500)); // Staggered auto-dismiss
+    });
+});
+
+function closeToast(toast) {
+    if (!toast) return;
+    toast.style.transform = 'translateY(-20px) scale(0.95)';
+    toast.style.opacity = '0';
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 400); // Wait for transition to complete
+}
+</script>
+{% endif %}
+
 </body>
 </html>
