@@ -446,17 +446,11 @@
 
         <!-- ORDER TRACKER — uses order.order_status -->
         {% with s=order.order_status|lower %}
-        {% if s == 'cancelled' %}
-        <div class="tracker-wrap" style="text-align: center; padding: 30px;">
-          <i class="fa-solid fa-ban" style="font-size: 24px; margin-bottom: 10px; display: block; color: var(--danger);"></i>
-          <span style="color: var(--danger); font-weight: bold; font-size: 14px;">Order Cancelled</span>
-        </div>
-        {% else %}
-        
+        {% if s != 'cancelled' and s != 'returned' %}
         <div class="tracker-wrap" style="position: relative;">
           <!-- RETURN TRACKER (Removed - Now Item Level) -->
 
-          <div class="tracker" style="--progress: {% if s == 'delivered' %}100%{% elif s == 'out for delivery' %}75%{% elif s == 'shipped' %}50%{% elif s == 'pending' %}25%{% else %}10%{% endif %}">
+          <div class="tracker" style="--progress: {% if s == 'delivered' %}100%{% elif s == 'out for delivery' %}66%{% elif s == 'shipped' %}33%{% else %}0%{% endif %}">
 
             <div class="tracker-step">
               <div class="step-circle done"><i class="fa-solid fa-check"></i></div>
@@ -465,38 +459,38 @@
             </div>
 
             <div class="tracker-step">
-              <div class="step-circle {% if s == 'shipped' or s == 'out for delivery' or s == 'delivered' %}done{% elif s == 'pending' %}active{% endif %}">
-                <i class="fa-solid {% if s == 'shipped' or s == 'out for delivery' or s == 'delivered' %}fa-check{% else %}fa-gear{% endif %}"></i>
+              <div class="step-circle {% if s == 'shipped' or s == 'out for delivery' or s == 'delivered' %}done{% elif s == 'pending' or s == 'placed' %}active{% endif %}">
+                <i class="fa-solid {% if s == 'shipped' or s == 'out for delivery' or s == 'delivered' %}fa-check{% else %}fa-truck-fast{% endif %}"></i>
               </div>
-              <div class="step-label {% if s == 'shipped' or s == 'out for delivery' or s == 'delivered' %}done{% endif %}">Processing</div>
+              <div class="step-label {% if s == 'shipped' or s == 'out for delivery' or s == 'delivered' %}done{% endif %}">Shipped</div>
               <div class="step-date">{% if s == 'shipped' or s == 'out for delivery' or s == 'delivered' %}{{ order.updated_at|date:"M d, g:i A" }}{% else %}—{% endif %}</div>
-            </div>
-
-            <div class="tracker-step">
-              <div class="step-circle {% if s == 'out for delivery' or s == 'delivered' %}done{% elif s == 'shipped' %}active{% endif %}">
-                <i class="fa-solid {% if s == 'out for delivery' or s == 'delivered' %}fa-check{% else %}fa-truck-fast{% endif %}"></i>
-              </div>
-              <div class="step-label {% if s == 'out for delivery' or s == 'delivered' %}done{% endif %}">Shipped</div>
-              <div class="step-date">{% if s == 'out for delivery' or s == 'delivered' %}{{ order.updated_at|date:"M d, g:i A" }}{% else %}—{% endif %}</div>
             </div>
             
             <div class="tracker-step">
               <div class="step-circle {% if s == 'delivered' %}done{% elif s == 'out for delivery' %}active{% endif %}">
-                <i class="fa-solid {% if s == 'delivered' %}fa-check{% else %}fa-motorcycle{% endif %}"></i>
+                <i class="fa-solid {% if s == 'delivered' %}fa-check{% else %}fa-box-open{% endif %}"></i>
               </div>
               <div class="step-label {% if s == 'delivered' %}done{% endif %}">Out for Delivery</div>
-              <div class="step-date">{% if s == 'delivered' %}{{ order.updated_at|date:"M d, g:i A" }}{% else %}—{% endif %}</div>
+              <div class="step-date">{% if s == 'out for delivery' or s == 'delivered' %}{{ order.updated_at|date:"M d, g:i A" }}{% else %}—{% endif %}</div>
             </div>
 
             <div class="tracker-step">
               <div class="step-circle {% if s == 'delivered' %}done{% endif %}">
-                <i class="fa-solid {% if s == 'delivered' %}fa-check{% else %}fa-house{% endif %}"></i>
+                <i class="fa-solid fa-house-chimney"></i>
               </div>
               <div class="step-label {% if s == 'delivered' %}done{% endif %}">Delivered</div>
               <div class="step-date">{% if s == 'delivered' %}{{ order.updated_at|date:"M d, g:i A" }}{% else %}—{% endif %}</div>
             </div>
 
           </div>
+        </div>
+        {% else %}
+        <div class="tracker-wrap" style="padding: 24px; text-align: center; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.1);">
+          <div style="font-size: 32px; margin-bottom: 12px; color: {% if s == 'cancelled' %}#f87171{% else %}var(--accent){% endif %};">
+            <i class="fa-solid {% if s == 'cancelled' %}fa-circle-xmark{% else %}fa-box-open{% endif %}"></i>
+          </div>
+          <h3 style="color: var(--text); margin-bottom: 6px;">Order {{ s|title }}</h3>
+          <p style="font-size: 13px; color: var(--muted);">This order has been {{ s }}.</p>
         </div>
         {% endif %}
         {% endwith %}
@@ -646,8 +640,8 @@
         </span>
         {% endif %}
 
-        {# CANCEL — only when placed / processing / confirmed #}
-        {% if s == 'pending' %}
+        {# CANCEL — only when placed / processing / confirmed / pending #}
+        {% if s == 'pending' or s == 'processing' or s == 'confirmed' %}
 <form id="fullCancelForm" method="POST" action="{% url 'cancel_order' order.id %}" style="display:none;">
   {% csrf_token %}
   <input type="hidden" name="cancellation_reason" id="fullCancelReason">
@@ -739,7 +733,19 @@
         </div>
       </div>
 
-
+      <!-- ACTION BUTTONS -->
+      <div style="display:flex;gap:10px;padding:0 24px 22px;">
+        <button type="button" id="modalCancelBtn"
+                style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;"
+                onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+          Cancel
+        </button>
+        <button type="button" id="modalConfirmBtn"
+                class="btn-modal-confirm cancel-confirm"
+                style="flex:2;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#ef4444,#f87171);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .2s;">
+          Confirm
+        </button>
+      </div>
 
     </div><!-- /modal-inner -->
   </div><!-- /modal-box -->
@@ -828,12 +834,13 @@ function openModal(type, scope, itemId, maxQty) {
     modalStrip.className  = 'modal-strip cancel-strip';
     modalIcon.className   = 'modal-icon cancel-icon';
     modalIconFA.className = 'fa-solid fa-xmark';
-    confirmBtn.className  = 'btn-modal-confirm cancel-confirm';
+    confirmBtn.style.background = 'linear-gradient(135deg,#ef4444,#f87171)';
   } else {
     modalStrip.className  = 'modal-strip return-strip';
     modalIcon.className   = 'modal-icon return-icon';
     modalIconFA.className = 'fa-solid fa-rotate-left';
-    confirmBtn.className  = 'btn-modal-confirm return-confirm';
+    confirmBtn.style.background = 'linear-gradient(135deg,var(--accent2),var(--accent))';
+    confirmBtn.style.color = '#000';
   }
 
   /* ── Title ── */
@@ -844,7 +851,7 @@ function openModal(type, scope, itemId, maxQty) {
   modalSubtitle.textContent = type === 'cancel'
     ? 'Cancelled items cannot be uncancelled.'
     : 'We will review your request within 2–3 days.';
-  confirmBtn.textContent = type === 'cancel' ? 'Confirm Cancellation' : 'Submit Return Request';
+  confirmBtn.textContent = type === 'cancel' ? '✕  Confirm Cancellation' : '↩  Submit Return Request';
 
   /* ── Qty stepper ── */
   if (scope === 'item' && maxQty > 0) {

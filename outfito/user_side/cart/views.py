@@ -140,7 +140,8 @@ def cart_view(request):
         item.offer_discount = offer_data['item_discounts'].get(item.id, Decimal('0.00'))
         item.final_subtotal = item.base_subtotal - item.offer_discount
 
-    shipping = Decimal('0.00') if (subtotal - offer_discount) >= Decimal('499.00') else Decimal('49.00')
+    from user_side.wallet.refund_utils import FREE_SHIPPING_THRESHOLD, SHIPPING_CHARGE
+    shipping = Decimal('0.00') if (subtotal - offer_discount) >= FREE_SHIPPING_THRESHOLD else SHIPPING_CHARGE
     total = subtotal - offer_discount + shipping
 
     return render(request, 'user/cart.html', {

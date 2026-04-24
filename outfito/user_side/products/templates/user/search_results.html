@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg:      #080c18;
+    --surface: #0e1525;
+    --border:  rgba(255,255,255,0.07);
+    --accent:  #10b981;
+    --muted:   #6b7a99;
+    --text:    #e8ecf4;
+  }
+
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
+
+  .search-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 100px 24px 80px;
+  }
+
+  /* ── Header ── */
+  .search-header {
+    margin-bottom: 36px;
+  }
+  .search-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .search-title span { color: var(--accent); }
+  .search-meta {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* ── Search bar ── */
+  .search-bar-wrap {
+    display: flex;
+    gap: 0;
+    max-width: 560px;
+    margin-bottom: 40px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--surface);
+    transition: border-color .25s;
+  }
+  .search-bar-wrap:focus-within { border-color: rgba(16,185,129,.5); }
+  .search-bar-wrap input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 13px 18px;
+    font-size: 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+  }
+  .search-bar-wrap input::placeholder { color: var(--muted); }
+  .search-bar-wrap button {
+    background: var(--accent);
+    border: none;
+    padding: 0 22px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
+    cursor: pointer;
+    transition: opacity .2s;
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .search-bar-wrap button:hover { opacity: .85; }
+
+  /* ── Grid ── */
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+  }
+
+  /* ── Product Card ── */
+  .product-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    transition: border-color .25s, transform .25s;
+  }
+  .product-card:hover {
+    border-color: rgba(16,185,129,.35);
+    transform: translateY(-3px);
+  }
+  .card-img-wrap {
+    aspect-ratio: 4/5;
+    overflow: hidden;
+    background: #111827;
+  }
+  .card-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .4s ease;
+  }
+  .product-card:hover .card-img-wrap img { transform: scale(1.05); }
+
+  .card-body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+  .card-name {
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-price {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .card-cta {
+    margin-top: auto;
+    padding-top: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: color .2s;
+  }
+  .product-card:hover .card-cta { color: var(--accent); }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+  }
+  .empty-state i {
+    font-size: 48px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    display: block;
+  }
+  .empty-state h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .empty-state p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+  .empty-state a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #000;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 11px 24px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: opacity .2s;
+  }
+  .empty-state a:hover { opacity: .85; }
+
+  @media (max-width: 600px) {
+    .results-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .search-title { font-size: 22px; }
+  }
+</style>
+
+<div class="search-page">
+
+  <!-- Search Form -->
+  <form method="GET" action="{% url 'search_products' %}" class="search-bar-wrap">
+    <input type="text" name="q" placeholder="Search products…"
+           value="{{ query }}" autocomplete="off" autofocus>
+    <button type="submit">
+      <i class="fa-solid fa-magnifying-glass"></i> Search
+    </button>
+  </form>
+
+  {% if query %}
+  <div class="search-header">
+    <div class="search-title">
+      Results for <span>"{{ query }}"</span>
+    </div>
+    <div class="search-meta">
+      {% if count %}
+        {{ count }} product{{ count|pluralize }} found
+      {% else %}
+        No results
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if products %}
+    <div class="results-grid">
+      {% for p in products %}
+      <a href="{{ p.url }}" class="product-card">
+        <div class="card-img-wrap">
+          {% if p.image %}
+            <img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy">
+          {% else %}
+            <img src="{% static 'images/no-image.png' %}" alt="{{ p.name }}" loading="lazy">
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <div class="card-name">{{ p.name }}</div>
+          <div class="card-price">₹{{ p.price }}</div>
+          <div class="card-cta">
+            View Product <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+  {% elif query %}
+    <!-- Empty state after a search -->
+    <div class="empty-state">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <h3>No products found</h3>
+      <p>We couldn't find anything for "{{ query }}". Try a different keyword.</p>
+      <a href="{% url 'user_product_list' %}">
+        <i class="fa-solid fa-store"></i> Browse All Products
+      </a>
+    </div>
+
+  {% else %}
+    <!-- No query yet -->
+    <div class="empty-state">
+      <i class="fa-solid fa-shirt"></i>
+      <h3>Find your style</h3>
+      <p>Enter a keyword above to search across our entire collection.</p>
+      <a href="{% url 'user_product_list' %}">
+        <i class="fa-solid fa-store"></i> Browse All Products
+      </a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

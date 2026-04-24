@@ -178,6 +178,9 @@ def order_success(request, order_id):
     return render(request, "user/success.html", {"order": order})
 
 
+from django.views.decorators.cache import never_cache
+
+@never_cache
 @login_required
 def order_list(request):
     q       = request.GET.get('q', '').strip()
@@ -198,8 +201,13 @@ def order_list(request):
             Q(items__variant__product__name__icontains=q)
         ).distinct()
 
+    VALID_STATUSES = {
+        'pending', 'shipped', 'out for delivery',
+        'delivered', 'cancelled'
+    }
+
     if status and status in VALID_STATUSES:
-        orders = orders.filter(payment_status__iexact=status)
+        orders = orders.filter(order_status__iexact=status)
 
     orders = orders.order_by('-created_at')
 
@@ -212,6 +220,7 @@ def order_list(request):
         "status_filter": status,
     })
 
+@never_cache
 @login_required
 def order_detail(request, order_id):
     order=get_object_or_404(Order.objects.prefetch_related('items__return_requests'),id=order_id,  user=request.user)
@@ -275,22 +284,10 @@ def cancel_order(request, order_id):
             all_cancelled = all(i.item_status == 'cancelled' for i in all_items)
             shipping_refunded = Decimal('0.00')
             if all_cancelled:
-                order.order_status='cancelled'
-                # ── Restore coupon if applicable (only once) ──────────
-                usage = CouponUsage.objects.filter(
-                    order=order,
-                    user=request.user,
-                    is_used=True,
-                    is_refunded=False
-                ).first()
-                if usage:
-                    usage.is_used     = False
-                    usage.is_refunded = True
-                    usage.save(update_fields=['is_used', 'is_refunded'])
-                    # Decrement global used_count safely (no negative)
-                    Coupon.objects.filter(
-                        pk=usage.coupon_id, used_count__gt=0
-                    ).update(used_count=F('used_count') - 1)
+                order.order_status = 'cancelled'
+                # NOTE: Coupon stays consumed — user already received the discount.
+                # Wallet refund is already proportionally reduced by _coupon_adjusted_refund.
+                # We do NOT restore is_used or decrement used_count here.
 
                 # ── Refund shipping if the whole order is cancelled ────
                 ship_ok = process_shipping_refund(
@@ -299,6 +296,7 @@ def cancel_order(request, order_id):
                 )
                 if ship_ok:
                     shipping_refunded = Decimal(str(order.delivery_charge or 0))
+
 
             active_items=order.items.exclude(item_status='cancelled')
             order.subtotal=sum(
@@ -436,8 +434,9 @@ def return_order(request, order_id):
     reason=request.POST.get('return_reason', '').strip()
     custom_reason=request.POST.get('custom_reason', '').strip()
 
-    if custom_reason:
-        reason=custom_reason
+    # Only use custom text if user selected "Other"
+    if reason == 'Other' and custom_reason:
+        reason = custom_reason
 
     if not reason:
         messages.error(request, "Return reason is required.")
@@ -546,7 +545,8 @@ def apply_coupon(request):
             
             effective_subtotal = subtotal - offer_discount
             
-            DELIVERY = 50
+            from user_side.wallet.refund_utils import FREE_SHIPPING_THRESHOLD, SHIPPING_CHARGE
+            DELIVERY = 0 if effective_subtotal >= FREE_SHIPPING_THRESHOLD else int(SHIPPING_CHARGE)
 
             if not code:
                 # ── Remove coupon ──────────────────────────────────
@@ -781,6 +781,18 @@ def place_order(request):
 
             wallet.balance -= total
             wallet.save()
+
+            from user_side.wallet.models import WalletTransaction
+            WalletTransaction.objects.create(
+                user             = request.user,
+                order            = order,
+                transaction_type = 'debit',
+                amount           = total,
+                balance_after    = wallet.balance,
+                is_credit        = False,
+                payment_status   = 'paid',
+                description      = f"Payment for Order #{order.order_number}"
+            )
 
             Payment.objects.create(
                 order          = order,

@@ -368,16 +368,14 @@
             <div>
               <span class="filter-chip {% if not status_filter %}active{% endif %}"
                     onclick="applyFilter('')">All</span>
-              <span class="filter-chip {% if status_filter == 'placed' %}active{% endif %}"
-                    onclick="applyFilter('placed')">Placed</span>
-              <span class="filter-chip {% if status_filter == 'confirmed' %}active{% endif %}"
-                    onclick="applyFilter('confirmed')">Confirmed</span>
+              <span class="filter-chip {% if status_filter == 'pending' %}active{% endif %}"
+                    onclick="applyFilter('pending')">Pending</span>
               <span class="filter-chip {% if status_filter == 'shipped' %}active{% endif %}"
                     onclick="applyFilter('shipped')">Shipped</span>
+              <span class="filter-chip {% if status_filter == 'out for delivery' %}active{% endif %}"
+                    onclick="applyFilter('out for delivery')">Out for Delivery</span>
               <span class="filter-chip {% if status_filter == 'delivered' %}active{% endif %}"
                     onclick="applyFilter('delivered')">Delivered</span>
-              <span class="filter-chip {% if status_filter == 'returned' %}active{% endif %}"
-                    onclick="applyFilter('returned')">Returned</span>
               <span class="filter-chip {% if status_filter == 'cancelled' %}active{% endif %}"
                     onclick="applyFilter('cancelled')">Cancelled</span>
             </div>

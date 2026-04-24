@@ -67,7 +67,7 @@ class Order(models.Model):
     
 class OrderItem(models.Model):
     STATUS_CHOICES = [
-        ('placed', 'Placed'),
+        ('placed', 'Pending'),
         ('shipped', 'Shipped'),
         ('out_for_delivery', 'Out for Delivery'),
         ('delivered', 'Delivered'),

@@ -172,8 +172,15 @@
                   <div class="text-xs text-gray-300 truncate">{{ txn.description|default:txn.get_transaction_type_display|truncatechars:24 }}</div>
                   <div class="text-[0.6rem] text-gray-400 mt-0.5">{{ txn.created_at|date:"d M · H:i" }}</div>
                 </div>
-                <div class="text-xs font-semibold pl-3 {% if txn.transaction_type == 'debit' %}text-gray-400{% else %}text-white{% endif %}">
-                  {% if txn.transaction_type == 'debit' %}-{% else %}+{% endif %}₹{{ txn.amount|floatformat:0 }}
+                <div class="text-xs font-semibold pl-3 text-right {% if txn.transaction_type == 'debit' %}text-gray-400{% else %}text-white{% endif %}">
+                  <div>{% if txn.transaction_type == 'debit' %}-{% else %}+{% endif %}₹{{ txn.amount|floatformat:0 }}</div>
+                  <div class="text-[0.55rem] uppercase tracking-widest mt-1
+                    {% if txn.payment_status == 'success' %}text-green-400
+                    {% elif txn.payment_status == 'paid' %}text-teal-400
+                    {% elif txn.payment_status == 'failed' %}text-red-400
+                    {% else %}text-yellow-400{% endif %}">
+                    {{ txn.get_payment_status_display|default:"Pending" }}
+                  </div>
                 </div>
               </div>
               {% empty %}

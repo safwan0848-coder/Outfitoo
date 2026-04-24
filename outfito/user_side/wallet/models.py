@@ -39,6 +39,7 @@ class WalletTransaction(models.Model):
         ('success', 'Success'),
         ('failed',  'Failed'),
         ('pending', 'Pending'),
+        ('paid',    'Paid'),
     ]
 
     user                 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wallet_transactions')

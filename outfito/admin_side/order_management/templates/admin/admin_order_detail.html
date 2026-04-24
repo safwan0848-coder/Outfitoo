@@ -1471,7 +1471,7 @@
                             </div>
                             <div class="pay-row">
                                 <span>Subtotal</span>
-                                <span class="val">₹{{ order.subtotal|floatformat:"2" }}</span>
+                                <span class="val">₹{{ order.subtotal|default:order.total_amount|floatformat:"2" }}</span>
                             </div>
                             <div class="pay-row">
                                 <span>Tax</span>
