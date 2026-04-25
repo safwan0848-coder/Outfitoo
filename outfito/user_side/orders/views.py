@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db import transaction
 from django.db.models import Q, F
@@ -14,10 +15,12 @@ from .models import Order, OrderItem, ReturnRequest
 from xhtml2pdf import pisa
 from decimal import Decimal
 from django.core.paginator import Paginator
+from django.utils import timezone
 from django.template.loader import render_to_string
 from admin_side.coupon_management.models import Coupon, CouponUsage
 import razorpay
 from user_side.payment.models import Payment
+from user_side.wallet.models import Wallet
 from user_side.wallet.refund_utils import (
     process_wallet_refund,
     process_shipping_refund,
@@ -25,21 +28,15 @@ from user_side.wallet.refund_utils import (
     SHIPPING_CHARGE,
 )
 
+VALID_STATUSES = {
+    'placed', 'confirmed', 'shipped',
+    'delivered', 'returned', 'cancelled', 'pending'
+}
 
-def _coupon_adjusted_refund(order, item_price, qty) -> Decimal:
-    """
-    Return the actually-paid amount for `qty` units at `item_price`,
-    after deducting the item's proportional share of the coupon discount.
-
-    Formula:
-        item_gross    = item_price × qty
-        item_share    = item_gross / original_order_subtotal
-        item_discount = order.discount_amount × item_share
-        net_refund    = item_gross - item_discount
-    """
-    item_gross = Decimal(str(item_price)) * qty
-    original_subtotal = Decimal(str(order.subtotal or 0))
-    discount = Decimal(str(order.discount_amount or 0))
+def _coupon_adjusted_refund(order, item_price, qty):
+    item_gross=Decimal(str(item_price)) * qty
+    original_subtotal=Decimal(str(order.subtotal or 0))
+    discount=Decimal(str(order.discount_amount or 0))
 
     if original_subtotal > 0 and discount > 0:
         item_share    = item_gross / original_subtotal
@@ -47,20 +44,6 @@ def _coupon_adjusted_refund(order, item_price, qty) -> Decimal:
         return max(item_gross - item_discount, Decimal('0.00'))
 
     return item_gross
-
-VALID_STATUSES = {
-    'placed', 'confirmed', 'shipped',
-    'delivered', 'returned', 'cancelled', 'pending'
-}
-
-from django.utils import timezone
-
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
-from django.db.models import F
-from django.utils import timezone
-
-# NOTE: Add your existing imports here (Cart, Address, Coupon, etc.)
 
 
 @login_required
@@ -80,18 +63,14 @@ def checkout_view(request):
         subtotal += item.base_subtotal
 
     from user_side.cart.utils import calculate_cart_offers
-    offer_data = calculate_cart_offers(cart_items)
+    offer_data=calculate_cart_offers(cart_items)
     offer_discount = offer_data['total_offer_discount']
-    
     for item in cart_items:
-        item.offer_discount = offer_data['item_discounts'].get(item.id, Decimal('0.00'))
-        item.final_subtotal = item.base_subtotal - item.offer_discount
-
-    # Base subtotal minus offer discount is the effective subtotal for shipping/coupons
-    effective_subtotal = subtotal - offer_discount
+        item.offer_discount=offer_data['item_discounts'].get(item.id, Decimal('0.00'))
+        item.final_subtotal=item.base_subtotal - item.offer_discount
+    effective_subtotal=subtotal - offer_discount
 
     tax = 0
-    # Free shipping on orders >= ₹1000
     delivery = 0 if effective_subtotal >= FREE_SHIPPING_THRESHOLD else int(SHIPPING_CHARGE)
     discount = 0
 
@@ -114,40 +93,37 @@ def checkout_view(request):
         except Coupon.DoesNotExist:
             request.session.pop('coupon_id', None)
 
-    total = effective_subtotal + tax + delivery - discount
+    total=effective_subtotal + tax + delivery - discount
 
     today = timezone.now().date()
     available_coupons = Coupon.objects.filter(
         is_active=True,
-        expiry_date__gte=today,          # not expired
+        expiry_date__gte=today,         
     ).filter(
-        Q(start_date__isnull=True) |     # no start restriction
-        Q(start_date__lte=today)         # or already started
+        Q(start_date__isnull=True) |   
+        Q(start_date__lte=today)        
     ).exclude(
         usage_limit__isnull=False,
-        used_count__gte=F('usage_limit') # not exhausted
+        used_count__gte=F('usage_limit') 
     )
 
-    # Wallet balance for display on checkout page
     wallet_balance = 0
     try:
         wallet_balance = request.user.wallet.balance
-    except Exception:
-        pass
+    except Wallet.DoesNotExist:
+        wallet_balance = 0
 
-    # Per-coupon usage info for the current user
     coupon_usage_info = {}
     for c in available_coupons:
         active_used = c.active_usage_count_for(request.user)
-        limit       = c.usage_limit_per_user
-        remaining   = max(limit - active_used, 0)
+        limit= c.usage_limit_per_user
+        remaining = max(limit - active_used, 0)
         coupon_usage_info[c.code] = {
-            'used':      active_used,
-            'limit':     limit,
+            'used': active_used,
+            'limit': limit,
             'remaining': remaining,
             'exhausted': remaining <= 0,
         }
-    # Set of codes the user can NO LONGER use (exhausted)
     used_coupon_codes = {
         code for code, info in coupon_usage_info.items() if info['exhausted']
     }
@@ -178,19 +154,13 @@ def order_success(request, order_id):
     return render(request, "user/success.html", {"order": order})
 
 
-from django.views.decorators.cache import never_cache
-
 @never_cache
 @login_required
 def order_list(request):
-    q       = request.GET.get('q', '').strip()
+    q = request.GET.get('q', '').strip()
     status  = request.GET.get('status', '').strip().lower()
     page_no = request.GET.get('page', 1)
 
-    # Only show real/completed orders:
-    #   • COD orders (always created immediately, payment on delivery)
-    #   • Paid orders (wallet or Razorpay after verified payment)
-    # This excludes any ghost 'pending' Razorpay orders from old code.
     orders = Order.objects.filter(user=request.user).filter(
         Q(payment_method='cod') | Q(payment_status='paid')
     )
@@ -201,10 +171,7 @@ def order_list(request):
             Q(items__variant__product__name__icontains=q)
         ).distinct()
 
-    VALID_STATUSES = {
-        'pending', 'shipped', 'out for delivery',
-        'delivered', 'cancelled'
-    }
+
 
     if status and status in VALID_STATUSES:
         orders = orders.filter(order_status__iexact=status)
@@ -267,10 +234,8 @@ def cancel_order(request, order_id):
                 item.cancellation_reason=reason
                 item.save()
 
-                # Coupon-adjusted refund: deduct item’s proportional discount share
                 net_refund = _coupon_adjusted_refund(order, item.price, item.quantity)
 
-                # ── Immediate wallet refund (safe / idempotent) ────────────
                 ok, credited = process_wallet_refund(
                     order_item      = item,
                     refund_qty      = item.quantity,
@@ -285,11 +250,7 @@ def cancel_order(request, order_id):
             shipping_refunded = Decimal('0.00')
             if all_cancelled:
                 order.order_status = 'cancelled'
-                # NOTE: Coupon stays consumed — user already received the discount.
-                # Wallet refund is already proportionally reduced by _coupon_adjusted_refund.
-                # We do NOT restore is_used or decrement used_count here.
 
-                # ── Refund shipping if the whole order is cancelled ────
                 ship_ok = process_shipping_refund(
                     order       = order,
                     description = f"Shipping refund — order #{order.order_number} cancelled",
@@ -340,7 +301,6 @@ def cancel_order(request, order_id):
             item.variant.save()
 
             if cancel_qty < item.quantity:
-                # Partial cancel: split off the cancelled portion as a new item
                 cancelled_item = OrderItem.objects.create(
                     order=item.order,
                     variant=item.variant,
@@ -352,10 +312,8 @@ def cancel_order(request, order_id):
                 item.quantity -= cancel_qty
                 item.save()
 
-                # Coupon-adjusted refund for the cancelled portion
                 net_refund = _coupon_adjusted_refund(order, item.price, cancel_qty)
 
-                # Refund on the split (cancelled) item
                 ok, credited = process_wallet_refund(
                     order_item      = cancelled_item,
                     refund_qty      = cancel_qty,
@@ -364,12 +322,10 @@ def cancel_order(request, order_id):
                 )
 
             else:
-                # Full item cancel
                 item.item_status='cancelled'
                 item.cancellation_reason=reason
                 item.save()
 
-                # Coupon-adjusted refund for this item
                 net_refund = _coupon_adjusted_refund(order, item.price, cancel_qty)
 
                 ok, credited = process_wallet_refund(
@@ -396,7 +352,6 @@ def cancel_order(request, order_id):
             refund_amount = credited if ok else Decimal('0.00')
             shipping_refunded = Decimal('0.00')
 
-            # If this cancellation wiped out the last remaining item, refund shipping too
             if order_fully_cancelled:
                 ship_ok = process_shipping_refund(
                     order       = order,
@@ -434,7 +389,6 @@ def return_order(request, order_id):
     reason=request.POST.get('return_reason', '').strip()
     custom_reason=request.POST.get('custom_reason', '').strip()
 
-    # Only use custom text if user selected "Other"
     if reason == 'Other' and custom_reason:
         reason = custom_reason
 
@@ -443,30 +397,22 @@ def return_order(request, order_id):
         return redirect('order_detail', order_id=order.id)
 
     with transaction.atomic():
-
         if not item_id:
-
             items=order.items.filter(item_status='delivered')
-
             if not items.exists():
                 messages.error(request, "No delivered items to return.")
                 return redirect('order_detail', order_id=order.id)
-
             created_any=False
             for item in items:
-
                 exists=ReturnRequest.objects.filter(item=item).exists()
-
                 if exists:
                     continue
-
                 ReturnRequest.objects.create(
                     order=order,
                     item=item,
                     reason=reason,
                     description=request.POST.get('custom_reason', '').strip()
                 )
-                
                 item.item_status='return_requested'
                 item.save()
                 created_any=True
@@ -504,20 +450,11 @@ def return_order(request, order_id):
 
 @login_required
 def download_invoice(request, order_id):
-    # 1. Get order
     order = get_object_or_404(Order, id=order_id, user=request.user)
-
-    # 2. Convert HTML template → string
     html = render_to_string('user/invoice.html', {'order': order})
-
-    # 3. Create PDF response
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="invoice_{order.order_number}.pdf"'
-
-    # 4. Generate PDF
     pisa_status = pisa.CreatePDF(html, dest=response)
-
-    # 5. Handle error
     if pisa_status.err:
         return HttpResponse('Error generating PDF')
 
@@ -528,11 +465,10 @@ def download_invoice(request, order_id):
 def apply_coupon(request):
     if request.method == "POST":
         try:
-            data = json.loads(request.body)
-            code = data.get('code', '').strip().upper()
-            
-            cart, _ = Cart.objects.get_or_create(user=request.user)
-            cart_items = list(cart.items.select_related('variant', 'variant__product'))
+            data=json.loads(request.body)
+            code=data.get('code', '').strip().upper()            
+            cart, _=Cart.objects.get_or_create(user=request.user)
+            cart_items=list(cart.items.select_related('variant', 'variant__product'))
             
             subtotal = Decimal('0.00')
             for item in cart_items:
@@ -542,14 +478,11 @@ def apply_coupon(request):
             from user_side.cart.utils import calculate_cart_offers
             offer_data = calculate_cart_offers(cart_items)
             offer_discount = offer_data['total_offer_discount']
-            
-            effective_subtotal = subtotal - offer_discount
-            
+            effective_subtotal = subtotal - offer_discount            
             from user_side.wallet.refund_utils import FREE_SHIPPING_THRESHOLD, SHIPPING_CHARGE
             DELIVERY = 0 if effective_subtotal >= FREE_SHIPPING_THRESHOLD else int(SHIPPING_CHARGE)
 
             if not code:
-                # ── Remove coupon ──────────────────────────────────
                 request.session.pop('coupon_id', None)
                 return JsonResponse({
                     'success':     True,
@@ -562,20 +495,18 @@ def apply_coupon(request):
                     'new_total':   float(effective_subtotal + DELIVERY),
                 })
 
-            # ── Validate coupon ────────────────────────────────────
             try:
                 coupon = Coupon.objects.get(code__iexact=code, is_active=True)
             except Coupon.DoesNotExist:
                 return JsonResponse({'success': False, 'message': 'Invalid or expired coupon code.'})
 
             from django.utils import timezone as tz
-            today = tz.now().date()   # DateField needs a date, not datetime
+            today = tz.now().date()
             if coupon.start_date and coupon.start_date > today:
                 return JsonResponse({'success': False, 'message': 'This coupon is not active yet.'})
             if coupon.expiry_date and coupon.expiry_date < today:
                 return JsonResponse({'success': False, 'message': 'This coupon has expired.'})
 
-            # ── Per-user usage check ───────────────────────────────
             used_count = coupon.active_usage_count_for(request.user)
             limit      = coupon.usage_limit_per_user
             remaining  = max(limit - used_count, 0)
@@ -595,7 +526,6 @@ def apply_coupon(request):
             if coupon.usage_limit and coupon.used_count >= coupon.usage_limit:
                 return JsonResponse({'success': False, 'message': 'This coupon\'s usage limit has been reached.'})
 
-            # ── Calculate discount ─────────────────────────────────
             if coupon.discount_type == 'fixed':
                 discount = min(float(coupon.discount_value), float(effective_subtotal))
             else:
@@ -607,7 +537,6 @@ def apply_coupon(request):
             request.session['coupon_id'] = coupon.id
             new_total = max(float(effective_subtotal) + DELIVERY - discount, 0)
             
-            # Information for frontend
             remaining_after = max(remaining - 1, 0)
             
             return JsonResponse({
@@ -665,15 +594,11 @@ def place_order(request):
     for item in items:
         item.offer_discount = offer_data['item_discounts'].get(item.id, Decimal('0.00'))
         item.final_subtotal = item.base_subtotal - item.offer_discount
-
     effective_subtotal = subtotal - offer_discount
-
-    # Free shipping on orders >= ₹1000
     delivery = 0 if effective_subtotal >= FREE_SHIPPING_THRESHOLD else int(SHIPPING_CHARGE)
     tax = 0
     coupon_discount = 0
  
-    # coupon
     coupon = None
     coupon_id = request.session.get('coupon_id')
     if coupon_id:
@@ -695,15 +620,11 @@ def place_order(request):
     total = max(effective_subtotal + delivery + tax - coupon_discount, 0)
     total_discount = offer_discount + coupon_discount
  
-    # stock check only (no deduction yet)
     for item in items:
         if item.variant.stock < item.quantity:
             messages.error(request, f"Stock issue for {item.variant}")
             return redirect('cart_view')
  
-    # ─────────────────────────────────────────────────────────
-    # COD — Create order immediately (payment on delivery)
-    # ─────────────────────────────────────────────────────────
     if payment_method == "cod":
         with transaction.atomic():
             order = Order.objects.create(
@@ -716,7 +637,7 @@ def place_order(request):
                 coupon           = coupon,
                 delivery_charge  = delivery,
                 total_amount     = total,
-                payment_status   = 'pending',   # paid on delivery
+                payment_status   = 'pending',  
             )
             for item in items:
                 OrderItem.objects.create(
@@ -747,9 +668,6 @@ def place_order(request):
 
         return redirect('order_success', order_id=order.id)
 
-    # ─────────────────────────────────────────────────────────
-    # WALLET — Deduct balance and create order immediately
-    # ─────────────────────────────────────────────────────────
     if payment_method == "wallet":
         wallet = request.user.wallet
         if wallet.balance < total:
@@ -813,11 +731,6 @@ def place_order(request):
 
         return redirect('order_success', order_id=order.id)
 
-    # ─────────────────────────────────────────────────────────
-    # RAZORPAY — Do NOT create an Order yet.
-    # Store everything in the session; the order will only be
-    # created inside verify_payment after signature is verified.
-    # ─────────────────────────────────────────────────────────
     if payment_method == "razorpay":
         key_id     = settings.RAZORPAY_KEY_ID.strip(' "\'')
         key_secret = settings.RAZORPAY_KEY_SECRET.strip(' "\'')
@@ -835,7 +748,6 @@ def place_order(request):
             messages.error(request, "Could not initiate payment. Please try again.")
             return redirect('checkout')
 
-        # Persist cart snapshot in session (NO Order written to DB)
         request.session['pending_razorpay'] = {
             'razorpay_order_id': rp_order['id'],
             'address_id':        int(address_id),

@@ -23,26 +23,19 @@ from .referral_utils import assign_referral
 
 @never_cache
 def signup_view(request):
-
     if request.user.is_authenticated:
         return redirect('landing')
 
-    # Capture referral code from URL (?ref=CODE) or preserve from previous GET
-    ref_code = (
-        request.GET.get('ref', '').strip().upper()
-        or request.session.get('ref_code', '')
-    )
+    ref_code = (request.GET.get('ref', '').strip().upper() or request.session.get('ref_code', ''))
     if ref_code:
-        request.session['ref_code'] = ref_code
+        request.session['ref_code']=ref_code
 
-    if request.method == "POST":
-
-        uname = request.POST.get('username')
-        email = request.POST.get('email')
-        pass1 = request.POST.get('password1')
-        pass2 = request.POST.get('password2')
-        # Also accept referral_code from the form field
-        form_ref = request.POST.get('referral_code', '').strip().upper()
+    if request.method=="POST":
+        uname=request.POST.get('username')
+        email=request.POST.get('email')
+        pass1=request.POST.get('password1')
+        pass2=request.POST.get('password2')
+        form_ref=request.POST.get('referral_code', '').strip().upper()
         if form_ref:
             request.session['ref_code'] = form_ref
 
@@ -115,7 +108,7 @@ def signup_view(request):
             password=pass1
         )
 
-        user.is_active   = False
+        user.is_active = False
         user.is_verified = False
         user.save()
 
@@ -175,7 +168,6 @@ def otp_verify(request):
 
         otp.delete()
 
-        # ── Apply referral if one was captured at signup ──
         ref_code = request.session.pop('ref_code', None)
         referral_applied = False
         if ref_code:
@@ -190,21 +182,14 @@ def otp_verify(request):
 
         return redirect('login')
 
-    return render(request, 'user/otp_verify.html', {
-        'email': email,
-        'remaining_seconds': remaining_seconds
-    })
+    return render(request, 'user/otp_verify.html', {'email': email,'remaining_seconds': remaining_seconds})
 
 
 def get_otp_timer(user):
-
-    otp = OTP.objects.filter(user=user).last()
-
-    remaining_seconds = 0
-
+    otp=OTP.objects.filter(user=user).last()
+    remaining_seconds=0
     if otp:
         remaining_seconds = int((otp.expired_at - timezone.now()).total_seconds())
-
         if remaining_seconds < 0:
             remaining_seconds = 0
 

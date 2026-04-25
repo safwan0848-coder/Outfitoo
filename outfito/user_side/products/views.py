@@ -94,7 +94,6 @@ def product_list(request):
     else:
         products = products.order_by(order_field)
 
-    # Pre-fetch user wishlist if logged in
     wishlist_items = set()
     if request.user.is_authenticated:
         from user_side.wishlist.models import Wishlist, WishlistItem
@@ -202,7 +201,6 @@ def search_products_ajax(request):
     if not query:
         return JsonResponse({'products': [], 'has_more': False, 'query': ''})
 
-    # Fetch 6 so we know if there are more than 5 without a separate count query
     products = Product.objects.filter(
         is_deleted=False,
         is_listed=True,
@@ -308,9 +306,6 @@ def product_detail(request, pk):
         selected_size  = display_variant.size
         selected_color = display_variant.color
 
-    # ==============================
-    # COLORS
-    # ==============================
 
     seen_colors = set()
     unique_color_variants = []
@@ -321,9 +316,6 @@ def product_detail(request, pk):
             seen_colors.add(color_key)
             unique_color_variants.append(v)
 
-    # ==============================
-    # SIZES
-    # ==============================
 
     SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
     size_variant_map = {}
@@ -348,9 +340,6 @@ def product_detail(request, pk):
             best_v = size_variant_map[sz]
             available_sizes.append((sz, best_v.stock > 0, best_v.color))
 
-    # ==============================
-    # RELATED PRODUCTS
-    # ==============================
 
     related_qs = Product.objects.filter(
         category=product.category,
@@ -369,9 +358,6 @@ def product_detail(request, pk):
 
         related_products.append(rp)
 
-    # ==============================
-    # ✅ FIXED WISHLIST + CART
-    # ==============================
 
     wishlist_count = 0
     in_wishlist = False
@@ -382,12 +368,12 @@ def product_detail(request, pk):
         wishlist = Wishlist.objects.filter(user=request.user).first()
 
         if wishlist:
-            wishlist_count = wishlist.items.count()  # ✅ FIX
+            wishlist_count = wishlist.items.count()
 
             in_wishlist = WishlistItem.objects.filter(
                 wishlist=wishlist,
                 product=product
-            ).exists()  # ✅ FIX
+            ).exists()
 
     cart_count = 0
 
@@ -397,11 +383,8 @@ def product_detail(request, pk):
         cart = Cart.objects.filter(user=request.user).first()
 
         if cart:
-            cart_count = cart.items.count()  # ✅ FIX
+            cart_count = cart.items.count()  
 
-    # ==============================
-    # REVIEWS (real data)
-    # ==============================
     from user_side.orders.models import Order, OrderItem
 
     has_purchased = False
@@ -409,7 +392,6 @@ def product_detail(request, pk):
     existing_review = None
 
     if request.user.is_authenticated:
-        # Check if the user has a delivered order containing this product
         has_purchased = OrderItem.objects.filter(
             order__user=request.user,
             variant__product=product,
@@ -422,22 +404,19 @@ def product_detail(request, pk):
         ).first()
         has_reviewed = existing_review is not None
 
-    # All reviews for this product
     all_reviews = ProductReview.objects.filter(product=product).select_related('user')
     review_count = all_reviews.count()
 
-    # Aggregate rating
     rating_agg = all_reviews.aggregate(avg=Avg('rating'))
     avg_rating  = round(rating_agg['avg'] or 0, 1)
 
-    # Breakdown per star level
     rating_breakdown = []
     for star in range(5, 0, -1):
         cnt = all_reviews.filter(rating=star).count()
         pct = round((cnt / review_count * 100)) if review_count else 0
         rating_breakdown.append((star, cnt, pct))
 
-    reviews = all_reviews[:10]  # Show latest 10
+    reviews = all_reviews[:10] 
 
     return render(request, 'user/product_detail.html', {
         'product': product,
@@ -464,13 +443,11 @@ def product_detail(request, pk):
 
 @login_required
 def submit_review(request, pk):
-    """POST-only view — securely saves a product review."""
     if request.method != 'POST':
         return redirect('product_detail', pk=pk)
 
     product = get_object_or_404(Product, pk=pk, is_deleted=False, is_listed=True)
 
-    # ── Security guard 1: must have purchased & received the item ──
     from user_side.orders.models import OrderItem
     has_purchased = OrderItem.objects.filter(
         order__user=request.user,
@@ -482,10 +459,8 @@ def submit_review(request, pk):
         messages.error(request, "You can review this product only after purchase and delivery")
         return redirect('product_detail', pk=pk)
 
-    # ── Fetch existing review if any ──
     existing_review = ProductReview.objects.filter(product=product, user=request.user).first()
 
-    # ── Validate input ──
     try:
         rating = int(request.POST.get('rating', 0))
     except (ValueError, TypeError):
@@ -502,7 +477,6 @@ def submit_review(request, pk):
         messages.error(request, "Review comment cannot be empty.")
         return redirect('product_detail', pk=pk)
 
-    # ── Save or Update review ──
     if existing_review:
         existing_review.rating = rating
         existing_review.title = title

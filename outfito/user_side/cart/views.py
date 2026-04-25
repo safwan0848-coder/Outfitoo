@@ -4,7 +4,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.views.decorators.cache import never_cache
 from decimal import Decimal
-
+from user_side.wallet.refund_utils import FREE_SHIPPING_THRESHOLD, SHIPPING_CHARGE
+from .utils import calculate_cart_offers
 from .models import Cart, CartItem
 from admin_side.variants_management.models import Variant
 
@@ -19,7 +20,6 @@ def get_or_create_cart(user):
     return cart
 
 def _variant_is_purchasable(variant):
-
     product=variant.product
 
     if not variant.is_active:
@@ -36,22 +36,21 @@ def _variant_is_purchasable(variant):
 @login_required
 @require_POST
 def add_to_cart(request, pk):
-
-    variant = get_object_or_404(Variant, pk=pk)
+    variant=get_object_or_404(Variant, pk=pk)
 
     try:
-        quantity = int(request.POST.get('quantity', 1))
+        quantity=int(request.POST.get('quantity', 1))
     except (ValueError, TypeError):
         quantity = 1
 
-    quantity = max(1, quantity)
-    action = request.POST.get('action', 'cart')
+    quantity=max(1, quantity)
+    action=request.POST.get('action', 'cart')
 
     if not variant.is_active or variant.stock <= 0:
         messages.error(request, "This product is not available.")
         return redirect('user_product_list')
 
-    cart = get_or_create_cart(request.user)
+    cart=get_or_create_cart(request.user)
 
     item, created = CartItem.objects.get_or_create(
         cart=cart,
@@ -62,7 +61,7 @@ def add_to_cart(request, pk):
         }
     )
 
-    new_qty = item.quantity + quantity
+    new_qty=item.quantity + quantity
 
     if new_qty > variant.stock:
         if item.quantity >= variant.stock:
@@ -72,21 +71,19 @@ def add_to_cart(request, pk):
             )
             return redirect(request.META.get('HTTP_REFERER', 'user_product_list'))
 
-        new_qty = variant.stock
+        new_qty=variant.stock
         messages.warning(request, f"Only {variant.stock} available. Quantity adjusted.")
 
-    MAX_QTY = 5
+    MAX_QTY=5
     if new_qty > MAX_QTY:
         new_qty = MAX_QTY
         messages.warning(request, f"Maximum {MAX_QTY} units allowed.")
 
-    item.quantity = new_qty
+    item.quantity=new_qty
     item.save()
 
-    # 🔥 FIXED WISHLIST REMOVAL
     try:
         from user_side.wishlist.models import Wishlist, WishlistItem
-
         wishlist = Wishlist.objects.filter(user=request.user).first()
 
         if wishlist:
@@ -100,7 +97,7 @@ def add_to_cart(request, pk):
 
     messages.success(request, f"'{variant.product.name}' added to cart!")
 
-    if action == 'buy':
+    if action=='buy':
         return redirect('cart_view')
 
     return redirect(request.META.get('HTTP_REFERER', 'user_product_list'))
@@ -108,11 +105,8 @@ def add_to_cart(request, pk):
 @never_cache
 @login_required(login_url='login')
 def cart_view(request):
-
-    cart = get_or_create_cart(request.user)
-
-    items = list(cart.items.select_related('product', 'variant').order_by('id'))
-
+    cart=get_or_create_cart(request.user)
+    items=list(cart.items.select_related('product', 'variant').order_by('id'))
     subtotal = Decimal('0.00')
     has_oos = False
     item_count = 0
@@ -131,18 +125,15 @@ def cart_view(request):
         subtotal += item.base_subtotal
         item_count += item.quantity
 
-    from .utils import calculate_cart_offers
-    offer_data = calculate_cart_offers(items)
+    offer_data=calculate_cart_offers(items)
     offer_discount = offer_data['total_offer_discount']
     
-    # Attach item discounts to items for UI display if needed
     for item in items:
         item.offer_discount = offer_data['item_discounts'].get(item.id, Decimal('0.00'))
         item.final_subtotal = item.base_subtotal - item.offer_discount
 
-    from user_side.wallet.refund_utils import FREE_SHIPPING_THRESHOLD, SHIPPING_CHARGE
-    shipping = Decimal('0.00') if (subtotal - offer_discount) >= FREE_SHIPPING_THRESHOLD else SHIPPING_CHARGE
-    total = subtotal - offer_discount + shipping
+    shipping=Decimal('0.00') if (subtotal - offer_discount) >= FREE_SHIPPING_THRESHOLD else SHIPPING_CHARGE
+    total=subtotal - offer_discount + shipping
 
     return render(request, 'user/cart.html', {
         'items':      items,

@@ -10,16 +10,13 @@ from .services import (
     get_top_selling_categories
 )
 import json
-
-# For Excel
 import openpyxl
 from openpyxl.styles import Font
-
-# For PDF
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
+from django.core.paginator import Paginator
 
 def parse_date(date_str):
     if not date_str:
@@ -31,15 +28,13 @@ def parse_date(date_str):
 
 @login_required(login_url='admin_login')
 def admin_dashboard(request):
-    # Overall stats (all time or this year, typically)
-    # Using 'yearly' for charts
     chart_period = request.GET.get('period', 'yearly')
     year_str = request.GET.get('year')
     year = None
     if year_str and year_str.isdigit():
         year = int(year_str)
     
-    report_data = get_sales_report_data() # overall
+    report_data = get_sales_report_data()
     chart_data = get_chart_data(chart_period, year=year)
     top_products = get_top_selling_products(limit=5)
     top_categories = get_top_selling_categories(limit=5)
@@ -57,7 +52,6 @@ def admin_dashboard(request):
     }
     return render(request, 'admin/dashboard.html', context)
 
-from django.core.paginator import Paginator
 
 @login_required(login_url='admin_login')
 def sales_report(request):
@@ -120,7 +114,6 @@ def download_sales_report_excel(request):
     start_date = parse_date(start_date_str)
     end_date = parse_date(end_date_str)
     
-    # Handle predefined filters just like the view
     today = timezone.now().date()
     if filter_type == 'today':
         start_date = today
@@ -166,7 +159,6 @@ def download_sales_report_excel(request):
         for col_num, cell_value in enumerate(row, 1):
             worksheet.cell(row=row_num, column=col_num).value = cell_value
             
-    # Add Summary
     row_num += 2
     worksheet.cell(row=row_num, column=1).value = "Summary"
     worksheet.cell(row=row_num, column=1).font = Font(bold=True)
@@ -183,7 +175,6 @@ def download_sales_report_excel(request):
     worksheet.cell(row=row_num, column=1).value = "Coupons Used:"
     worksheet.cell(row=row_num, column=2).value = report_data['coupons_used']
 
-    # Add Coupon Usage Details
     if report_data['coupon_usage_details']:
         row_num += 3
         worksheet.cell(row=row_num, column=1).value = "Coupon Usage Details"
@@ -247,11 +238,9 @@ def download_sales_report_pdf(request):
     elements = []
     styles = getSampleStyleSheet()
     
-    # Title
     elements.append(Paragraph("Sales Report", styles['Title']))
     elements.append(Spacer(1, 12))
     
-    # Date Range
     date_range = "All Time"
     if start_date and end_date:
         date_range = f"{start_date.strftime('%B %d, %Y')} - {end_date.strftime('%B %d, %Y')}"
@@ -263,7 +252,6 @@ def download_sales_report_pdf(request):
     elements.append(Paragraph(f"Period: {date_range}", styles['Normal']))
     elements.append(Spacer(1, 12))
     
-    # Summary Table
     summary_data = [
         ["Total Orders", str(report_data['total_orders'])],
         ["Total Revenue", f"Rs. {report_data['total_revenue']:.2f}"],
@@ -283,7 +271,6 @@ def download_sales_report_pdf(request):
     elements.append(summary_table)
     elements.append(Spacer(1, 24))
     
-    # Orders Table
     data = [['Order ID', 'Date', 'Customer', 'Amount', 'Discount', 'Final']]
     for order in orders:
         data.append([
@@ -307,7 +294,6 @@ def download_sales_report_pdf(request):
     
     elements.append(order_table)
     
-    # Coupon Details Table
     if report_data['coupon_usage_details']:
         elements.append(Spacer(1, 24))
         elements.append(Paragraph("Coupon Usage Details", styles['Heading2']))

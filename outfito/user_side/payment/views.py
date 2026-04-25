@@ -9,14 +9,11 @@ from django.views.decorators.csrf import csrf_exempt
 from decimal import Decimal
 from .models import Payment
 from admin_side.coupon_management.models import Coupon, CouponUsage
+from user_side.address.models import Address
+from user_side.cart.models import Cart
+from admin_side.coupon_management.models import Coupon
 
 
-# ─────────────────────────────────────────────────────────────
-#  initiate_payment
-#  Reads the pending Razorpay context stored in the session by
-#  place_order and renders the Razorpay payment page.
-#  NO Order object exists at this point.
-# ─────────────────────────────────────────────────────────────
 @login_required
 def initiate_payment(request):
     pending = request.session.get('pending_razorpay')
@@ -34,13 +31,6 @@ def initiate_payment(request):
     return render(request, "user/payment_page.html", context)
 
 
-# ─────────────────────────────────────────────────────────────
-#  verify_payment
-#  Called by Razorpay's handler after the user completes payment.
-#  1. Verify HMAC signature.
-#  2. On SUCCESS  → create Order + OrderItems + Payment, clear cart.
-#  3. On FAILURE  → do nothing, cart stays intact.
-# ─────────────────────────────────────────────────────────────
 @csrf_exempt
 @login_required
 def verify_payment(request):
@@ -48,18 +38,15 @@ def verify_payment(request):
     razorpay_payment_id = request.POST.get("razorpay_payment_id")
     razorpay_signature  = request.POST.get("razorpay_signature")
 
-    # Basic presence check
     if not all([razorpay_order_id, razorpay_payment_id, razorpay_signature]):
         messages.error(request, "Invalid payment request.")
         return redirect('checkout')
 
-    # Retrieve the pending context stored by place_order
     pending = request.session.get('pending_razorpay')
     if not pending or pending.get('razorpay_order_id') != razorpay_order_id:
         messages.error(request, "Payment session mismatch. Please try again.")
         return redirect('checkout')
 
-    # ── Verify Razorpay signature ──────────────────────────────
     key_id     = settings.RAZORPAY_KEY_ID.strip(' "\'')
     key_secret = settings.RAZORPAY_KEY_SECRET.strip(' "\'')
     client     = razorpay.Client(auth=(key_id, key_secret))
@@ -75,11 +62,6 @@ def verify_payment(request):
         messages.error(request, "Payment verification failed. Please try again.")
         return redirect('payment_failed')
 
-    # ── Signature valid → create Order atomically ──────────────
-    from user_side.address.models import Address
-    from user_side.cart.models import Cart
-    from admin_side.coupon_management.models import Coupon
-
     address = get_object_or_404(Address, id=pending['address_id'], user=request.user)
 
     coupon = None
@@ -94,7 +76,6 @@ def verify_payment(request):
 
     try:
         with transaction.atomic():
-            # 1. Create the Order (status = paid immediately)
             order = Order.objects.create(
                 user             = request.user,
                 shipping_address = address,
@@ -108,7 +89,6 @@ def verify_payment(request):
                 payment_status   = 'paid',
             )
 
-            # 2. Create OrderItems and reduce stock
             for item in cart_items:
                 OrderItem.objects.create(
                     order    = order,
@@ -119,7 +99,6 @@ def verify_payment(request):
                 item.variant.stock -= item.quantity
                 item.variant.save()
 
-            # 3. Record the Payment
             Payment.objects.create(
                 order                = order,
                 payment_method       = 'razorpay',
@@ -130,7 +109,6 @@ def verify_payment(request):
                 amount               = Decimal(str(pending['total'])),
             )
 
-            # 4. Record coupon usage (atomic, no duplicate via get_or_create)
             if coupon:
                 CouponUsage.objects.get_or_create(
                     user=request.user, coupon=coupon, order=order,
@@ -141,7 +119,6 @@ def verify_payment(request):
                     used_count=_F('used_count') + 1
                 )
 
-            # 5. Clear cart and session
             cart.items.all().delete()
             request.session.pop('pending_razorpay', None)
             request.session.pop('coupon_id', None)
@@ -155,13 +132,7 @@ def verify_payment(request):
     return redirect('order_success', order_id=order.id)
 
 
-# ─────────────────────────────────────────────────────────────
-#  payment_failed
-#  Simple failure page. No order exists → nothing to update.
-#  Cart is untouched; user can retry from checkout.
-# ─────────────────────────────────────────────────────────────
 @login_required
 def payment_failed(request):
-    # Clean up any stale pending session so the user starts fresh
     request.session.pop('pending_razorpay', None)
     return render(request, "user/payment_failed.html")

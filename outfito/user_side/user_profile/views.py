@@ -30,7 +30,6 @@ def profile(request):
 
     profile, created = Profile.objects.get_or_create(user=request.user)
 
-    # ── Wallet ────────────────────────────────────────────
     try:
         wallet_balance = request.user.wallet.balance
     except Exception:
@@ -42,7 +41,6 @@ def profile(request):
 
     recent_transactions = all_transactions[:5]  # kept for backwards compat
 
-    # ── Orders ────────────────────────────────────────────
     recent_orders = Order.objects.filter(
         user=request.user
     ).order_by('-created_at')[:5]
@@ -54,17 +52,15 @@ def profile(request):
     total_orders     = Order.objects.filter(user=request.user).count()
     delivered_orders = Order.objects.filter(user=request.user, order_status='Delivered').count()
 
-    # ── Coupons (currently valid & active) ──────────────────
     now = timezone.now()
     all_coupons = Coupon.objects.filter(
         is_active=True,
         start_date__lte=now,
         expiry_date__gte=now,
     ).order_by('expiry_date')
-    active_coupons = all_coupons[:3]   # kept for context
+    active_coupons = all_coupons[:3] 
     coupons_count = all_coupons.count()
 
-    # ── Referral ─────────────────────────────────────────
     referral_code = request.user.referral_code
     referral_link = request.build_absolute_uri(f'/signup/?ref={referral_code}')
     referral_count = request.user.referrals.filter(referral_used=True).count()
@@ -72,20 +68,16 @@ def profile(request):
     context = {
         "user":                request.user,
         "profile":             profile,
-        # wallet
         "wallet_balance":      wallet_balance,
         "all_transactions":    all_transactions,
         "recent_transactions": recent_transactions,
-        # orders
         "recent_orders":       recent_orders,
         "all_orders":          all_orders,
         "total_orders":        total_orders,
         "delivered_orders":    delivered_orders,
-        # coupons
         "coupons_count":       coupons_count,
         "all_coupons":         all_coupons,
         "active_coupons":      active_coupons,
-        # referral
         "referral_code":       referral_code,
         "referral_link":       referral_link,
         "referral_count":      referral_count,
@@ -111,7 +103,6 @@ def edit_profile(request):
             "profile": profile
         }
 
-        # 🔹 VALIDATIONS
         if not username or not email:
             messages.error(request, "Username and Email required")
             return render(request, "user/edit_profile.html", context)
@@ -132,7 +123,6 @@ def edit_profile(request):
             messages.error(request, "Google users cannot change email address.")
             return redirect("profile")
 
-        # 🔹 EMAIL CHANGE FLOW
         if email != request.user.email:
 
             request.session["new_email"] = email
@@ -150,7 +140,6 @@ def edit_profile(request):
 
             return redirect("verify-email-change")
 
-        # 🔹 UPDATE USER
         request.user.username = username
         request.user.save()
 
@@ -164,7 +153,6 @@ def edit_profile(request):
         messages.success(request, "Profile updated successfully")
         return redirect("profile")
 
-    # 🔹 GET REQUEST
     return render(request, "user/edit_profile.html", {
         "user": request.user,
         "profile": profile
@@ -175,19 +163,7 @@ def logout_view(request):
    logout(request)
    return redirect('landing')
 
-@never_cache
-@login_required(login_url='login')
-def address(request):
-    return HttpResponse('address')
-@never_cache
-@login_required(login_url='login')
-def wallet(request):
-    return HttpResponse('wallet')
 
-@never_cache
-@login_required(login_url='login')
-def wishlist(request):
-    return HttpResponse('wishlist')
 
 
 @never_cache

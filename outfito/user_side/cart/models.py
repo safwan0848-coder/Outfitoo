@@ -6,7 +6,7 @@ from admin_side.variants_management.models import Variant
  
  
 class Cart(models.Model):
-    user       = models.OneToOneField(       # OneToOne: one cart per user
+    user= models.OneToOneField(    
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='cart'
@@ -33,7 +33,7 @@ class CartItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
  
     class Meta:
-        unique_together = ('cart', 'variant')   # prevent duplicate rows
+        unique_together = ('cart', 'variant')   
  
     def __str__(self):
         return f"{self.product.name} × {self.quantity}"

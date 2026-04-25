@@ -16,10 +16,7 @@ SORT_OPTIONS = [
 SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
  
 def user_category_list(request):
-    """
-    Shows the categories grid — each card links to
-    product_list?category=<id> which auto-applies the filter.
-    """
+
     categories = (
     Category.objects
     .filter(is_active=True, is_deleted=False)

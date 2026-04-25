@@ -12,14 +12,13 @@ class User(AbstractUser):
     is_verified    = models.BooleanField(default=False)
     is_blocked     = models.BooleanField(default=False)
 
-    # ── Referral fields ────────────────────────────────────────
     referral_code  = models.CharField(max_length=8, unique=True, blank=True)
     referred_by    = models.ForeignKey(
                         'self', null=True, blank=True,
                         on_delete=models.SET_NULL,
                         related_name='referrals'
                      )
-    referral_used  = models.BooleanField(default=False)   # True once a referrer is linked
+    referral_used  = models.BooleanField(default=False) 
 
     USERNAME_FIELD   = 'email'
     REQUIRED_FIELDS  = ['username']

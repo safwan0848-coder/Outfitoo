@@ -1,8 +1,6 @@
 from .models import Cart as _Cart   # relative import inside the same app
- 
- 
-def cart_count(request):
 
+def cart_count(request):
     if not request.user.is_authenticated:
         return {'cart_count': 0}
  

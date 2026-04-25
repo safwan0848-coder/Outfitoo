@@ -12,9 +12,8 @@ from django.views.decorators.http import require_POST
 
 from .models import Wallet, WalletTransaction
 
-# ── Constants ──────────────────────────────────────────────────────────────
-MIN_TOPUP = Decimal('10')        # ₹10 minimum
-MAX_TOPUP = Decimal('50000')     # ₹50,000 maximum
+MIN_TOPUP = Decimal('10')       
+MAX_TOPUP = Decimal('50000')     
 
 
 def _razorpay_client():
@@ -25,7 +24,6 @@ def _razorpay_client():
 
 from django.core.paginator import Paginator
 
-# ── 1. Wallet Dashboard ────────────────────────────────────────────────────
 @never_cache
 @login_required(login_url='login')
 def wallet_view(request):
@@ -45,26 +43,19 @@ def wallet_view(request):
     return render(request, 'user/wallet.html', context)
 
 
-# ── 2. Create Razorpay Order for Wallet Top-up ─────────────────────────────
 @login_required(login_url='login')
 @require_POST
 def create_wallet_order(request):
-    """
-    Validates the top-up amount on the SERVER side (never trust frontend).
-    Returns a Razorpay order to the frontend via JSON.
-    """
     try:
         data   = json.loads(request.body)
         amount = Decimal(str(data.get('amount', 0)))
     except Exception:
         return JsonResponse({'success': False, 'message': 'Invalid request.'}, status=400)
 
-    # ── Backend amount validation ──────────────────────────────────────────
     if amount < MIN_TOPUP:
         return JsonResponse({'success': False, 'message': f'Minimum top-up is ₹{MIN_TOPUP}.'})
     if amount > MAX_TOPUP:
         return JsonResponse({'success': False, 'message': f'Maximum top-up is ₹{MAX_TOPUP}.'})
-
     try:
         client = _razorpay_client()
         rp_order = client.order.create({
@@ -76,7 +67,6 @@ def create_wallet_order(request):
     except Exception as e:
         return JsonResponse({'success': False, 'message': 'Could not create payment order.'}, status=500)
 
-    # Store validated amount in session (not from frontend on verify)
     request.session['wallet_topup'] = {
         'amount':           str(amount),
         'razorpay_order_id': rp_order['id'],
@@ -92,15 +82,9 @@ def create_wallet_order(request):
     })
 
 
-# ── 3. Verify Payment and Credit Wallet ────────────────────────────────────
 @login_required(login_url='login')
 @require_POST
 def verify_wallet_payment(request):
-    """
-    1. Validates Razorpay signature.
-    2. Checks razorpay_payment_id hasn't already been processed (idempotency).
-    3. Atomically credits wallet balance.
-    """
     try:
         data = json.loads(request.body)
     except Exception:
@@ -113,18 +97,15 @@ def verify_wallet_payment(request):
     if not all([razorpay_order_id, razorpay_payment_id, razorpay_signature]):
         return JsonResponse({'success': False, 'message': 'Missing payment details.'}, status=400)
 
-    # ── Match against session (prevents tampered order IDs) ───────────────
     pending = request.session.get('wallet_topup')
     if not pending or pending.get('razorpay_order_id') != razorpay_order_id:
         return JsonResponse({'success': False, 'message': 'Session mismatch. Please try again.'}, status=400)
 
     amount = Decimal(pending['amount'])
 
-    # ── Duplicate payment guard ────────────────────────────────────────────
     if WalletTransaction.objects.filter(razorpay_payment_id=razorpay_payment_id).exists():
         return JsonResponse({'success': False, 'message': 'This payment has already been processed.'}, status=409)
 
-    # ── Signature verification ─────────────────────────────────────────────
     try:
         client = _razorpay_client()
         client.utility.verify_payment_signature({
@@ -137,7 +118,6 @@ def verify_wallet_payment(request):
     except Exception:
         return JsonResponse({'success': False, 'message': 'Payment verification error.'}, status=500)
 
-    # ── Atomic wallet credit ───────────────────────────────────────────────
     try:
         with transaction.atomic():
             wallet = Wallet.objects.select_for_update().get(user=request.user)

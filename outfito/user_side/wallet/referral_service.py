@@ -6,15 +6,12 @@ Call process_referral_reward(order) when an order is marked Delivered.
 from decimal import Decimal
 from django.db import transaction
 
-REFERRER_BONUS  = Decimal('100.00')   # ₹100 → referrer
-NEW_USER_BONUS  = Decimal('50.00')    # ₹50  → new user
+REFERRER_BONUS  = Decimal('100.00')   
+NEW_USER_BONUS  = Decimal('50.00')   
 
 
 def _credit_wallet(user, amount, order, description):
-    """
-    Add `amount` to `user`'s wallet and record a WalletTransaction.
-    Must be called inside an atomic block.
-    """
+
     from user_side.wallet.models import Wallet, WalletTransaction
 
     wallet, _ = Wallet.objects.select_for_update().get_or_create(user=user)
@@ -32,7 +29,6 @@ def _credit_wallet(user, amount, order, description):
         payment_status   = 'success',
     )
     
-    # ── Notify User via Email ────────────────────────────
     from django.core.mail import send_mail
     try:
         send_mail(
@@ -48,38 +44,24 @@ def _credit_wallet(user, amount, order, description):
 
 
 def process_referral_reward(order) -> bool:
-    """
-    Credit referral bonuses when order is Delivered.
 
-    Returns True if rewards were credited, False if skipped.
-
-    Idempotency guards:
-      - order.is_referral_rewarded flag (set atomically)
-      - Only fires for the user's FIRST delivered order
-      - select_for_update on Wallet prevents race conditions
-    """
-    # ── Guard 1: already rewarded ──────────────────────────────
     if order.is_referral_rewarded:
         return False
-
-    # ── Guard 2: user has no referrer ──────────────────────────
     user = order.user
     referrer = getattr(user, 'referred_by', None)
     if referrer is None:
         return False
 
-    # ── Guard 3: must be user's first Delivered order ───────────
     from user_side.orders.models import Order as OrderModel
     prior_delivered = OrderModel.objects.filter(
         user         = user,
         order_status = 'Delivered',
-        is_referral_rewarded = True,   # already processed
+        is_referral_rewarded = True, 
     ).exists()
 
     if prior_delivered:
         return False
 
-    # Also check it is literally the first delivered order
     first_delivered = (
         OrderModel.objects
         .filter(user=user, order_status='Delivered')
@@ -89,14 +71,11 @@ def process_referral_reward(order) -> bool:
     if first_delivered is None or first_delivered.pk != order.pk:
         return False
 
-    # ── Atomic reward credit ────────────────────────────────────
     try:
         with transaction.atomic():
-            # Re-fetch with lock to prevent concurrent execution
             locked_order = OrderModel.objects.select_for_update().get(pk=order.pk)
             if locked_order.is_referral_rewarded:
-                return False   # another process beat us
-
+                return False  
             _credit_wallet(
                 user        = user,
                 amount      = NEW_USER_BONUS,
@@ -119,5 +98,4 @@ def process_referral_reward(order) -> bool:
         return True
 
     except Exception:
-        # Never crash the order status update
         return False
