@@ -23,10 +23,10 @@ def initiate_payment(request):
         return redirect('checkout')
 
     context = {
-        "razorpay_key":      settings.RAZORPAY_KEY_ID.strip(' "\''),
+        "razorpay_key": settings.RAZORPAY_KEY_ID.strip(' "\''),
         "razorpay_order_id": pending['razorpay_order_id'],
-        "amount":            int(float(pending['total']) * 100),   # paise
-        "total_display":     pending['total'],
+        "amount":   int(float(pending['total']) * 100),   # paise
+        "total_display":  pending['total'],
     }
     return render(request, "user/payment_page.html", context)
 
@@ -34,9 +34,9 @@ def initiate_payment(request):
 @csrf_exempt
 @login_required
 def verify_payment(request):
-    razorpay_order_id   = request.POST.get("razorpay_order_id")
+    razorpay_order_id = request.POST.get("razorpay_order_id")
     razorpay_payment_id = request.POST.get("razorpay_payment_id")
-    razorpay_signature  = request.POST.get("razorpay_signature")
+    razorpay_signature= request.POST.get("razorpay_signature")
 
     if not all([razorpay_order_id, razorpay_payment_id, razorpay_signature]):
         messages.error(request, "Invalid payment request.")
@@ -47,9 +47,9 @@ def verify_payment(request):
         messages.error(request, "Payment session mismatch. Please try again.")
         return redirect('checkout')
 
-    key_id     = settings.RAZORPAY_KEY_ID.strip(' "\'')
+    key_id = settings.RAZORPAY_KEY_ID.strip(' "\'')
     key_secret = settings.RAZORPAY_KEY_SECRET.strip(' "\'')
-    client     = razorpay.Client(auth=(key_id, key_secret))
+    client = razorpay.Client(auth=(key_id, key_secret))
 
     try:
         client.utility.verify_payment_signature({
