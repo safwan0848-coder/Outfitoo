@@ -280,13 +280,14 @@ Didn't receive the code?
 </div>
 
 <script>
-setTimeout(() => {
-    document.querySelectorAll('.error-text, .success-text, .warning-text')
-    .forEach(el => {
+// Auto-dismiss: error-text after 10s, others after 3s
+document.querySelectorAll('.error-text, .success-text, .warning-text').forEach(el => {
+    const delay = el.classList.contains('error-text') ? 10000 : 3000;
+    setTimeout(() => {
         el.style.opacity = "0";
         setTimeout(() => el.remove(), 400);
-    });
-}, 3000);
+    }, delay);
+});
 
 const inputs = document.querySelectorAll(".otp-box");
 const hiddenInput = document.getElementById("final_otp");

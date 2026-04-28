@@ -201,6 +201,10 @@ function submitFilter(){clearTimeout(filterTimer);filterTimer=setTimeout(()=>{do
 function confirmDelete(url,name){document.getElementById('deleteForm').action=url;document.getElementById('deleteModalMsg').innerHTML=`This will soft-delete <strong>${name}</strong>.`;document.getElementById('deleteModal').classList.add('show');}
 function closeDeleteModal(){document.getElementById('deleteModal').classList.remove('show');}
 document.getElementById('deleteModal').addEventListener('click',function(e){if(e.target===this)closeDeleteModal();});
-setTimeout(()=>{document.querySelectorAll('.msg-item').forEach(el=>{el.style.transition='opacity .4s';el.style.opacity='0';setTimeout(()=>el.remove(),400);});},4000);
+// Auto-dismiss messages: errors after 10s, others after 4s
+document.querySelectorAll('.msg-item').forEach(el=>{
+  const delay = el.classList.contains('msg-error') ? 10000 : 4000;
+  setTimeout(()=>{el.style.transition='opacity .4s';el.style.opacity='0';setTimeout(()=>el.remove(),400);},delay);
+});
 </script>
 {% endblock %}

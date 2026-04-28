@@ -255,14 +255,15 @@ Didn't receive the code?
 
 <script>
 
-setTimeout(() => {
-    document.querySelectorAll('.alert, .error-text, .success-text, .warning-text')
-    .forEach(el => {
+// Auto-dismiss: alert-danger after 10s, others after 3s
+document.querySelectorAll('.alert, .error-text, .success-text, .warning-text').forEach(el => {
+    const delay = el.classList.contains('error-text') || (el.classList.contains('alert') && el.classList.contains('alert-danger')) ? 10000 : 3000;
+    setTimeout(() => {
         el.style.transition = "opacity 0.4s";
         el.style.opacity = "0";
         setTimeout(() => el.remove(), 400);
-    });
-}, 3000);
+    }, delay);
+});
 const inputs=document.querySelectorAll(".otp-box");
 const hiddenInput=document.getElementById("final_otp");
 

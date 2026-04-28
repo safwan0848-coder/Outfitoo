@@ -102,14 +102,15 @@
 </div>
 
 <script>
-// Auto-dismiss messages
-setTimeout(() => {
-  document.querySelectorAll('.error-msg, .temp-msg').forEach(el => {
+// Auto-dismiss: error-msg after 10s, others after 3s
+document.querySelectorAll('.error-msg, .temp-msg').forEach(el => {
+  const delay = el.classList.contains('error-msg') ? 10000 : 3000;
+  setTimeout(() => {
     el.style.transition = 'opacity 0.5s';
     el.style.opacity = '0';
     setTimeout(() => el.remove(), 500);
-  });
-}, 3000);
+  }, delay);
+});
 
 // Image Preview
 document.getElementById("imageUpload")?.addEventListener("change", function(e) {

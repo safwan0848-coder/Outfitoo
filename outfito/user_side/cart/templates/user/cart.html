@@ -669,14 +669,18 @@
 
 
 <script>
-setTimeout(() => {
-  const wrap = document.getElementById('toastWrap');
-  if (wrap) {
-    wrap.style.transition = 'opacity .4s';
-    wrap.style.opacity = '0';
-    setTimeout(() => wrap?.remove(), 400);
-  }
-}, 3500);
+// Auto-dismiss: toast-error after 10s, others after 3.5s
+document.querySelectorAll('#toastWrap .toast-item').forEach(el => {
+  const delay = el.classList.contains('toast-error') ? 10000 : 3500;
+  setTimeout(() => {
+    el.style.transition = 'opacity .4s';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 400);
+  }, delay);
+});
+// Clean up container when empty
+const wrap = document.getElementById('toastWrap');
+if (wrap) setTimeout(() => { if (!wrap.children.length) wrap.remove(); }, 11000);
 
 let deleteForm = null;
 

@@ -1251,12 +1251,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* Messages: close button + auto-dismiss */
   $$('[data-msg-close]').forEach(b => { b.addEventListener('click', () => b.closest('.msg-item')?.remove()); });
-  setTimeout(() => {
-    $$('.msg-item').forEach(el => {
+  $$('.msg-item').forEach(el => {
+    const delay = el.classList.contains('msg-error') ? 10000 : 4000;
+    setTimeout(() => {
       el.style.transition='opacity .4s'; el.style.opacity='0';
       setTimeout(()=>el.remove(),400);
-    });
-  }, 4000);
+    }, delay);
+  });
 
   /* Delete modal */
   $('btnDeleteTrigger').addEventListener('click', () => $('deleteOverlay').classList.add('active'));

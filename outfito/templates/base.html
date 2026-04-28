@@ -93,7 +93,7 @@
       {% if message.tags == 'success' %}
         bg-[#0e2b1e]/90 border-green-500/30 text-green-400
       {% elif message.tags == 'error' %}
-        bg-[#2b0f0f]/90 border-red-500/30 text-red-400
+        bg-[#2b0f0f]/90 border-red-500/30 text-red-400" data-toast-type="error
       {% elif message.tags == 'warning' %}
         bg-[#2b220f]/90 border-yellow-500/30 text-yellow-400
       {% else %}
@@ -139,11 +139,13 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }, 50);
 
-    // Auto-dismiss after 4 seconds
+    // Auto-dismiss: errors after 10s, all others after 4s
     toasts.forEach((toast, index) => {
+        const isError = toast.dataset.toastType === 'error';
+        const baseDelay = isError ? 10000 : 4000;
         setTimeout(() => {
             closeToast(toast);
-        }, 4000 + (index * 500)); // Staggered auto-dismiss
+        }, baseDelay + (index * 500)); // Staggered auto-dismiss
     });
 });
 

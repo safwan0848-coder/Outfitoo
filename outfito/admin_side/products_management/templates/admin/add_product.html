@@ -1165,13 +1165,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   refreshSkuPreview();
 
-  // Auto-dismiss messages after 4s
-  setTimeout(() => {
-    $$('.msg-item').forEach(el => {
+  // Auto-dismiss messages: errors after 10s, others after 4s
+  $$('.msg-item').forEach(el => {
+    const delay = el.classList.contains('msg-error') ? 10000 : 4000;
+    setTimeout(() => {
       el.style.transition='opacity .4s'; el.style.opacity='0';
       setTimeout(()=>el.remove(),400);
-    });
-  }, 4000);
+    }, delay);
+  });
 
 });
 </script>

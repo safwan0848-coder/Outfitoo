@@ -244,14 +244,15 @@
 </div>
 
 <script>
-// Auto-dismiss messages
-setTimeout(() => {
-  document.querySelectorAll('.error-text, .success-text, .warning-text').forEach(el => {
+// Auto-dismiss: error-text after 10s, others after 3s
+document.querySelectorAll('.error-text, .success-text, .warning-text').forEach(el => {
+  const delay = el.classList.contains('error-text') ? 10000 : 3000;
+  setTimeout(() => {
     el.style.transition = "opacity 0.4s";
     el.style.opacity = "0";
     setTimeout(() => el.remove(), 400);
-  });
-}, 3000);
+  }, delay);
+});
 
 // Logout modal
 function openLogout() { 
