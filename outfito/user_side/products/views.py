@@ -24,19 +24,26 @@ def product_list(request):
     size_filter = request.GET.getlist('size')
     type_filter = request.GET.get('type', '')
 
+    # ─────────────────────────────────────────────────────────────────
+    # BASE QUERYSET
+    # Annotate every product with min price of its active variants so
+    # we can sort on it safely and never get duplicate rows from joins.
+    # .distinct() ensures any subsequent join-based filter won't fan out.
+    # ─────────────────────────────────────────────────────────────────
     products = (
-    Product.objects
-    .filter(
-        is_deleted=False,
-        is_listed=True,
-        category__is_active=True  
+        Product.objects
+        .filter(
+            is_deleted=False,
+            is_listed=True,
+            category__is_active=True,
+        )
+        .select_related('category')
+        .prefetch_related('variants')
+        .annotate(min_price=Min('variants__price', filter=Q(variants__is_active=True)))
+        .distinct()
     )
-    .select_related('category')
-    .prefetch_related('variants')
-)
 
-    products = products.filter(is_listed=True)
-
+    # ── Text search ──────────────────────────────────────────────────
     if query:
         products = products.filter(
             Q(name__icontains=query) |
@@ -44,83 +51,78 @@ def product_list(request):
             Q(category__category_name__icontains=query)
         )
 
+    # ── Category filter ──────────────────────────────────────────────
     if cat_slug:
         products = products.filter(category__id=cat_slug)
 
+    # ── Product type filter ──────────────────────────────────────────
     if type_filter:
         products = products.filter(product_type=type_filter)
 
+    # ── Size filter ──────────────────────────────────────────────────
     if size_filter:
         products = products.filter(
             variants__size__in=size_filter,
             variants__is_active=True,
-            variants__stock__gt=0
+            variants__stock__gt=0,
         ).distinct()
 
+    # ── Price range filter ───────────────────────────────────────────
+    # Uses the annotated min_price so no extra join / no duplicate rows.
     if price_min:
         try:
-            products = products.filter(
-                variants__price__gte=float(price_min),
-                variants__is_active=True
-            ).distinct()
-        except ValueError:
+            products = products.filter(min_price__gte=float(price_min))
+        except (ValueError, TypeError):
             pass
 
     if price_max:
         try:
-            products = products.filter(
-                variants__price__lte=float(price_max),
-                variants__is_active=True
-            ).distinct()
-        except ValueError:
+            products = products.filter(min_price__lte=float(price_max))
+        except (ValueError, TypeError):
             pass
 
+    # ── Sorting ──────────────────────────────────────────────────────
+    # Price sorts use the annotated min_price → no extra joins → no dupes.
     SORT_MAP = {
-        'price_asc':  'variants__price',
-        'price_desc': '-variants__price',
+        'price_asc':  'min_price',
+        'price_desc': '-min_price',
         'name_asc':   'name',
         'name_desc':  '-name',
         'newest':     '-id',
-        'discount':   '-id',
+        'discount':   '-id',   # sorted in Python below after discount calc
         'default':    '-id',
     }
+    products = products.order_by(SORT_MAP.get(sort_by, '-id'))
 
-    order_field = SORT_MAP.get(sort_by, '-id')
-
-    if sort_by in ('price_asc', 'price_desc'):
-        products = products.filter(
-            variants__is_active=True
-        ).order_by(order_field).distinct()
-    else:
-        products = products.order_by(order_field)
-
+    # ── Wishlist lookup ──────────────────────────────────────────────
     wishlist_items = set()
     if request.user.is_authenticated:
         from user_side.wishlist.models import Wishlist, WishlistItem
         wishlist = Wishlist.objects.filter(user=request.user).first()
         if wishlist:
-            wishlist_items = set(WishlistItem.objects.filter(wishlist=wishlist).values_list('product_id', flat=True))
+            wishlist_items = set(
+                WishlistItem.objects
+                .filter(wishlist=wishlist)
+                .values_list('product_id', flat=True)
+            )
 
+    # ── Build product_data list ──────────────────────────────────────
     product_data = []
-
     for product in products:
         variants = product.variants.filter(is_active=True, stock__gt=0)
 
+        # Choose representative variant
         variant = None
-
         if variants.exists():
-
             if size_filter:
                 variant = variants.filter(size__in=size_filter).first()
-
             if not variant:
                 variant = variants.filter(is_default=True).first()
-
             if not variant:
                 variant = variants.first()
 
+        # Compute % discount from original_price if available
         discount = None
-
         if variant and getattr(variant, 'original_price', None):
             try:
                 pct = int((1 - float(variant.price) / float(variant.original_price)) * 100)
@@ -130,35 +132,36 @@ def product_list(request):
                 pass
 
         product_data.append({
-            'product': product,
-            'variant': variant,
-            'discount': discount,
-            'is_new': False,
+            'product':     product,
+            'variant':     variant,
+            'discount':    discount,
+            'is_new':      False,
             'in_wishlist': product.id in wishlist_items,
         })
 
+    # Sort by biggest discount in Python (avoids complex DB annotation)
     if sort_by == 'discount':
-        product_data.sort(
-            key=lambda x: x['discount'] or 0,
-            reverse=True
-        )
+        product_data.sort(key=lambda x: x['discount'] or 0, reverse=True)
 
+    # ── Categories for sidebar ───────────────────────────────────────
     categories = Category.objects.filter(
-        is_active=True,is_deleted=False,
+        is_active=True,
+        is_deleted=False,
     ).order_by('category_name')
 
-    price_bounds = Product.objects.filter(
-        is_deleted=False,
-        is_listed=True,
-        variants__is_active=True
-    ).aggregate(
-        min_price=Min('variants__price'),
-        max_price=Max('variants__price'),
+    # ── Dynamic price bounds ─────────────────────────────────────────
+    price_bounds = (
+        Product.objects
+        .filter(is_deleted=False, is_listed=True, variants__is_active=True)
+        .aggregate(
+            min_price=Min('variants__price'),
+            max_price=Max('variants__price'),
+        )
     )
-
     global_min = int(price_bounds['min_price'] or 0)
     global_max = int(price_bounds['max_price'] or 10000)
 
+    # ── Pagination ───────────────────────────────────────────────────
     paginator = Paginator(product_data, 8)
     page_obj  = paginator.get_page(page_num)
 

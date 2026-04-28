@@ -387,6 +387,26 @@
     .fs-apply-btn:hover { opacity: .9; transform: translateY(-1px); }
     .fs-apply-btn:active { transform: translateY(0); }
 
+    .fs-clear-btn {
+        display: flex; align-items: center; justify-content: center; gap: 7px;
+        width: 100%; margin-top: 10px;
+        background: transparent;
+        border: 1px solid rgba(239,68,68,.35);
+        border-radius: 8px; color: #f87171;
+        padding: 11px;
+        font-family: 'Inter', sans-serif; font-size: .75rem; font-weight: 700;
+        letter-spacing: .08em; text-transform: uppercase;
+        text-decoration: none; cursor: pointer;
+        transition: background .2s, border-color .2s, color .2s;
+        min-height: 44px;
+    }
+    .fs-clear-btn:hover {
+        background: rgba(239,68,68,.10);
+        border-color: rgba(239,68,68,.65);
+        color: #fca5a5;
+    }
+    .fs-clear-btn:active { opacity: .8; }
+
     /* ══ GRID WRAPPER ══ */
     .page-wrapper {
         max-width: 1440px; margin: 0 auto;
@@ -896,6 +916,12 @@
 
         <div class="fs-footer">
             <button type="submit" class="fs-apply-btn">Apply Filters</button>
+            <a href="{% url 'user_product_list' %}" class="fs-clear-btn">
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;">
+                    <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                Clear All Filters
+            </a>
         </div>
     </form>
 </aside>
