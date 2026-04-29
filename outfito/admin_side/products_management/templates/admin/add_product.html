@@ -198,30 +198,44 @@
     .page-footer { margin-top:2.5rem; text-align:center; font-size:.72rem; color:var(--text-muted); }
 
     /* ── Crop Modal ── */
-    .crop-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.82); z-index:9000; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+    .crop-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.88); z-index:9000; align-items:center; justify-content:center; backdrop-filter:blur(6px); animation:fadeIn .2s ease; }
     .crop-overlay.active { display:flex; }
-    .crop-modal { background:var(--card-bg); border-radius:16px; width:min(680px,95vw); max-height:92vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 60px rgba(0,0,0,.4); }
-    .crop-modal-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
-    .crop-modal-title { font-family:var(--font-display); font-size:1.1rem; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
-    .crop-close-btn { background:var(--input-bg); border:1px solid var(--border); border-radius:8px; width:32px; height:32px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text-muted); transition:background .2s; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .crop-modal { background:var(--card-bg); border-radius:18px; width:min(760px,96vw); max-height:94vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 32px 80px rgba(0,0,0,.5); }
+    .crop-modal-header { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+    .crop-modal-title { font-family:var(--font-display); font-size:1rem; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .crop-close-btn { background:transparent; border:1px solid var(--border); border-radius:8px; width:30px; height:30px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text-muted); transition:all .2s; }
     .crop-close-btn:hover { background:var(--border); color:var(--text); }
-    .crop-canvas-wrap { flex:1; overflow:hidden; padding:12px 16px; min-height:0; height:360px; display:flex; align-items:center; justify-content:center; background:var(--section-bg); }
-    .crop-canvas-wrap img { max-width:100%; max-height:100%; display:block; }
-    .crop-toolbar { padding:10px 16px; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; align-items:center; gap:7px; flex-shrink:0; }
-    .crop-tool-btn { background:var(--input-bg); border:1px solid var(--border); border-radius:7px; color:var(--text-sub); font-size:.78rem; padding:5px 10px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; transition:all .15s; font-family:var(--font-body); }
+    .crop-body { display:flex; flex:1; min-height:0; }
+    .crop-canvas-wrap { flex:1; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#111; min-height:320px; max-height:420px; }
+    .crop-canvas-wrap img { display:block; max-width:100%; max-height:100%; }
+    .crop-preview-panel { width:140px; flex-shrink:0; background:var(--section-bg); border-left:1px solid var(--border); display:flex; flex-direction:column; align-items:center; padding:14px 10px; gap:10px; }
+    .crop-preview-panel .preview-label { font-size:.62rem; font-weight:700; letter-spacing:.08em; color:var(--text-muted); text-transform:uppercase; align-self:flex-start; }
+    .crop-preview-box { width:110px; height:110px; overflow:hidden; border-radius:8px; border:2px solid var(--border); background:#000; }
+    .crop-preview-box-round { border-radius:50%; }
+    .crop-preview-box-sm { width:60px; height:60px; border-radius:6px; }
+    .crop-toolbar { padding:10px 14px; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; align-items:center; gap:6px; flex-shrink:0; background:var(--card-bg); }
+    .crop-toolbar-row { display:flex; align-items:center; gap:6px; width:100%; }
+    .crop-tool-btn { background:var(--input-bg); border:1px solid var(--border); border-radius:7px; color:var(--text-sub); font-size:.75rem; padding:5px 9px; cursor:pointer; display:inline-flex; align-items:center; gap:3px; transition:all .15s; font-family:var(--font-body); }
     .crop-tool-btn:hover { background:var(--border); color:var(--text); }
-    .crop-ratio-group { display:flex; gap:5px; }
-    .crop-ratio-btn { background:var(--input-bg); border:1px solid var(--border); border-radius:7px; color:var(--text-muted); font-size:.68rem; font-weight:600; padding:5px 9px; cursor:pointer; transition:all .15s; font-family:var(--font-body); }
+    .crop-tool-btn.active-tool { background:var(--primary); border-color:var(--primary); color:#fff; }
+    .crop-ratio-group { display:flex; gap:4px; }
+    .crop-ratio-btn { background:var(--input-bg); border:1px solid var(--border); border-radius:6px; color:var(--text-muted); font-size:.66rem; font-weight:700; padding:4px 8px; cursor:pointer; transition:all .15s; font-family:var(--font-body); letter-spacing:.02em; }
     .crop-ratio-btn:hover { border-color:var(--primary); color:var(--primary); }
     .crop-ratio-btn.active { background:var(--primary); border-color:var(--primary); color:#fff; }
-    .crop-slider-group { display:flex; align-items:center; gap:7px; flex:1; min-width:100px; }
+    .crop-divider { width:1px; height:24px; background:var(--border); flex-shrink:0; }
+    .crop-slider-group { display:flex; align-items:center; gap:6px; flex:1; min-width:80px; }
     .crop-slider-group label { font-size:.7rem; color:var(--text-muted); white-space:nowrap; }
-    .crop-slider { flex:1; accent-color:var(--primary); cursor:pointer; }
+    .crop-slider { flex:1; accent-color:var(--primary); cursor:pointer; height:4px; }
     .crop-actions { margin-left:auto; display:flex; gap:8px; }
-    .btn-crop-cancel { background:var(--card-bg); border:1px solid var(--border); border-radius:8px; color:var(--text-muted); font-size:.8rem; font-weight:600; padding:8px 14px; cursor:pointer; font-family:var(--font-body); transition:all .15s; }
+    .btn-crop-reset { background:transparent; border:1px solid var(--border); border-radius:8px; color:var(--text-muted); font-size:.78rem; font-weight:600; padding:7px 12px; cursor:pointer; font-family:var(--font-body); display:inline-flex; align-items:center; gap:4px; transition:all .15s; }
+    .btn-crop-reset:hover { border-color:orange; color:orange; }
+    .btn-crop-cancel { background:var(--card-bg); border:1px solid var(--border); border-radius:8px; color:var(--text-muted); font-size:.78rem; font-weight:600; padding:7px 14px; cursor:pointer; font-family:var(--font-body); transition:all .15s; }
     .btn-crop-cancel:hover { border-color:var(--primary); color:var(--primary); }
-    .btn-crop-apply { background:var(--primary); border:none; border-radius:8px; color:#fff; font-size:.8rem; font-weight:700; padding:8px 18px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-family:var(--font-body); transition:background .2s; }
+    .btn-crop-apply { background:var(--primary); border:none; border-radius:8px; color:#fff; font-size:.78rem; font-weight:700; padding:7px 18px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-family:var(--font-body); transition:background .2s; min-width:90px; justify-content:center; }
     .btn-crop-apply:hover { background:var(--primary-hover); }
+    .btn-crop-apply:disabled { opacity:.6; cursor:not-allowed; }
+    @media(max-width:640px) { .crop-preview-panel { display:none; } .crop-modal { width:100vw; border-radius:0; max-height:100vh; } }
 
     /* ── Lightbox ── */
     .lightbox-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.92); z-index:9100; align-items:center; justify-content:center; backdrop-filter:blur(6px); cursor:zoom-out; }
@@ -238,6 +252,11 @@
   </style>
 {% endblock %}
 {% block content %}
+{% if request.method == 'GET' %}
+<script>
+  [0, 1, 2].forEach(i => sessionStorage.removeItem('outfito_add_prod_img_' + i));
+</script>
+{% endif %}
 
   <nav class="breadcrumb-nav">
     <a href="{% url 'product_list' %}">Product Management</a>
@@ -286,10 +305,17 @@
                      value="{{ form.name.value|default_if_none:'' }}"
                      maxlength="120"/>
               <div class="char-count" id="nameCount">0 / 120</div>
+              {% if form.name.errors %}
+              <div class="field-hint" style="display:block; color:#dc2626;">
+                <span class="material-icons-outlined">error</span>
+                {{ form.name.errors.0 }}
+              </div>
+              {% else %}
               <div class="field-hint" id="hint_name">
                 <span class="material-icons-outlined">error</span>
                 Name must be at least 3 characters
               </div>
+              {% endif %}
             </div>
 
             <!-- ✅ DESCRIPTION — new field -->
@@ -303,10 +329,17 @@
                         maxlength="2000"
                         rows="5">{{ form.description.value|default_if_none:'' }}</textarea>
               <div class="char-count" id="descCount">0 / 2000</div>
+              {% if form.description.errors %}
+              <div class="field-hint" style="display:block; color:#dc2626;">
+                <span class="material-icons-outlined">error</span>
+                {{ form.description.errors.0 }}
+              </div>
+              {% else %}
               <div class="field-hint" id="hint_description">
                 <span class="material-icons-outlined">error</span>
                 Description must be under 2000 characters
               </div>
+              {% endif %}
             </div>
 
             <!-- IMAGES -->
@@ -441,8 +474,12 @@
                   <option value="coat"   {% if form.product_type.value == 'coat'   %}selected{% endif %}>Coat</option>
                 </select>
                 {% if form.product_type.errors %}
-                <div class="field-hint" style="display:block;margin-top:.4rem;">
+                <div class="field-hint" style="display:block;margin-top:.4rem; color:#dc2626;">
                   <span class="material-icons-outlined">error</span>{{ form.product_type.errors.0 }}
+                </div>
+                {% else %}
+                <div class="field-hint" id="hint_type" style="margin-top:.4rem;">
+                  <span class="material-icons-outlined">error</span>Please select a product type
                 </div>
                 {% endif %}
               </div>
@@ -589,29 +626,16 @@
                 {% endfor %}
               </select>
               {% if form.category.errors %}
-              <div class="field-hint" style="display:block;">
+              <div class="field-hint" style="display:block; color:#dc2626;">
                 <span class="material-icons-outlined">error</span>{{ form.category.errors.0 }}
+              </div>
+              {% else %}
+              <div class="field-hint" id="hint_category">
+                <span class="material-icons-outlined">error</span>Please select a category
               </div>
               {% endif %}
             </div>
 
-            <!-- SKU PREVIEW (display only, never submitted) -->
-            <div class="field-group" style="margin-bottom:0;">
-              <label class="field-label">SKU Preview</label>
-              <div style="display:flex;gap:.6rem;align-items:center;">
-                <input class="f-input-inner" type="text" id="skuPreview"
-                       placeholder="OUT-XXXXXXXX" readonly
-                       style="flex:1;color:var(--text-muted);cursor:default;background:var(--section-bg);"/>
-                <button type="button" id="skuRefreshBtn"
-                        style="background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.5rem .85rem;cursor:pointer;color:var(--text-sub);font-size:.75rem;font-family:var(--font-body);display:inline-flex;align-items:center;gap:4px;transition:all .2s;">
-                  <span class="material-icons-outlined" style="font-size:14px;">refresh</span> Refresh
-                </button>
-              </div>
-              <p style="font-size:.68rem;color:var(--accent);margin-top:.35rem;display:flex;align-items:center;gap:.25rem;">
-                <span class="material-icons-outlined" style="font-size:.85rem;">info</span>
-                Preview only — server generates the real SKU on save.
-              </p>
-            </div>
 
           </div><!-- /form-col-right -->
         </div>
@@ -640,37 +664,54 @@
         <span class="material-icons-outlined">close</span>
       </button>
     </div>
-    <div class="crop-canvas-wrap" id="cropCanvasWrap">
-      <img id="cropImg" src="" alt="Crop target" style="max-width:100%;max-height:100%;display:block;"/>
+    <div class="crop-body">
+      <div class="crop-canvas-wrap" id="cropCanvasWrap">
+        <img id="cropImg" src="" alt="Crop target" style="display:block;max-width:100%;max-height:100%;"/>
+      </div>
+      <div class="crop-preview-panel">
+        <span class="preview-label">Preview</span>
+        <div class="crop-preview-box" id="cropPreviewBox1"></div>
+        <span class="preview-label" style="margin-top:4px;">Round</span>
+        <div class="crop-preview-box crop-preview-box-round crop-preview-box-sm" id="cropPreviewBox2"></div>
+      </div>
     </div>
     <div class="crop-toolbar">
-      <div class="crop-ratio-group">
-        <button type="button" class="crop-ratio-btn active" data-ratio="NaN">Free</button>
-        <button type="button" class="crop-ratio-btn" data-ratio="1">1:1</button>
-        <button type="button" class="crop-ratio-btn" data-ratio="1.3333">4:3</button>
-        <button type="button" class="crop-ratio-btn" data-ratio="1.7778">16:9</button>
-      </div>
-      <button type="button" class="crop-tool-btn" data-rotate="-90">
-        <span class="material-icons-outlined" style="font-size:15px;">rotate_left</span>
-      </button>
-      <button type="button" class="crop-tool-btn" data-rotate="90">
-        <span class="material-icons-outlined" style="font-size:15px;">rotate_right</span>
-      </button>
-      <button type="button" class="crop-tool-btn" data-flip="x">
-        <span class="material-icons-outlined" style="font-size:15px;">flip</span>
-      </button>
-      <button type="button" class="crop-tool-btn" data-flip="y" style="transform:rotate(90deg)">
-        <span class="material-icons-outlined" style="font-size:15px;">flip</span>
-      </button>
-      <div class="crop-slider-group">
-        <label><span class="material-icons-outlined" style="font-size:14px;">zoom_in</span></label>
-        <input type="range" class="crop-slider" id="zoomSlider" min="0" max="3" step="0.01" value="0"/>
-      </div>
-      <div class="crop-actions">
-        <button type="button" class="btn-crop-cancel" id="cropCancelBtn">Cancel</button>
-        <button type="button" class="btn-crop-apply" id="cropApplyBtn">
-          <span class="material-icons-outlined" style="font-size:14px;">check</span> Apply
+      <div class="crop-toolbar-row">
+        <div class="crop-ratio-group">
+          <button type="button" class="crop-ratio-btn active" data-ratio="NaN">Free</button>
+          <button type="button" class="crop-ratio-btn" data-ratio="1">1:1</button>
+          <button type="button" class="crop-ratio-btn" data-ratio="1.3333">4:3</button>
+          <button type="button" class="crop-ratio-btn" data-ratio="0.75">3:4</button>
+          <button type="button" class="crop-ratio-btn" data-ratio="1.7778">16:9</button>
+        </div>
+        <div class="crop-divider"></div>
+        <button type="button" class="crop-tool-btn" id="rotateLeftBtn" title="Rotate Left 90°">
+          <span class="material-icons-outlined" style="font-size:15px;">rotate_left</span>
         </button>
+        <button type="button" class="crop-tool-btn" id="rotateRightBtn" title="Rotate Right 90°">
+          <span class="material-icons-outlined" style="font-size:15px;">rotate_right</span>
+        </button>
+        <button type="button" class="crop-tool-btn" id="flipHBtn" title="Flip Horizontal">
+          <span class="material-icons-outlined" style="font-size:15px;">flip</span>
+        </button>
+        <button type="button" class="crop-tool-btn" id="flipVBtn" title="Flip Vertical" style="transform:rotate(90deg);">
+          <span class="material-icons-outlined" style="font-size:15px;">flip</span>
+        </button>
+        <div class="crop-divider"></div>
+        <div class="crop-slider-group">
+          <span class="material-icons-outlined" style="font-size:15px;color:var(--text-muted);">zoom_out</span>
+          <input type="range" class="crop-slider" id="zoomSlider" min="-0.5" max="3" step="0.01" value="0"/>
+          <span class="material-icons-outlined" style="font-size:15px;color:var(--text-muted);">zoom_in</span>
+        </div>
+        <div class="crop-actions">
+          <button type="button" class="btn-crop-reset" id="cropResetBtn">
+            <span class="material-icons-outlined" style="font-size:14px;">restart_alt</span> Reset
+          </button>
+          <button type="button" class="btn-crop-cancel" id="cropCancelBtn">Cancel</button>
+          <button type="button" class="btn-crop-apply" id="cropApplyBtn">
+            <span class="material-icons-outlined" style="font-size:14px;">check</span> Apply
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -734,6 +775,12 @@ function slotClear(idx) {
   $(`file-${idx}`).value = '';
   $(`kb-${idx}`).textContent = '';
   Object.assign(state[idx], { originalSrc:'', croppedBlob:null, flipX:1, flipY:1 });
+  sessionStorage.removeItem(sessionPrefix + idx);
+}
+
+const sessionPrefix = 'outfito_add_prod_img_';
+function persistImage(idx, dataUrl) {
+  try { sessionStorage.setItem(sessionPrefix + idx, dataUrl); } catch(e) { console.warn('Storage full'); }
 }
 
 function handleFileSelected(input, idx) {
@@ -746,61 +793,169 @@ function handleFileSelected(input, idx) {
     Object.assign(state[idx], { originalSrc: e.target.result, croppedBlob:null, flipX:1, flipY:1 });
     slotSetPreview(idx, e.target.result);
     $(`kb-${idx}`).textContent = (file.size / 1024).toFixed(0) + ' KB';
+    persistImage(idx, e.target.result);
     openCrop(idx);
   };
   reader.readAsDataURL(file);
 }
 
-/* ── Crop ── */
+/* ── Crop Engine (production-ready) ── */
+
+// Convert stored dataURL to a fresh Blob URL to guarantee onload fires
+function _dataUrlToBlobUrl(dataUrl) {
+  const arr  = dataUrl.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  const u8   = new Uint8Array(bstr.length);
+  for (let i = 0; i < bstr.length; i++) u8[i] = bstr.charCodeAt(i);
+  return URL.createObjectURL(new Blob([u8], { type: mime }));
+}
+
 function openCrop(idx) {
-  if (!state[idx].originalSrc) return;
-  state[idx].flipX = 1; state[idx].flipY = 1;
+  if (!state[idx] || !state[idx].originalSrc) {
+    toast('warning', 'Please select an image first.');
+    return;
+  }
+
+  // Track active slot
   activeCropSlot = idx;
   $('cropSlotLabel').textContent = SLOT_LABELS[idx] || '';
-  if (cropperInst) { cropperInst.destroy(); cropperInst = null; }
+
+  // Reset ratio buttons to Free
   $$('.crop-ratio-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.crop-ratio-btn[data-ratio="NaN"]').classList.add('active');
   $('zoomSlider').value = 0;
+
+  // Show overlay
   $('cropOverlay').classList.add('active');
+
+  // CRITICAL: destroy any existing instance to prevent memory leaks / duplicates
+  if (cropperInst) {
+    cropperInst.destroy();
+    cropperInst = null;
+  }
+
   const cropImg = $('cropImg');
-  cropImg.onload = () => {
-    if (activeCropSlot !== idx) return;
+  cropImg.onload  = null;
+  cropImg.onerror = null;
+
+  // Convert dataURL → fresh blob URL. This ALWAYS fires onload even for cached images.
+  let blobUrl;
+  try { blobUrl = _dataUrlToBlobUrl(state[idx].originalSrc); }
+  catch(e) { blobUrl = state[idx].originalSrc; } // fallback to raw dataURL
+
+  const capturedIdx = idx;
+
+  cropImg.onload = function() {
+    cropImg.onload  = null;
+    cropImg.onerror = null;
+
+    // Guard: slot may have changed while image was loading
+    if (activeCropSlot !== capturedIdx) {
+      if (blobUrl.startsWith('blob:')) URL.revokeObjectURL(blobUrl);
+      return;
+    }
+
+    // Destroy again (race-condition guard)
+    if (cropperInst) { cropperInst.destroy(); cropperInst = null; }
+
     cropperInst = new Cropper(cropImg, {
-      viewMode:1, autoCropArea:0.85, responsive:true,
-      background:false, checkOrientation:false, toggleDragModeOnDblclick:false,
-      zoom(e) { $('zoomSlider').value = Math.max(0, Math.min(3, (e.detail.ratio - 1).toFixed(2))); },
+      viewMode:    1,
+      autoCropArea: 0.85,
+      responsive:  true,
+      background:  false,
+      checkOrientation: false,
+      toggleDragModeOnDblclick: false,
+      preview: '#cropPreviewBox1, #cropPreviewBox2',
+      ready() {
+        state[capturedIdx].flipX = 1;
+        state[capturedIdx].flipY = 1;
+        $('zoomSlider').value = 0;
+        if (blobUrl.startsWith('blob:')) URL.revokeObjectURL(blobUrl); // free memory
+      },
+      zoom(e) {
+        const v = Math.max(-0.5, Math.min(3, +(e.detail.ratio - 1).toFixed(3)));
+        $('zoomSlider').value = v;
+      },
     });
   };
-  if (cropImg.src === state[idx].originalSrc) cropImg.onload();
-  else cropImg.src = state[idx].originalSrc;
+
+  cropImg.onerror = function() {
+    cropImg.onerror = null;
+    toast('error', 'Failed to load image into crop editor.');
+    if (blobUrl.startsWith('blob:')) URL.revokeObjectURL(blobUrl);
+  };
+
+  cropImg.src = blobUrl;
 }
 
 function closeCrop() {
   $('cropOverlay').classList.remove('active');
-  if (cropperInst) { cropperInst.destroy(); cropperInst = null; }
+  // Always destroy on close — prevents memory leak
+  if (cropperInst) {
+    cropperInst.destroy();
+    cropperInst = null;
+  }
   activeCropSlot = -1;
 }
 
 function applyCrop() {
-  if (!cropperInst || activeCropSlot < 0) { toast('warning','No crop active.'); return; }
-  const idx = activeCropSlot;
-  const canvas = cropperInst.getCroppedCanvas({ maxWidth:1200, maxHeight:1200, imageSmoothingQuality:'high' });
-  if (!canvas) { toast('error','Could not generate cropped image.'); return; }
+  if (!cropperInst || activeCropSlot < 0) {
+    toast('warning', 'Please wait for the image to fully load, then click Apply.');
+    return;
+  }
+
+  const applyBtn = $('cropApplyBtn');
+  applyBtn.disabled = true;
+  applyBtn.innerHTML = 'Applying…';
+
+  const idx             = activeCropSlot;
+  const capturedCropper = cropperInst; // local ref — survives closeCrop()
+
+  const canvas = capturedCropper.getCroppedCanvas({
+    maxWidth:  1200,
+    maxHeight: 1200,
+    fillColor: '#fff',
+    imageSmoothingEnabled: true,
+    imageSmoothingQuality: 'high',
+  });
+
+  function restoreBtn() {
+    applyBtn.disabled = false;
+    applyBtn.innerHTML = '<span class="material-icons-outlined" style="font-size:14px;">check</span> Apply';
+  }
+
+  if (!canvas) {
+    toast('error', 'Could not generate cropped image.');
+    restoreBtn();
+    return;
+  }
+
   canvas.toBlob(blob => {
-    if (!blob) { toast('error','Crop failed.'); return; }
-    state[idx].croppedBlob = blob;
-    slotSetPreview(idx, URL.createObjectURL(blob));
-    const r = new FileReader();
-    r.onload = e => { state[idx].originalSrc = e.target.result; };
-    r.readAsDataURL(blob);
-    try {
-      const dt = new DataTransfer();
-      const names = ['image_cover.jpg','image_side.jpg','image_back.jpg'];
-      dt.items.add(new File([blob], names[idx], { type:'image/jpeg' }));
-      $(`file-${idx}`).files = dt.files;
-    } catch(_) {}
-    $(`kb-${idx}`).textContent = (blob.size / 1024).toFixed(0) + ' KB (cropped)';
-    closeCrop();
+    if (!blob) { toast('error', 'Crop export failed.'); restoreBtn(); return; }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result;
+
+      state[idx].croppedBlob = blob;
+      state[idx].originalSrc = dataUrl;
+
+      slotSetPreview(idx, dataUrl);
+      persistImage(idx, dataUrl);
+
+      try {
+        const names = ['image_cover.jpg', 'image_side.jpg', 'image_back.jpg'];
+        const dt = new DataTransfer();
+        dt.items.add(new File([blob], names[idx], { type: 'image/jpeg' }));
+        $(`file-${idx}`).files = dt.files;
+      } catch(e) { console.warn('DataTransfer not supported:', e); }
+
+      $(`kb-${idx}`).textContent = (blob.size / 1024).toFixed(0) + ' KB (cropped)';
+      restoreBtn();
+      closeCrop();
+    };
+    reader.readAsDataURL(blob);
   }, 'image/jpeg', 0.92);
 }
 
@@ -861,24 +1016,9 @@ function swatchFromText(val) {
     setTimeout(() => { $('id_color').value = nearestColorName(val.trim()); }, 0);
   }
   if (val.trim()) { clearErr($('id_color')); hideHint('hint_color'); }
-  refreshSkuPreview();
 }
 
-/* ── SKU preview ── */
-function refreshSkuPreview() {
-  const catEl   = $('id_category');
-  const catText = catEl.options[catEl.selectedIndex]?.text?.trim() || '';
-  const color   = $('id_color').value.trim();
-  const size    = $('sizeValue').value.trim();
-  const type    = $('id_product_type')?.value?.trim() || '';
-  const parts   = [];
-  if (catText && catText !== 'Select Category') parts.push(catText.substring(0,3).toUpperCase());
-  if (type)  parts.push(type.substring(0,3).toUpperCase());
-  if (color && /^[A-Za-z\s]+$/.test(color) && !color.startsWith('#')) parts.push(color.substring(0,3).toUpperCase());
-  if (size)  parts.push(size.toUpperCase());
-  parts.push([...Array(4)].map(()=>Math.floor(Math.random()*16).toString(16)).join('').toUpperCase());
-  $('skuPreview').value = 'OUT-' + parts.join('-');
-}
+
 
 /* ── Size pills ── */
 // Removed, using Variants table now.
@@ -955,6 +1095,36 @@ document.addEventListener('DOMContentLoaded', () => {
   $$('.slot-file-input').forEach(i => {
     i.addEventListener('change', function() { handleFileSelected(this, parseInt(this.dataset.slot)); });
   });
+
+  // Restore images from sessionStorage on validation failure
+  function dataURLtoFile(dataurl, filename) {
+    var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+    return new File([u8arr], filename, {type:mime});
+  }
+
+  const IMG_SLOTS = [0, 1, 2];
+
+  IMG_SLOTS.forEach(i => {
+    const stored = sessionStorage.getItem(sessionPrefix + i);
+    if (stored) {
+      try {
+        const names = ['image_cover.jpg','image_side.jpg','image_back.jpg'];
+        const file = dataURLtoFile(stored, names[i]);
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        $(`file-${i}`).files = dt.files;
+        slotSetPreview(i, stored);
+        $(`kb-${i}`).textContent = (file.size / 1024).toFixed(0) + ' KB (restored)';
+        state[i].croppedBlob = file;
+        state[i].originalSrc = stored;
+      } catch(e) {
+        console.warn('Failed to restore image', e);
+      }
+    }
+  });
+
   $$('.slot-btn-remove').forEach(b => {
     b.addEventListener('click', e => { e.stopPropagation(); slotClear(parseInt(b.dataset.slot)); });
   });
@@ -965,30 +1135,55 @@ document.addEventListener('DOMContentLoaded', () => {
     b.addEventListener('click', e => { e.stopPropagation(); openCrop(parseInt(b.dataset.slot)); });
   });
 
-  // Crop modal
+  // Crop modal button wiring
   $('cropCloseBtn').addEventListener('click', closeCrop);
   $('cropCancelBtn').addEventListener('click', closeCrop);
   $('cropApplyBtn').addEventListener('click', applyCrop);
-  $('zoomSlider').addEventListener('input', function() {
-    if (cropperInst) cropperInst.zoomTo(1 + parseFloat(this.value));
+
+  // Reset — destroy + re-init on same src
+  $('cropResetBtn').addEventListener('click', () => {
+    if (!cropperInst || activeCropSlot < 0) return;
+    cropperInst.reset();
+    $('zoomSlider').value = 0;
   });
+
+  // Zoom slider — zoomTo absolute level
+  $('zoomSlider').addEventListener('input', function() {
+    if (cropperInst) {
+      const v = parseFloat(this.value);
+      // v=0 → natural size (ratio=1), v>0 → zoomed in, v<0 → zoomed out
+      cropperInst.zoomTo(Math.max(0.05, 1 + v));
+    }
+  });
+
+  // Aspect ratio buttons
   $$('.crop-ratio-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       $$('.crop-ratio-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      if (cropperInst) { const r=parseFloat(btn.dataset.ratio); cropperInst.setAspectRatio(isNaN(r)?NaN:r); }
+      if (cropperInst) {
+        const r = parseFloat(btn.dataset.ratio);
+        cropperInst.setAspectRatio(isNaN(r) ? NaN : r);
+      }
     });
   });
-  $$('[data-rotate]').forEach(b => {
-    b.addEventListener('click', () => { if (cropperInst) cropperInst.rotate(parseInt(b.dataset.rotate)); });
+
+  // Rotate buttons (named IDs)
+  $('rotateLeftBtn').addEventListener('click',  () => { if (cropperInst) cropperInst.rotate(-90); });
+  $('rotateRightBtn').addEventListener('click', () => { if (cropperInst) cropperInst.rotate(90); });
+
+  // Flip buttons (named IDs)
+  $('flipHBtn').addEventListener('click', () => {
+    if (!cropperInst || activeCropSlot < 0) return;
+    const s = state[activeCropSlot];
+    s.flipX = (s.flipX || 1) * -1;
+    cropperInst.scaleX(s.flipX);
   });
-  $$('[data-flip]').forEach(b => {
-    b.addEventListener('click', () => {
-      if (!cropperInst || activeCropSlot < 0) return;
-      const s = state[activeCropSlot];
-      if (b.dataset.flip==='x') { s.flipX*=-1; cropperInst.scaleX(s.flipX); }
-      else                       { s.flipY*=-1; cropperInst.scaleY(s.flipY); }
-    });
+  $('flipVBtn').addEventListener('click', () => {
+    if (!cropperInst || activeCropSlot < 0) return;
+    const s = state[activeCropSlot];
+    s.flipY = (s.flipY || 1) * -1;
+    cropperInst.scaleY(s.flipY);
   });
 
   // Lightbox
@@ -1002,7 +1197,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Product type
   $('id_product_type').addEventListener('change', function() {
     if (this.value) hideHint('hint_type');
-    refreshSkuPreview();
   });
 
   // Dynamic Variants Logic
@@ -1119,10 +1313,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Category
   $('id_category').addEventListener('change', function() {
     if (this.value) { clearErr(this); hideHint('hint_category'); }
-    refreshSkuPreview();
   });
-
-  $('skuRefreshBtn').addEventListener('click', refreshSkuPreview);
 
   // Message close buttons
   $$('[data-msg-close]').forEach(b => { b.addEventListener('click', () => b.closest('.msg-item')?.remove()); });
@@ -1161,13 +1352,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (ec) swatchFromText(ec);
   else $('colorSwatch').style.background = $('colorPicker').value;
 
-  refreshSkuPreview();
-
-  refreshSkuPreview();
 
   // Auto-dismiss messages: errors after 10s, others after 4s
   $$('.msg-item').forEach(el => {
-    const delay = el.classList.contains('msg-error') ? 10000 : 4000;
+    const delay = el.classList.contains('msg-error') ? 8000 : 4000;
     setTimeout(() => {
       el.style.transition='opacity .4s'; el.style.opacity='0';
       setTimeout(()=>el.remove(),400);

@@ -351,10 +351,17 @@
                      value="{{ form.name.value|default_if_none:'' }}"
                      maxlength="120"/>
               <div class="char-count" id="nameCount">0 / 80</div>
+              {% if form.name.errors %}
+              <div class="field-hint" style="display:block; color:#dc2626;">
+                <span class="material-icons-outlined">error</span>
+                {{ form.name.errors.0 }}
+              </div>
+              {% else %}
               <div class="field-hint" id="hint_name">
                 <span class="material-icons-outlined">error</span>
                 Name must be at least 3 characters
               </div>
+              {% endif %}
             </div>
 
             <!-- DESCRIPTION -->
@@ -368,10 +375,17 @@
                         maxlength="2000"
                         rows="5">{{ form.description.value|default_if_none:'' }}</textarea>
               <div class="char-count" id="descCount">0 / 2000</div>
+              {% if form.description.errors %}
+              <div class="field-hint" style="display:block; color:#dc2626;">
+                <span class="material-icons-outlined">error</span>
+                {{ form.description.errors.0 }}
+              </div>
+              {% else %}
               <div class="field-hint" id="hint_description">
                 <span class="material-icons-outlined">error</span>
                 Description must be under 2000 characters
               </div>
+              {% endif %}
             </div>
 
             <!-- IMAGES -->
@@ -530,8 +544,12 @@
                   <option value="coat"   {% if form.product_type.value == 'coat'   %}selected{% endif %}>Coat</option>
                 </select>
                 {% if form.product_type.errors %}
-                <div class="field-hint" style="display:block;margin-top:.4rem;">
+                <div class="field-hint" style="display:block;margin-top:.4rem; color:#dc2626;">
                   <span class="material-icons-outlined">error</span>{{ form.product_type.errors.0 }}
+                </div>
+                {% else %}
+                <div class="field-hint" id="hint_type" style="margin-top:.4rem;">
+                  <span class="material-icons-outlined">error</span>Please select a product type
                 </div>
                 {% endif %}
               </div>
@@ -679,8 +697,12 @@
                 {% endfor %}
               </select>
               {% if form.category.errors %}
-              <div class="field-hint" style="display:block;">
+              <div class="field-hint" style="display:block; color:#dc2626;">
                 <span class="material-icons-outlined">error</span>{{ form.category.errors.0 }}
+              </div>
+              {% else %}
+              <div class="field-hint" id="hint_category">
+                <span class="material-icons-outlined">error</span>Please select a category
               </div>
               {% endif %}
             </div>
@@ -1252,7 +1274,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* Messages: close button + auto-dismiss */
   $$('[data-msg-close]').forEach(b => { b.addEventListener('click', () => b.closest('.msg-item')?.remove()); });
   $$('.msg-item').forEach(el => {
-    const delay = el.classList.contains('msg-error') ? 10000 : 4000;
+    const delay = el.classList.contains('msg-error') ? 8000 : 4000;
     setTimeout(() => {
       el.style.transition='opacity .4s'; el.style.opacity='0';
       setTimeout(()=>el.remove(),400);
