@@ -320,7 +320,7 @@
   <div class="wl-grid">
     {% for item in items %}
       {% with product=item.product variant=item.variant %}
-      <div class="wl-card">
+      <div class="wl-card" id="wl-card-{{ product.id }}">
         
         <div class="wl-img-box">
           <div class="wl-badges">
@@ -341,7 +341,7 @@
             {% endif %}
           </div>
           
-          <a href="{% url 'remove_from_wishlist' product.id %}" class="wl-remove" title="Remove">
+          <a href="{% url 'remove_from_wishlist' product.id %}" class="wl-remove" data-card="wl-card-{{ product.id }}" title="Remove">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </a>
 
@@ -393,7 +393,10 @@
           </div>
 
           {% if variant and variant.stock > 0 and variant.is_active and not product.is_deleted and product.is_listed %}
-            <form action="{% url 'add_to_cart' variant.id %}" method="POST" style="margin-top: auto;">
+            <form class="wl-add-form" style="margin-top: auto;"
+                  data-url="{% url 'add_to_cart' variant.id %}"
+                  data-card="wl-card-{{ product.id }}"
+                  data-product="{{ product.id }}">
               {% csrf_token %}
               <input type="hidden" name="quantity" value="1">
               <button type="submit" class="wl-btn-cart">
@@ -429,4 +432,133 @@
 
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  function getCsrf() {
+    const m = document.cookie.match(/csrftoken=([^;]+)/);
+    return m ? m[1] : '';
+  }
+
+  function showToast(msg, type) {
+    if (typeof window.showSiteToast === 'function') { window.showSiteToast(msg, type); return; }
+    const t = document.createElement('div');
+    t.textContent = msg;
+    const bg = type === 'error' ? '#ef4444' : '#10b981';
+    t.style.cssText = 'position:fixed;top:1.2rem;right:1.2rem;z-index:9999;background:' + bg + ';color:#fff;padding:.75rem 1.4rem;border-radius:10px;font-size:.85rem;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:opacity .35s';
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 380); }, 2800);
+  }
+
+  function updateCartBadge(count) {
+    document.querySelectorAll('.ajax-cart-badge').forEach(el => {
+      el.textContent = count;
+      el.style.display = count > 0 ? 'flex' : 'none';
+    });
+  }
+
+  function updateWishBadge(count) {
+    document.querySelectorAll('.ajax-wishlist-badge').forEach(el => {
+      el.textContent = count;
+      el.style.display = count > 0 ? 'flex' : 'none';
+    });
+  }
+
+  function removeCard(cardId, wishCount) {
+    const card = document.getElementById(cardId);
+    if (!card) return;
+    card.style.transition = 'transform .3s ease, opacity .3s ease';
+    card.style.transform  = 'scale(0.82)';
+    card.style.opacity    = '0';
+    setTimeout(() => {
+      card.remove();
+      const remaining = document.querySelectorAll('.wl-card').length;
+      const countEl   = document.querySelector('.wl-count');
+      if (remaining === 0) {
+        const grid = document.querySelector('.wl-grid');
+        if (grid)    grid.remove();
+        if (countEl) countEl.remove();
+        const wrap = document.querySelector('.wl-wrap');
+        if (wrap) wrap.insertAdjacentHTML('beforeend',
+          '<div class="wl-empty-box"><div class="wl-empty-icon"><svg viewBox="0 0 24 24" width="60" height="60" fill="none" stroke="currentColor" stroke-width="1"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div><h2>Nothing saved yet</h2><p>Explore our curated collections and tap the heart to save your favorites.</p><a href="/products/" class="wl-btn-shop">Explore Collection</a></div>'
+        );
+      } else if (countEl) {
+        countEl.textContent = remaining + ' Item' + (remaining !== 1 ? 's' : '');
+      }
+      updateWishBadge((wishCount !== undefined) ? wishCount : remaining);
+    }, 320);
+  }
+
+  /* Add to Cart */
+  document.addEventListener('submit', function (e) {
+    const form = e.target.closest('.wl-add-form');
+    if (!form) return;
+    e.preventDefault();
+    const url    = form.dataset.url;
+    const cardId = form.dataset.card;
+    const btn    = form.querySelector('button[type="submit"]');
+    const orig   = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = 'Adding…';
+    fetch(url, {
+      method : 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': getCsrf() },
+      body   : new FormData(form),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        showToast(data.message || 'Added to cart!', 'success');
+        if (data.item_count !== undefined) updateCartBadge(data.item_count);
+        const wc = data.wishlist_count !== undefined
+          ? data.wishlist_count
+          : Math.max(0, document.querySelectorAll('.wl-card').length - 1);
+        removeCard(cardId, wc);
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+        showToast(data.warning || data.message || 'Could not add to cart.', 'error');
+      }
+    })
+    .catch(() => {
+      btn.disabled = false;
+      btn.innerHTML = orig;
+      showToast('Network error. Please try again.', 'error');
+    });
+  });
+
+  /* Remove from Wishlist (X button) */
+  document.addEventListener('click', function (e) {
+    const link = e.target.closest('.wl-remove');
+    if (!link) return;
+    e.preventDefault();
+    const href   = link.getAttribute('href');
+    const cardId = link.dataset.card;
+    link.style.pointerEvents = 'none';
+    link.style.opacity = '0.3';
+    fetch(href, {
+      method : 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': getCsrf() },
+    })
+    .then(r => {
+      if (r.ok || r.redirected) {
+        const wc = Math.max(0, document.querySelectorAll('.wl-card').length - 1);
+        removeCard(cardId, wc);
+        showToast('Removed from wishlist', 'success');
+      } else {
+        link.style.pointerEvents = '';
+        link.style.opacity = '';
+        showToast('Could not remove.', 'error');
+      }
+    })
+    .catch(() => {
+      link.style.pointerEvents = '';
+      link.style.opacity = '';
+      showToast('Network error.', 'error');
+    });
+  });
+})();
+</script>
 {% endblock %}

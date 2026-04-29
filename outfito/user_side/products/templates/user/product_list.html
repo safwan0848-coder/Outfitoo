@@ -1279,10 +1279,41 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /* ── WISHLIST ── */
-    window.toggleWish = function (e, btn, id) {
+    window.toggleWish = async function (e, btn, id) {
         e.preventDefault();
         e.stopPropagation();
-        window.location.href = "{% url 'toggle_wishlist' 0 %}".replace('0', id);
+        const url = "{% url 'toggle_wishlist' 0 %}".replace('0', id);
+        
+        try {
+            // Include CSRF token for security if the backend expects it, though GET might pass if the view isn't require_POST
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await response.json();
+            if (data.ok) {
+                const wishBadges = document.querySelectorAll('.ajax-wishlist-badge');
+                wishBadges.forEach(badge => {
+                    badge.textContent = data.wishlist_count;
+                    badge.style.display = data.wishlist_count > 0 ? 'flex' : 'none';
+                });
+                
+                if (data.action === 'added') {
+                    btn.classList.add('active');
+                    btn.querySelector('i').classList.replace('fa-regular', 'fa-solid');
+                    btn.querySelector('i').style.color = 'var(--accent-light)';
+                    if (window.showToast) showToast(data.message, 'success');
+                } else {
+                    btn.classList.remove('active');
+                    btn.querySelector('i').classList.replace('fa-solid', 'fa-regular');
+                    btn.querySelector('i').style.color = '';
+                    if (window.showToast) showToast(data.message, 'info');
+                }
+            }
+        } catch (error) {
+            console.error("Error toggling wishlist:", error);
+            window.location.href = url; // Fallback
+        }
     }
 
     /* ── AJAX ADD TO CART ── */
@@ -1312,16 +1343,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
                 updateBadge(data.item_count);
                 
-                // Update global nav badges
-                const navBadge = document.getElementById('bag-count-badge');
-                if (navBadge) {
-                    navBadge.textContent = data.item_count;
-                    navBadge.style.display = data.item_count > 0 ? 'flex' : 'none';
-                }
-                const mobBadge = document.getElementById('mob-bag-count-badge');
-                if (mobBadge) {
-                    mobBadge.textContent = data.item_count;
-                    mobBadge.style.display = data.item_count > 0 ? 'flex' : 'none';
+                // Update cart badge in navbar
+                const cartBadges = document.querySelectorAll('.ajax-cart-badge');
+                cartBadges.forEach(badge => {
+                    badge.textContent = data.item_count;
+                    badge.style.display = data.item_count > 0 ? 'flex' : 'none';
+                });
+
+                // Update wishlist badge — backend removes item from wishlist when added to cart
+                if (data.wishlist_count !== undefined) {
+                    const wishBadges = document.querySelectorAll('.ajax-wishlist-badge');
+                    wishBadges.forEach(badge => {
+                        badge.textContent = data.wishlist_count;
+                        badge.style.display = data.wishlist_count > 0 ? 'flex' : 'none';
+                    });
                 }
             } else if (data.warning) {
                 if (window.showToast) showToast(data.warning, 'warning');

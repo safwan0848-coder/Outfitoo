@@ -32,16 +32,18 @@ def _cart_summary_json(cart):
         item.offer_dict = offer_info
         item.final_subtotal = item.base_subtotal - item.offer_discount
 
+    effective_subtotal = subtotal - offer_discount
     shipping = (
         Decimal('0.00')
-        if (subtotal - offer_discount) >= FREE_SHIPPING_THRESHOLD
+        if effective_subtotal >= FREE_SHIPPING_THRESHOLD
         else SHIPPING_CHARGE
     )
-    total = subtotal - offer_discount + shipping
+    total = effective_subtotal + shipping
     item_count = sum(i.quantity for i in items)
 
     return {
         'subtotal':    float(subtotal),
+        'effective_subtotal': float(effective_subtotal),
         'discount':    float(offer_discount),
         'shipping':    float(shipping),
         'total':       float(total),
@@ -97,9 +99,9 @@ def add_to_cart(request, pk):
 
     if not variant.is_active or variant.stock <= 0:
         msg = "This product is not available."
-        messages.error(request, msg)
         if _is_ajax(request):
             return JsonResponse({'ok': False, 'warning': msg})
+        messages.error(request, msg)
         return redirect('user_product_list')
 
     cart=get_or_create_cart(request.user)
@@ -119,20 +121,22 @@ def add_to_cart(request, pk):
     if new_qty > variant.stock:
         if item.quantity >= variant.stock:
             warn_msg = f"Maximum available stock ({variant.stock}) already in cart."
-            messages.warning(request, warn_msg)
             if _is_ajax(request):
                 return JsonResponse({'ok': False, 'warning': warn_msg})
+            messages.warning(request, warn_msg)
             return redirect(request.META.get('HTTP_REFERER', 'user_product_list'))
 
         new_qty=variant.stock
         warn_msg = f"Only {variant.stock} available. Quantity adjusted."
-        messages.warning(request, warn_msg)
+        if not _is_ajax(request):
+            messages.warning(request, warn_msg)
 
     MAX_QTY=5
     if new_qty > MAX_QTY:
         new_qty = MAX_QTY
         warn_msg = f"Maximum {MAX_QTY} units allowed."
-        messages.warning(request, warn_msg)
+        if not _is_ajax(request):
+            messages.warning(request, warn_msg)
 
     item.quantity=new_qty
     item.save()
@@ -140,24 +144,27 @@ def add_to_cart(request, pk):
     try:
         from user_side.wishlist.models import Wishlist, WishlistItem
         wishlist = Wishlist.objects.filter(user=request.user).first()
-
+        wishlist_count = 0
         if wishlist:
             WishlistItem.objects.filter(
                 wishlist=wishlist,
                 product=variant.product
             ).delete()
+            wishlist_count = wishlist.items.count()   # count AFTER delete
 
     except Exception:
-        pass
+        wishlist_count = 0
 
     msg = f"'{variant.product.name}' added to cart!"
-    messages.success(request, msg)
+    if not _is_ajax(request):
+        messages.success(request, msg)
 
     if _is_ajax(request):
         cart = get_or_create_cart(request.user)
         summary = _cart_summary_json(cart)
-        # If there's a warning (like max qty reached), send it along with the success payload
-        return JsonResponse({'ok': True, 'message': msg, 'warning': warn_msg, **summary})
+        # Include wishlist_count so the frontend can update the navbar badge instantly
+        return JsonResponse({'ok': True, 'message': msg, 'warning': warn_msg,
+                             'wishlist_count': wishlist_count, **summary})
 
     if action == 'buy':
         return redirect('cart_view')
@@ -196,20 +203,22 @@ def cart_view(request):
         item.offer_dict = offer_info
         item.final_subtotal = item.base_subtotal - item.offer_discount
 
-    shipping=Decimal('0.00') if (subtotal - offer_discount) >= FREE_SHIPPING_THRESHOLD else SHIPPING_CHARGE
-    total=subtotal - offer_discount + shipping
+    effective_subtotal = subtotal - offer_discount
+    shipping=Decimal('0.00') if effective_subtotal >= FREE_SHIPPING_THRESHOLD else SHIPPING_CHARGE
+    total=effective_subtotal + shipping
 
     return render(request, 'user/cart.html', {
-        'items':      items,
-        'item_count': item_count,
-        'subtotal':   subtotal,
-        'discount':   offer_discount,
-        'shipping':   shipping,
-        'total':      total,
-        'savings':    offer_discount,
-        'has_oos':    has_oos,
-        'max_qty':    MAX_QTY,
-        'applied_offers': offer_data['applied_offer_messages'],
+        'items':              items,
+        'item_count':         item_count,
+        'subtotal':           subtotal,
+        'effective_subtotal': effective_subtotal,
+        'discount':           offer_discount,
+        'shipping':           shipping,
+        'total':              total,
+        'savings':            offer_discount,
+        'has_oos':            has_oos,
+        'max_qty':            MAX_QTY,
+        'applied_offers':     offer_data['applied_offer_messages'],
     })
 
 @never_cache
@@ -230,10 +239,12 @@ def update_cart_qty(request, item_id):
     if action == 'increment':
         if item.quantity >= v.stock:
             warn_msg = f"Only {v.stock} units in stock."
-            messages.warning(request, warn_msg)
+            if not _is_ajax(request):
+                messages.warning(request, warn_msg)
         elif item.quantity >= MAX_QTY:
             warn_msg = f"Maximum {MAX_QTY} units per item."
-            messages.warning(request, warn_msg)
+            if not _is_ajax(request):
+                messages.warning(request, warn_msg)
         else:
             item.quantity += 1
             item.save()

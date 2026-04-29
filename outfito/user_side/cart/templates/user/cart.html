@@ -808,17 +808,11 @@ function updateSummary(data) {
         if (sCount) sCount.innerText = data.item_count;
         
         // Global navbar bag counter if it exists
-        const navBagCount = document.getElementById('bag-count-badge');
-        if (navBagCount) {
-            navBagCount.innerText = data.item_count;
-            navBagCount.style.display = data.item_count > 0 ? 'flex' : 'none';
-        }
-        // Mobile bottom nav badge if it exists
-        const mobBagCount = document.getElementById('mob-bag-count-badge');
-        if (mobBagCount) {
-            mobBagCount.innerText = data.item_count;
-            mobBagCount.style.display = data.item_count > 0 ? 'flex' : 'none';
-        }
+        const cartBadges = document.querySelectorAll('.ajax-cart-badge');
+        cartBadges.forEach(badge => {
+            badge.textContent = data.item_count;
+            badge.style.display = data.item_count > 0 ? 'flex' : 'none';
+        });
     }
     
     if (data.subtotal !== undefined) {

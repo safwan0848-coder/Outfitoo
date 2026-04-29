@@ -85,9 +85,13 @@
           </button>
         </div>
 
-        <div class="text-xs text-gray-400 text-center leading-relaxed">
-          <strong class="text-gray-200">{{ referral_count }}</strong> friend{{ referral_count|pluralize }} referred <br>
-          You earn <strong class="text-white">₹100</strong>, they get <strong class="text-gray-200">₹50</strong>
+        <div class="text-xs text-gray-400 text-center leading-relaxed space-y-1">
+          <div>
+            <strong class="text-white">{{ referral_count }}</strong>
+            friend{{ referral_count|pluralize }} completed their first order
+          </div>
+          <div>You earned <strong class="text-green-400">+₹{{ referral_earnings|floatformat:0 }}</strong> in referral bonuses</div>
+          <div class="text-gray-500 text-[0.6rem] mt-1">You earn ₹100 per friend · They get ₹50</div>
         </div>
         <input type="hidden" id="refLink" value="{{ referral_link }}">
       </div>

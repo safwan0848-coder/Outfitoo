@@ -1368,20 +1368,20 @@
                                             </div>
 
                                             <!-- Per-item status tags -->
-{% with rr=item.latest_return %}
-
-{% if rr and rr.status == 'Pending' %}
-    <span class="item-return-requested">(Return Requested)</span>
-    <button type="button" class="btn-view-return" style="margin-left: .5rem; padding: 0.2rem 0.6rem; font-size: 0.65rem;" onclick="document.getElementById('returnModal-{{ rr.id }}').classList.add('open')">Verify Return</button>
-{% elif rr and rr.status == 'Approved' %}
-    <span class="item-returned" style="color:var(--accent);">(Returned)</span>
-    <button type="button" class="btn-view-return" style="margin-left: .5rem; background: var(--text-muted); padding: 0.2rem 0.6rem; font-size: 0.65rem;" onclick="document.getElementById('returnModal-{{ rr.id }}').classList.add('open')">View Return</button>
-{% elif rr and rr.status == 'Rejected' %}
-    <span class="item-cancelled">(Rejected)</span>
-    <button type="button" class="btn-view-return" style="margin-left: .5rem; background: var(--text-muted); padding: 0.2rem 0.6rem; font-size: 0.65rem;" onclick="document.getElementById('returnModal-{{ rr.id }}').classList.add('open')">View Return</button>
+{% if item.pending_qty > 0 %}
+    <span class="item-return-requested">(Return Requested - Qty {{ item.pending_qty }})</span>
+    <button type="button" class="btn-view-return" style="margin-left: .5rem; padding: 0.2rem 0.6rem; font-size: 0.65rem;" onclick="document.getElementById('returnModal-{{ item.latest_pending.id }}').classList.add('open')">Verify Return</button>
 {% endif %}
 
-{% endwith %}
+{% if item.approved_qty > 0 %}
+    <span class="item-returned" style="color:var(--accent);">(Returned - Qty {{ item.approved_qty }})</span>
+    <button type="button" class="btn-view-return" style="margin-left: .5rem; background: var(--text-muted); padding: 0.2rem 0.6rem; font-size: 0.65rem;" onclick="document.getElementById('returnModal-{{ item.latest_approved.id }}').classList.add('open')">View Return</button>
+{% endif %}
+
+{% if item.rejected_qty > 0 %}
+    <span class="item-cancelled">(Rejected - Qty {{ item.rejected_qty }})</span>
+    <button type="button" class="btn-view-return" style="margin-left: .5rem; background: var(--text-muted); padding: 0.2rem 0.6rem; font-size: 0.65rem;" onclick="document.getElementById('returnModal-{{ item.latest_rejected.id }}').classList.add('open')">View Return</button>
+{% endif %}
 
                                         </div>
                                     </div>
@@ -1565,8 +1565,7 @@
 
 
     {% for item in order.items.all %}
-    {% with rr=item.latest_return %}
-    {% if rr %}
+    {% for rr in item.return_requests.all %}
     <!-- Return Modal for {{ rr.id }} -->
     <div class="modal-overlay" id="returnModal-{{ rr.id }}">
         <div class="modal-box" onclick="event.stopPropagation()">
@@ -1674,8 +1673,7 @@
             {% endif %}
         </div>
     </div>
-    {% endif %}
-    {% endwith %}
+    {% endfor %}
     {% endfor %}
 
 {% endblock %}

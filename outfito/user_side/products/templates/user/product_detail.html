@@ -151,7 +151,7 @@
             <span class="text-[9px] font-black tracking-[0.2em] uppercase text-gray-500">{{ product.product_type|title }}</span>
             {% endif %}
           </div>
-          <form action="{% url 'toggle_wishlist' product.id %}" method="POST" class="lg:hidden">
+          <form action="{% url 'toggle_wishlist' product.id %}" method="POST" class="lg:hidden" onsubmit="handleWishlistAjax(event, this)">
             {% csrf_token %}
             <button type="submit"
               class="w-11 h-11 flex items-center justify-center rounded-2xl border transition-all active:scale-90 shadow-xl
@@ -232,7 +232,7 @@
               <div id="qtyDisplay" class="w-12 text-center font-black text-white text-base">1</div>
               <button type="button" onclick="changeQty(1)" class="w-12 h-full text-gray-500 hover:text-white font-black text-xl transition-colors active:scale-90">+</button>
             </div>
-            <form action="{% url 'toggle_wishlist' product.id %}" method="POST" class="flex-1">
+            <form action="{% url 'toggle_wishlist' product.id %}" method="POST" class="flex-1" onsubmit="handleWishlistAjax(event, this)">
               {% csrf_token %}
               <button type="submit" class="w-full h-14 flex items-center justify-center rounded-2xl border-2 font-black text-[11px] uppercase tracking-[0.2em] transition-all group active:scale-95
                 {% if in_wishlist %}text-red-500 border-red-500/20 bg-red-500/5 shadow-[0_0_20px_rgba(239,68,68,0.1)]{% else %}text-gray-500 border-white/10 hover:bg-white/5 hover:text-red-500 hover:border-red-500/20{% endif %}">
@@ -914,16 +914,20 @@ if(mzImg) {
                   showToast(data.message, 'success');
               }
               
-              // Update global nav badges
-              const navBadge = document.getElementById('bag-count-badge');
-              if (navBadge) {
-                  navBadge.textContent = data.item_count;
-                  navBadge.style.display = data.item_count > 0 ? 'flex' : 'none';
-              }
-              const mobBadge = document.getElementById('mob-bag-count-badge');
-              if (mobBadge) {
-                  mobBadge.textContent = data.item_count;
-                  mobBadge.style.display = data.item_count > 0 ? 'flex' : 'none';
+              // Update cart badge in navbar
+              const cartBadges = document.querySelectorAll('.ajax-cart-badge');
+              cartBadges.forEach(badge => {
+                  badge.textContent = data.item_count;
+                  badge.style.display = data.item_count > 0 ? 'flex' : 'none';
+              });
+
+              // Update wishlist badge — backend removes item from wishlist when added to cart
+              if (data.wishlist_count !== undefined) {
+                  const wishBadges = document.querySelectorAll('.ajax-wishlist-badge');
+                  wishBadges.forEach(badge => {
+                      badge.textContent = data.wishlist_count;
+                      badge.style.display = data.wishlist_count > 0 ? 'flex' : 'none';
+                  });
               }
           } else if (data.warning) {
               if (window.showToast) showToast(data.warning, 'warning');
@@ -932,6 +936,69 @@ if(mzImg) {
           if (window.showToast) showToast("Error adding to cart", 'error');
       } finally {
           btn.innerHTML = originalHtml;
+          btn.disabled = false;
+      }
+  };
+
+  /* AJAX Toggle Wishlist */
+  window.handleWishlistAjax = async function(event, form) {
+      event.preventDefault();
+      const btn = form.querySelector('button[type="submit"]');
+      const originalHtml = btn.innerHTML;
+      
+      // Show syncing indicator
+      btn.innerHTML = '<span class="material-icons-outlined animate-spin text-lg mr-2">sync</span> Syncing...';
+      btn.disabled = true;
+
+      try {
+          const response = await fetch(form.action, {
+              method: 'GET',
+              headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          });
+          const data = await response.json();
+          
+          if (data.ok) {
+              const wishBadges = document.querySelectorAll('.ajax-wishlist-badge');
+              wishBadges.forEach(badge => {
+                  badge.textContent = data.wishlist_count;
+                  badge.style.display = data.wishlist_count > 0 ? 'flex' : 'none';
+              });
+              
+              if (window.showToast) {
+                  showToast(data.message, data.action === 'added' ? 'success' : 'info');
+              }
+              
+              // Restore HTML but modify classes and text based on action
+              btn.innerHTML = originalHtml;
+              
+              if(data.action === 'added') {
+                  btn.classList.add('text-red-500', 'border-red-500/20', 'bg-red-500/5', 'shadow-[0_0_20px_rgba(239,68,68,0.1)]');
+                  btn.classList.remove('text-gray-500', 'border-white/10', 'hover:bg-white/5', 'hover:text-red-500', 'hover:border-red-500/20');
+                  const svg = btn.querySelector('svg');
+                  if(svg) {
+                      svg.setAttribute('fill', 'currentColor');
+                      svg.removeAttribute('stroke');
+                  }
+                  if (btn.innerHTML.includes('Add Wishlist')) {
+                      btn.innerHTML = btn.innerHTML.replace('Add Wishlist', 'In Wishlist');
+                  }
+              } else {
+                  btn.classList.remove('text-red-500', 'border-red-500/20', 'bg-red-500/5', 'shadow-[0_0_20px_rgba(239,68,68,0.1)]');
+                  btn.classList.add('text-gray-500', 'border-white/10', 'hover:bg-white/5', 'hover:text-red-500', 'hover:border-red-500/20');
+                  const svg = btn.querySelector('svg');
+                  if(svg) {
+                      svg.setAttribute('fill', 'none');
+                      svg.setAttribute('stroke', 'currentColor');
+                  }
+                  if (btn.innerHTML.includes('In Wishlist')) {
+                      btn.innerHTML = btn.innerHTML.replace('In Wishlist', 'Add Wishlist');
+                  }
+              }
+          }
+      } catch (error) {
+          console.error("Error toggling wishlist:", error);
+          window.location.href = form.action;
+      } finally {
           btn.disabled = false;
       }
   };

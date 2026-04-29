@@ -1,33 +1,29 @@
 # OUTFITO – Premium E-commerce Platform
 
-## 📖 Project Description
-
-OUTFITO is a feature-rich, premium e-commerce platform built to provide a seamless shopping experience. Designed with a "Quiet Luxury" aesthetic, the platform handles everything from product discovery and cart management to secure payments and order tracking. 
-
-The application is powered by a robust **Django** backend for secure data handling and business logic, combined with a responsive, modern frontend styled using **Tailwind CSS** and raw JavaScript. 
+A modern, high-performance eCommerce platform built with Django and styled with a "Quiet Luxury" aesthetic using Tailwind CSS. OUTFITO provides a seamless shopping experience with robust backend management, dynamic offers, a wallet system, and secure payment integrations.
 
 ---
 
-## ✨ Features
+## 🌟 Features
 
-* **User Authentication**: Secure login, signup, and OTP-based email verification.
-* **Product Listing & Filtering**: Dynamic product pages with category, size, and price range filters.
-* **Cart & Checkout**: Session-based cart management with seamless checkout workflows.
-* **Wallet System**: Digital wallet for users to store funds, receive refunds, and make direct purchases.
-* **Coupon & Offer System**: Category-wide and product-specific discounts, plus checkout coupon application.
-* **Order Management**: Real-time order tracking, cancellation workflows, and per-item return tracking.
-* **Referral System**: Earn wallet credits by inviting friends using unique referral codes.
-* **Admin Panel**: Comprehensive dashboard for managing products, variants, categories, orders, and sales analytics.
+- **User Authentication:** Secure registration, login, and profile management.
+- **Product Listing & Filtering:** Advanced category and product browsing with dynamic filtering.
+- **Cart & Checkout:** Intuitive shopping cart with real-time stock validation and offer calculation.
+- **Wallet System:** Integrated user wallets for instant refunds and manual top-ups.
+- **Coupon & Offer System:** Dynamic product/category offers and user-specific coupon application.
+- **Order Management:** Comprehensive order tracking, sequential partial returns, and invoice generation.
+- **Admin Panel:** Custom-built, responsive admin dashboard for managing products, categories, orders, offers, and sales analytics.
+- **Payment Integration:** Secure checkout and wallet top-ups powered by Razorpay.
 
 ---
 
-## 🛠 Tech Stack
+## 💻 Tech Stack
 
-* **Backend**: Django (Python)
-* **Frontend**: Tailwind CSS, HTML5, Vanilla JavaScript
-* **Database**: SQLite (Development) / PostgreSQL (Production ready)
-* **Payment Gateway**: Razorpay Integration
-* **Email Service**: SMTP integration for OTPs and invoices
+- **Backend:** Django (Python)
+- **Frontend:** HTML5, Tailwind CSS, Vanilla JavaScript
+- **Database:** PostgreSQL (Production) / SQLite (Development)
+- **Payment Gateway:** Razorpay
+- **PDF Generation:** xhtml2pdf (for invoice generation)
 
 ---
 
@@ -35,100 +31,83 @@ The application is powered by a robust **Django** backend for secure data handli
 
 Follow these steps to set up the project locally:
 
-**1. Clone the repository**
-```bash
-git clone https://github.com/yourusername/outfito.git
-cd outfito
-```
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/outfito.git
+   cd outfito
+   ```
 
-**2. Create and activate a virtual environment**
-```bash
-python -m venv venv
-# On Windows
-venv\Scripts\activate
-# On macOS/Linux
-source venv/bin/activate
-```
+2. **Create and activate a virtual environment**
+   ```bash
+   python -m venv venv
+   # On Windows:
+   venv\Scripts\activate
+   # On macOS/Linux:
+   source venv/bin/activate
+   ```
 
-**3. Install dependencies**
-```bash
-pip install -r requirements.txt
-```
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-**4. Set up environment variables**
-Create a `.env` file in the root directory (see Environment Variables section below).
+4. **Set up environment variables**
+   Create a `.env` file in the root directory (where `manage.py` is located) and configure your variables (see below).
 
-**5. Apply database migrations**
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
+5. **Run database migrations**
+   ```bash
+   python manage.py makemigrations
+   python manage.py migrate
+   ```
 
-**6. Create a superuser (Admin access)**
-```bash
-python manage.py createsuperuser
-```
+6. **Create a superuser (Admin)**
+   ```bash
+   python manage.py createsuperuser
+   ```
 
-**7. Run the development server**
-```bash
-python manage.py runserver
-```
+7. **Run the development server**
+   ```bash
+   python manage.py runserver
+   ```
+   *Access the site at `http://127.0.0.1:8000/` and the admin panel at `http://127.0.0.1:8000/admin/`.*
 
 ---
 
 ## 🔐 Environment Variables
 
-Create a `.env` file in your root directory and configure the following variables:
+The project uses `python-dotenv` to manage sensitive configurations. Create a `.env` file in the root directory and include the following:
 
 ```env
-# Security
+# Django Settings
 SECRET_KEY=your-django-secret-key
 DEBUG=True
 
-# Database (Optional if using default SQLite)
-DATABASE_URL=postgres://user:password@localhost:5432/outfitodb
+# Database Configuration (PostgreSQL example)
+DB_NAME=outfito_db
+DB_USER=postgres
+DB_PASSWORD=yourpassword
+DB_HOST=localhost
+DB_PORT=5432
 
-# Email Configuration (For OTPs and Notifications)
-EMAIL_HOST_USER=your-email@gmail.com
-EMAIL_HOST_PASSWORD=your-app-password
-
-# Payment Gateway
+# Razorpay Integration
 RAZORPAY_KEY_ID=your-razorpay-key-id
 RAZORPAY_KEY_SECRET=your-razorpay-key-secret
+
+# Email Settings (for OTP/password reset)
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
 ```
 
 ---
 
-## 📁 Folder Structure
+## 📈 Key Modules
 
-* **`admin_side/`**: Dedicated applications for the admin dashboard (product, category, variant, and coupon management).
-* **`user_side/`**: Core user-facing applications (authentication, profile, cart, orders, wallet, wishlist).
-* **`templates/`**: Global HTML templates divided logically into `admin/` and `user/` directories.
-* **`static/`**: Global static assets including compiled CSS, JS scripts, and images.
-* **`media/`**: User-uploaded content (e.g., product images, user avatars).
+- **Offer Management:** Calculates dynamic "best price" combinations when both category and product offers apply.
+- **Refund Engine:** Automatically calculates proportional coupon and offer deductions during sequential partial order returns.
+- **Sales Reporting:** Generates interactive admin charts and downloadable PDF/Excel sales reports.
 
 ---
 
-## 📸 Screenshots
+## 📄 License
 
-*(Replace these links with actual image paths once deployed or pushed to GitHub)*
-
-* ![Home Page](docs/screenshots/home.png)
-* ![Product Listing](docs/screenshots/shop.png)
-* ![Cart & Checkout](docs/screenshots/checkout.png)
-* ![Admin Dashboard](docs/screenshots/admin.png)
-
----
-
-## 🚀 Future Improvements
-
-* **Deployment**: Containerize the application with Docker and deploy to AWS/DigitalOcean.
-* **Payment Improvements**: Add multi-currency support and additional payment gateways (e.g., Stripe, PayPal).
-* **Performance**: Implement Redis caching for product listings and Celery for background tasks (e.g., async email sending).
-
----
-
-## 👤 Author
-
-* **Name**: Safwan
-* **GitHub**: [@safwan0848](https://github.com/safwan0848)
+This project is open-source and available under the [MIT License](LICENSE).

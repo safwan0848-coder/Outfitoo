@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from admin_side.variants_management.models import Variant
@@ -39,10 +40,20 @@ def toggle_wishlist(request, pk):
 
     if item:
         item.delete()
-        messages.info(request, "Removed from wishlist")
+        action = 'removed'
+        msg = "Removed from wishlist"
     else:
         WishlistItem.objects.create(wishlist=wishlist,product=product)
-        messages.success(request, "Added to wishlist")
+        action = 'added'
+        msg = "Added to wishlist"
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True, 'action': action, 'message': msg, 'wishlist_count': wishlist.items.count()})
+
+    if action == 'removed':
+        messages.info(request, msg)
+    else:
+        messages.success(request, msg)
 
     return redirect(request.META.get('HTTP_REFERER', 'home'))
 

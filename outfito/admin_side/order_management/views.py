@@ -76,7 +76,15 @@ def admin_order_detail(request, order_id):
     order=get_object_or_404(Order.objects.select_related('user', 'shipping_address').prefetch_related('items__variant__product','items__return_requests'),id=order_id)
 
     for item in order.items.all():
-        item.latest_return = item.return_requests.order_by('-id').first()
+        rrs = item.return_requests.order_by('-id')
+        
+        item.pending_qty = sum(r.quantity for r in rrs if r.status == 'Pending')
+        item.approved_qty = sum(r.quantity for r in rrs if r.status in ('Approved', 'Picked Up'))
+        item.rejected_qty = sum(r.quantity for r in rrs if r.status == 'Rejected')
+        
+        item.latest_pending = next((r for r in rrs if r.status == 'Pending'), None)
+        item.latest_approved = next((r for r in rrs if r.status in ('Approved', 'Picked Up')), None)
+        item.latest_rejected = next((r for r in rrs if r.status == 'Rejected'), None)
 
     context={
         'order': order,
@@ -201,20 +209,25 @@ def create_return_request(request, item_id):
 @user_passes_test(is_admin, login_url='login')
 @require_POST
 def approve_return_request(request, return_id):
-    return_req=get_object_or_404(ReturnRequest, id=return_id)
+    return_req = get_object_or_404(ReturnRequest, id=return_id)
 
-    return_req.status='Approved'
+    return_req.status = 'Approved'
     return_req.save()
 
-    return_req.item.item_status='returned'
-    return_req.item.save()
-
-    # Note: returned_quantity on OrderItem is already incremented when the request is created.
-    # We just need to restore stock for the approved amount.
+    # Restore stock for the approved quantity
     return_req.item.variant.stock += return_req.quantity
     return_req.item.variant.save()
 
-    messages.success(request,f"Return request #{return_req.id} approved. Item marked as returned.")
+    # Only mark the item as 'returned' if NO other Pending requests remain
+    # (handles sequential partial returns like returning 1-by-1)
+    still_pending = return_req.item.return_requests.filter(status='Pending').exists()
+    if still_pending:
+        return_req.item.item_status = 'return_requested'   # more still waiting
+    else:
+        return_req.item.item_status = 'returned'           # all requests approved
+    return_req.item.save(update_fields=['item_status'])
+
+    messages.success(request, f"Return request #{return_req.id} approved. Item marked as returned.")
     return redirect('admin_order_detail', order_id=return_req.order.id)
 
 
@@ -238,7 +251,7 @@ def pickup_return_request(request, return_id):
     order = return_req.order
     qty   = return_req.quantity
 
-    net_refund = calculate_coupon_adjusted_refund(order, item.price, qty)
+    net_refund = calculate_coupon_adjusted_refund(order, item.price, qty, order_item=item)
 
     ok, credited = process_wallet_refund(
         order_item      = item,

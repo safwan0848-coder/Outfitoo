@@ -48,8 +48,7 @@ def calculate_cart_offers(cart_items):
                             max_disc = po.maximum_discount_amount * share
                             discount = min(discount, max_disc)
                     else:
-                        share = base_subtotal / product_subtotals[product]
-                        discount = po.discount_value * share
+                        discount = po.discount_value * item.quantity
 
                     if discount > best_discount:
                         best_discount = discount
@@ -68,8 +67,7 @@ def calculate_cart_offers(cart_items):
                             max_disc = co.maximum_discount_amount * share
                             discount = min(discount, max_disc)
                     else:
-                        share = base_subtotal / category_subtotals[category]
-                        discount = co.discount_value * share
+                        discount = co.discount_value * item.quantity
 
                     if discount > best_discount:
                         best_discount = discount

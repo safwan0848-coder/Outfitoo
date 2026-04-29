@@ -14,9 +14,13 @@ def _credit_wallet(user, amount, order, description):
 
     from user_side.wallet.models import Wallet, WalletTransaction
 
-    wallet, _ = Wallet.objects.select_for_update().get_or_create(user=user)
+    # Step 1: ensure wallet exists (can't use select_for_update with get_or_create)
+    Wallet.objects.get_or_create(user=user)
+
+    # Step 2: lock and update atomically
+    wallet = Wallet.objects.select_for_update().get(user=user)
     wallet.balance += amount
-    wallet.save(update_fields=['balance'])
+    wallet.save(update_fields=['balance', 'updated_at'])
 
     WalletTransaction.objects.create(
         user             = user,
@@ -28,7 +32,7 @@ def _credit_wallet(user, amount, order, description):
         description      = description,
         payment_status   = 'success',
     )
-    
+
     from django.core.mail import send_mail
     try:
         send_mail(
@@ -44,24 +48,31 @@ def _credit_wallet(user, amount, order, description):
 
 
 def process_referral_reward(order) -> bool:
+    """Credit ₹50 to the new buyer and ₹100 to their referrer
+    when the buyer's FIRST order is delivered. Idempotent — safe to call multiple times."""
 
+    # Guard 1: already rewarded for this order
     if order.is_referral_rewarded:
         return False
+
     user = order.user
     referrer = getattr(user, 'referred_by', None)
+
+    # Guard 2: this user was not referred by anyone
     if referrer is None:
         return False
 
     from user_side.orders.models import Order as OrderModel
-    prior_delivered = OrderModel.objects.filter(
-        user         = user,
-        order_status = 'Delivered',
-        is_referral_rewarded = True, 
-    ).exists()
 
-    if prior_delivered:
+    # Guard 3: the buyer already got a referral reward on a previous order
+    already_rewarded = OrderModel.objects.filter(
+        user=user,
+        is_referral_rewarded=True,
+    ).exists()
+    if already_rewarded:
         return False
 
+    # Guard 4: this order must be the user's first delivered order
     first_delivered = (
         OrderModel.objects
         .filter(user=user, order_status='Delivered')

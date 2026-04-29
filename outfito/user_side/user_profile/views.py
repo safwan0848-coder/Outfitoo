@@ -20,6 +20,7 @@ from django.contrib.messages import get_messages
 from user_side.orders.models import Order
 from user_side.wallet.models import Wallet, WalletTransaction
 from admin_side.coupon_management.models import Coupon
+from django.db import models
 
 @never_cache
 @login_required(login_url='login')
@@ -62,9 +63,21 @@ def profile(request):
     active_coupons = all_coupons[:3] 
     coupons_count = all_coupons.count()
 
-    referral_code = request.user.referral_code
-    referral_link = request.build_absolute_uri(f'/signup/?ref={referral_code}')
-    referral_count = request.user.referrals.filter(referral_used=True).count()
+    referral_code  = request.user.referral_code
+    referral_link  = request.build_absolute_uri(f'/signup/?ref={referral_code}')
+
+    # Count friends who actually COMPLETED their first order (reward was triggered)
+    from user_side.orders.models import Order as OrderModel
+    referral_count = OrderModel.objects.filter(
+        user__referred_by = request.user,
+        is_referral_rewarded = True,
+    ).count()
+
+    # Total ₹ earned from referral bonuses
+    referral_earnings = WalletTransaction.objects.filter(
+        user=request.user,
+        description__icontains='referral',
+    ).aggregate(total=models.Sum('amount'))['total'] or 0
 
     context = {
         "user":                request.user,
@@ -82,6 +95,7 @@ def profile(request):
         "referral_code":       referral_code,
         "referral_link":       referral_link,
         "referral_count":      referral_count,
+        "referral_earnings":   referral_earnings,
     }
 
     return render(request, "user/profile.html", context)

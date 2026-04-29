@@ -950,6 +950,12 @@ document.getElementById('modalConfirmBtn').addEventListener('click', () => {
     return;
   }
 
+  /* Disable button to prevent double-click / multiple submissions */
+  const confirmBtn = document.getElementById('modalConfirmBtn');
+  confirmBtn.disabled = true;
+  confirmBtn.style.opacity = '0.7';
+  confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
   /* Fill the correct hidden form and submit */
   if (_scope === 'item' && _itemId) {
     if (_type === 'cancel') {

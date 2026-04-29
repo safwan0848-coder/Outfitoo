@@ -212,7 +212,7 @@ def cancel_order(request, order_id):
                 messages.error(request, "This order can no longer be cancelled.")
                 return redirect('order_detail', order_id=order.id)
 
-            cancellable = order.items.exclude(
+            cancellable = order.items.select_for_update().exclude(
                 item_status__in=['cancelled', 'delivered', 'shipped']
             )
             if not cancellable.exists():
@@ -232,7 +232,7 @@ def cancel_order(request, order_id):
                 item.cancellation_reason = reason
                 item.save(update_fields=['cancelled_quantity', 'item_status', 'cancellation_reason'])
 
-                net_refund = calculate_coupon_adjusted_refund(order, item.price, cancel_qty)
+                net_refund = calculate_coupon_adjusted_refund(order, item.price, cancel_qty, order_item=item)
                 ok, credited = process_wallet_refund(
                     order_item      = item,
                     refund_qty      = cancel_qty,
@@ -278,7 +278,7 @@ def cancel_order(request, order_id):
 
         # ── SINGLE ITEM PARTIAL CANCEL ─────────────────────────────────────────
         else:
-            item = get_object_or_404(OrderItem, id=item_id, order=order)
+            item = get_object_or_404(OrderItem.objects.select_for_update(), id=item_id, order=order)
 
             if item.item_status.lower() not in ['placed', 'processing', 'confirmed']:
                 messages.error(request, "This item can no longer be cancelled.")
@@ -312,7 +312,7 @@ def cancel_order(request, order_id):
             item.save(update_fields=['cancelled_quantity', 'cancellation_reason', 'item_status'])
 
             # Proportional refund
-            net_refund = calculate_coupon_adjusted_refund(order, item.price, cancel_qty)
+            net_refund = calculate_coupon_adjusted_refund(order, item.price, cancel_qty, order_item=item)
             ok, credited = process_wallet_refund(
                 order_item      = item,
                 refund_qty      = cancel_qty,
@@ -394,7 +394,7 @@ def return_order(request, order_id):
 
         # ── FULL ORDER RETURN ──────────────────────────────────────────────────
         if not item_id:
-            items = order.items.filter(item_status='delivered')
+            items = order.items.select_for_update().filter(item_status='delivered')
             if not items.exists():
                 messages.error(request, "No delivered items to return.")
                 return redirect('order_detail', order_id=order.id)
@@ -428,7 +428,7 @@ def return_order(request, order_id):
 
         # ── SINGLE ITEM PARTIAL RETURN ─────────────────────────────────────────
         else:
-            item = get_object_or_404(OrderItem, id=item_id, order=order)
+            item = get_object_or_404(OrderItem.objects.select_for_update(), id=item_id, order=order)
 
             if item.item_status not in ('delivered', 'return_requested'):
                 messages.error(request, "Only delivered items can be returned.")
