@@ -375,7 +375,7 @@ A premium financial ecosystem crafted for modern professionals.
 {% endif %}
 
 <div class="premium-input-group">
-<input type="email" name="email" id="emailInput" placeholder=" " required>
+<input type="email" name="email" id="emailInput" placeholder=" " required value="{{ form_email|default:'' }}">
 <label>Email Address</label>
 </div>
 

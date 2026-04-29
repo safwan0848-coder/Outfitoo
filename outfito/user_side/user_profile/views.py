@@ -1,10 +1,11 @@
-from django.shortcuts import render, redirect, get_object_or_404
+﻿from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Profile
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
 from django.http import HttpResponse
 from django.contrib.auth import logout
+from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from user_side.authentication.models import OTP
@@ -130,12 +131,14 @@ def edit_profile(request):
             OTP.objects.filter(user=request.user).delete()
             otp = OTP.objects.create(user=request.user)
 
+            html_msg = render_to_string('user/otp_email.html', {'otp': otp.code, 'user_name': user.username, 'otp_expires_in': max(1, round((otp.expired_at - timezone.now()).total_seconds() / 60)) if otp.expired_at else 1})
             send_mail(
                 subject="Verify Email Change",
                 message=f"Your OTP is {otp.code}",
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[email],
-                fail_silently=False
+                fail_silently=False,
+                html_message=html_msg,
             )
 
             return redirect("verify-email-change")
@@ -252,12 +255,14 @@ def start_password_reset(request):
 
     otp = OTP.objects.create(user=user)
 
+    html_msg = render_to_string('user/otp_email.html', {'otp': otp.code, 'user_name': user.username, 'otp_expires_in': max(1, round((otp.expired_at - timezone.now()).total_seconds() / 60)) if otp.expired_at else 1})
     send_mail(
         subject="OTP Verification",
         message=f"Your OTP is {otp.code}",
         from_email=settings.EMAIL_HOST_USER,
         recipient_list=[user.email],
         fail_silently=False,
+        html_message=html_msg,
     )
 
     messages.success(request, "A new OTP has been sent to your email.")
@@ -393,12 +398,14 @@ def resend_profile_otp(request):
 
     otp = OTP.objects.create(user=user)
 
+    html_msg = render_to_string('user/otp_email.html', {'otp': otp.code, 'user_name': user.username, 'otp_expires_in': max(1, round((otp.expired_at - timezone.now()).total_seconds() / 60)) if otp.expired_at else 1})
     send_mail(
         subject="Email Change OTP",
         message=f"Your OTP is {otp.code}",
         from_email=settings.EMAIL_HOST_USER,
         recipient_list=[new_email],
-        fail_silently=False
+        fail_silently=False,
+        html_message=html_msg,
     )
 
     messages.success(request, "New OTP sent successfully")
@@ -461,3 +468,5 @@ def verify_email_change(request):
         return redirect("profile")
 
     return render(request, "user/verify_email_change.html", context)
+
+

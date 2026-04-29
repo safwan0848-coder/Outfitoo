@@ -322,6 +322,7 @@ The modern fintech platform designed for the sophisticated professional.
 name="username"
 placeholder=" "
 required
+value="{{ form_username|default:'' }}"
 pattern="^[A-Za-z0-9]+$"
 title="Username can contain only letters and numbers">
 <label>User Name</label>
@@ -331,7 +332,8 @@ title="Username can contain only letters and numbers">
 <input type="email"
 name="email"
 placeholder=" "
-required>
+required
+value="{{ form_email|default:'' }}">
 <label>Email Address</label>
 </div>
 

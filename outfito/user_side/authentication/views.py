@@ -1,5 +1,6 @@
-from django.shortcuts import render, redirect
+﻿from django.shortcuts import render, redirect
 from .models import OTP
+from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -31,76 +32,71 @@ def signup_view(request):
         request.session['ref_code']=ref_code
 
     if request.method=="POST":
-        uname=request.POST.get('username')
-        email=request.POST.get('email')
-        pass1=request.POST.get('password1')
-        pass2=request.POST.get('password2')
+        uname=request.POST.get('username', '')
+        email=request.POST.get('email', '')
+        pass1=request.POST.get('password1', '')
+        pass2=request.POST.get('password2', '')
         form_ref=request.POST.get('referral_code', '').strip().upper()
         if form_ref:
             request.session['ref_code'] = form_ref
 
+        # Helper to re-render with values preserved
+        def form_error(msg):
+            messages.error(request, msg)
+            return render(request, 'user/signup.html', {
+                'prefilled_ref': form_ref or ref_code,
+                'form_username': uname,
+                'form_email': email,
+            })
+
         if not uname:
-            messages.error(request, "Username is required")
-            return redirect('signup')
+            return form_error("Username is required")
 
         if uname.isdigit():
-            messages.error(request, "Username cannot contain only numbers")
-            return redirect('signup')
+            return form_error("Username cannot contain only numbers")
 
         if not re.match(r'^[A-Za-z0-9_ ]+$', uname):
-            messages.error(request, "Username can contain letters, numbers and underscore")
-            return redirect('signup')
+            return form_error("Username can contain letters, numbers and underscore")
 
         if not email:
-            messages.error(request, "Email is required")
-            return redirect('signup')
+            return form_error("Email is required")
 
         try:
             validate_email(email)
         except ValidationError:
-            messages.error(request, "Enter a valid email address")
-            return redirect('signup')
+            return form_error("Enter a valid email address")
 
         if not pass1 or not pass2:
-            messages.error(request, "Password fields cannot be empty")
-            return redirect('signup')
+            return form_error("Password fields cannot be empty")
 
         if pass1 != pass2:
-            messages.error(request, "Passwords do not match")
-            return redirect('signup')
+            return form_error("Passwords do not match")
 
         if len(pass1) < 8:
-            messages.error(request, "Password must be at least 8 characters")
-            return redirect('signup')
+            return form_error("Password must be at least 8 characters")
 
         if not re.search(r'[A-Z]', pass1):
-            messages.error(request, "Password must contain at least one uppercase letter")
-            return redirect('signup')
+            return form_error("Password must contain at least one uppercase letter")
 
         if not re.search(r'[a-z]', pass1):
-            messages.error(request, "Password must contain at least one lowercase letter")
-            return redirect('signup')
+            return form_error("Password must contain at least one lowercase letter")
 
         if not re.search(r'[0-9]', pass1):
-            messages.error(request, "Password must contain at least one number")
-            return redirect('signup')
+            return form_error("Password must contain at least one number")
 
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', pass1):
-            messages.error(request, "Password must contain at least one special character")
-            return redirect('signup')
+            return form_error("Password must contain at least one special character")
 
         existing_user = User.objects.filter(email=email).first()
 
         if existing_user:
             if existing_user.is_verified:
-                messages.error(request, "Email already registered")
-                return redirect('signup')
+                return form_error("Email already registered")
             else:
                 existing_user.delete()
 
         if User.objects.filter(username=uname).exists():
-            messages.error(request, "Username already exists")
-            return redirect('signup')
+            return form_error("Username already exists")
 
         user = User.objects.create_user(
             username=uname,
@@ -117,12 +113,19 @@ def signup_view(request):
         OTP.objects.filter(user=user).delete()
         otp = OTP.objects.create(user=user)
 
+        otp_expires_in = max(1, round((otp.expired_at - timezone.now()).total_seconds() / 60)) if otp.expired_at else 1
+        html_msg = render_to_string('user/otp_email.html', {
+            'otp': otp.code,
+            'user_name': user.username,
+            'otp_expires_in': otp_expires_in,
+        })
         send_mail(
             subject='Your OTP Code',
-            message=f'Hello {user.username},\n\nYour OTP is {otp.code}\nIt expires in 5 minutes.',
+            message=f'Hello {user.username},\n\nYour OTP is {otp.code}\nIt expires in {otp_expires_in} minute{"s" if otp_expires_in != 1 else ""}.',
             from_email='outfito0848@gmail.com',
             recipient_list=[user.email],
             fail_silently=False,
+            html_message=html_msg,
         )
 
         messages.success(request, "OTP sent to your email")
@@ -176,7 +179,7 @@ def otp_verify(request):
         request.session.pop('email', None)
 
         if referral_applied:
-            messages.success(request, f"Referral code '{ref_code}' applied! Complete your first order to earn ₹50.")
+            messages.success(request, f"Referral code '{ref_code}' applied! Complete your first order to earn Ã¢â€šÂ¹50.")
         else:
             messages.success(request, "Email verified successfully")
 
@@ -219,12 +222,14 @@ def resend_signup_otp(request):
 
     otp = OTP.objects.create(user=user)
 
+    html_msg = render_to_string('user/otp_email.html', {'otp': otp.code, 'user_name': user.username, 'otp_expires_in': max(1, round((otp.expired_at - timezone.now()).total_seconds() / 60)) if otp.expired_at else 1})
     send_mail(
         subject="Signup OTP",
         message=f"Your OTP is {otp.code}",
         from_email=settings.EMAIL_HOST_USER,
         recipient_list=[user.email],
-        fail_silently=False
+        fail_silently=False,
+        html_message=html_msg,
     )
 
     messages.success(request,"New OTP sent successfully")
@@ -255,12 +260,14 @@ def resend_reset_otp(request):
 
     otp = OTP.objects.create(user=user)
 
+    html_msg = render_to_string('user/otp_email.html', {'otp': otp.code, 'user_name': user.username, 'otp_expires_in': max(1, round((otp.expired_at - timezone.now()).total_seconds() / 60)) if otp.expired_at else 1})
     send_mail(
         subject="Password Reset OTP",
         message=f"Your OTP is {otp.code}",
         from_email=settings.EMAIL_HOST_USER,
         recipient_list=[user.email],
-        fail_silently=False
+        fail_silently=False,
+        html_message=html_msg,
     )
 
     messages.success(request,"New OTP sent successfully")
@@ -282,28 +289,31 @@ def login_view(request):
 
     if request.method == 'POST':
 
-        email = request.POST.get('email')
-        password = request.POST.get('password')
+        email = request.POST.get('email', '')
+        password = request.POST.get('password', '')
+
+        def login_error(msg, level='error'):
+            if level == 'warning':
+                messages.warning(request, msg)
+            else:
+                messages.error(request, msg)
+            return render(request, 'user/login.html', {'form_email': email})
 
         user = User.objects.filter(email=email).first()
 
         if not user:
-            messages.error(request, "Invalid email or password")
-            return redirect('login')
+            return login_error("Invalid email or password")
 
         if not user.is_active:
-            messages.error(request, "Your account is blocked. Contact support.")
-            return redirect('login')
+            return login_error("Your account is blocked. Contact support.")
 
         if not user.is_verified:
-            messages.warning(request, "Please verify your email first.")
-            return redirect('login')
+            return login_error("Please verify your email first.", level='warning')
 
         user = authenticate(request, email=email, password=password)
 
         if user is None:
-            messages.error(request, "Invalid email or password")
-            return redirect('login')
+            return login_error("Invalid email or password")
 
         login(request, user)
         messages.success(request, "Login successful!")
@@ -334,12 +344,14 @@ def forgot_password(request):
 
         otp = OTP.objects.create(user=user)
 
+        html_msg = render_to_string('user/otp_email.html', {'otp': otp.code, 'user_name': user.username, 'otp_expires_in': max(1, round((otp.expired_at - timezone.now()).total_seconds() / 60)) if otp.expired_at else 1})
         send_mail(
             subject="Password Reset OTP",
             message=f"Your OTP is {otp.code}",
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[email],
-            fail_silently=False
+            fail_silently=False,
+            html_message=html_msg,
         )
 
         return redirect("reset_verify")
@@ -469,7 +481,7 @@ def landing_view(request):
 
     variant_qs = Variant.objects.filter(is_active=True)
 
-    # ✅ get all valid products
+    # Ã¢Å“â€¦ get all valid products
     all_products = Product.objects.filter(
         is_deleted=False,
         is_listed=True
@@ -477,11 +489,11 @@ def landing_view(request):
         Prefetch('variants', queryset=variant_qs, to_attr='active_variants')
     ).order_by('-created_at')
 
-    # ✅ split for Velour UI
+    # Ã¢Å“â€¦ split for Velour UI
     hero_products = all_products[:4]
     grid_products = all_products[4:]
 
-    # ✅ marquee fix
+    # Ã¢Å“â€¦ marquee fix
     marquee_items = [
         "New Arrivals",
         "The Vault Collection",
@@ -513,3 +525,6 @@ def address(request):
 @login_required(login_url='login')
 def wallet(request):
     return HttpResponse('wallet')
+
+
+
