@@ -19,12 +19,15 @@
             line-height: 1.6;
             color: #1a1a28;
             background: #ffffff;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
-        /* ── RUPEE FIX: Use HTML entity fallback + universal font stack ── */
-        /* Never rely on a single font for ₹. Stack: Noto Sans > DejaVu > Arial */
+        /* ── GLOBAL TABLE RESETS (Fixes border gaps in PDF) ── */
+        table { border-collapse: collapse; border-spacing: 0; }
+        th, td { padding: 0; }
+
         .cur {
-            font-family: 'Noto Sans', 'DejaVu Sans', 'Arial Unicode MS', Arial, sans-serif;
             font-weight: 500;
         }
 
@@ -38,7 +41,7 @@
         .gold  { color: #b18a4c; }
 
         /* ── LAYOUT HELPERS ── */
-        .w100 { width: 100%; border-collapse: collapse; }
+        .w100 { width: 100%; border-collapse: collapse; border-spacing: 0; }
         .vtop { vertical-align: top; }
         .vmid { vertical-align: middle; }
         .tr   { text-align: right; }
@@ -209,6 +212,7 @@
             text-align: left;
         }
         .items-head th.tr { text-align: right; }
+        .items-head th:last-child { padding-right: 0; }
 
         .items-body tr { border-bottom: 1px solid #ede8e0; }
         .items-body td {
@@ -216,6 +220,7 @@
             vertical-align: middle;
         }
         .items-body td.tr { text-align: right; }
+        .items-body td:last-child { padding-right: 0; }
 
         .prod-name {
             font-family: 'Cormorant Garamond', Georgia, serif;
@@ -265,10 +270,14 @@
         ══════════════════════════════ */
         .totals-wrap { margin-top: 24px; }
 
-        .concierge-box {
+        .concierge-table {
             background: #fbfaf8;
-            border-radius: 8px;
             border: 1px solid #e8e2d8;
+            border-radius: 8px;
+            /* In xhtml2pdf, borders on rounded tables need separate */
+            border-collapse: separate; 
+        }
+        .concierge-table td {
             padding: 20px 22px;
         }
         .cnc-title {
@@ -306,8 +315,6 @@
         .savings-td { color: #1f8f5c; }
 
         .grand-row td {
-            border-top: 2px solid #b18a4c;
-            border-bottom: 2px solid #b18a4c;
             padding: 15px 0;
         }
         .grand-label {
@@ -332,7 +339,6 @@
         .footer-bar {
             margin-top: 32px;
             padding-top: 18px;
-            border-top: 1px solid #d4cec4;
         }
         .footer-left {
             font-size: 9.5px;
@@ -446,7 +452,7 @@
                     {% if item.item_status == 'returned' and item.return_reason %}
                         <div class="return-note">&#8635; Return: {{ item.return_reason }}</div>
                     {% endif %}
-                    <div>
+                    <div style="margin-top: 5px;">
                         <span class="tag">Size: {{ item.variant.size }}</span>
                         <span class="tag">{{ item.variant.color|title }}</span>
                         {% if item.variant.sku %}
@@ -467,14 +473,14 @@
                 </td>
                 <!-- Unit Price -->
                 <td class="tr price-col">
-                    <span class="cur">&#8377;</span>{{ item.price|floatformat:2 }}
+                    <span class="cur">Rs. </span>{{ item.price|floatformat:2 }}
                 </td>
                 <!-- Qty -->
                 <td class="tr qty-col">{{ item.quantity }}</td>
                 <!-- Line Total -->
                 <td class="tr total-col">
                     {% widthratio item.price 1 item.quantity as item_total %}
-                    <span class="cur">&#8377;</span>{{ item_total }}
+                    <span class="cur">Rs. </span>{{ item_total }}
                 </td>
             </tr>
             {% endfor %}
@@ -486,42 +492,44 @@
         <tr>
             <!-- Concierge Note -->
             <td class="vtop" style="width: 50%; padding-right: 28px;">
-                <div class="concierge-box">
-                    <div class="cnc-title">&#10022; Concierge Note</div>
-                    <div class="cnc-body">
-                        Thank you for shopping with Outfito. This invoice is computer&#8209;generated
-                        and valid without signature. For styling advice, returns, or
-                        adjustments, please quote your order ID.
-                    </div>
-                    <div class="cnc-contact">
-                        concierge@outfito.com &nbsp;·&nbsp; +91 1800 456 7890
-                    </div>
-                </div>
+                <table class="w100 concierge-table">
+                    <tr><td>
+                        <div class="cnc-title">&#10022; Concierge Note</div>
+                        <div class="cnc-body">
+                            Thank you for shopping with Outfito. This invoice is computer&#8209;generated
+                            and valid without signature. For styling advice, returns, or
+                            adjustments, please quote your order ID.
+                        </div>
+                        <div class="cnc-contact">
+                            concierge@outfito.com &nbsp;·&nbsp; +91 1800 456 7890
+                        </div>
+                    </td></tr>
+                </table>
             </td>
             <!-- Totals -->
             <td class="vtop" style="width: 50%;">
-                <table class="w100">
+                <table class="w100 totals-table">
                     <tr>
                         <td class="tl">Subtotal</td>
-                        <td class="ta"><span class="cur">&#8377;</span>{{ order.subtotal|floatformat:2 }}</td>
+                        <td class="ta"><span class="cur">Rs. </span>{{ order.subtotal|floatformat:2 }}</td>
                     </tr>
                     <tr>
                         <td class="tl">Shipping &amp; Handling</td>
-                        <td class="ta"><span class="cur">&#8377;</span>{{ order.delivery_charge|floatformat:2 }}</td>
+                        <td class="ta"><span class="cur">Rs. </span>{{ order.delivery_charge|floatformat:2 }}</td>
                     </tr>
                     <tr>
                         <td class="tl">GST (estimated)</td>
-                        <td class="ta"><span class="cur">&#8377;</span>{{ order.tax_amount|floatformat:2 }}</td>
+                        <td class="ta"><span class="cur">Rs. </span>{{ order.tax_amount|floatformat:2 }}</td>
                     </tr>
                     {% if order.discount_amount and order.discount_amount > 0 %}
                     <tr>
                         <td class="tl savings-td">Discount / Savings</td>
-                        <td class="ta savings-td">&minus; <span class="cur">&#8377;</span>{{ order.discount_amount|floatformat:2 }}</td>
+                        <td class="ta savings-td">&minus; <span class="cur">Rs. </span>{{ order.discount_amount|floatformat:2 }}</td>
                     </tr>
                     {% endif %}
                     <tr class="grand-row">
                         <td class="grand-label">Total (INR)</td>
-                        <td class="grand-amount"><span class="cur">&#8377;</span>{{ order.total_amount|floatformat:2 }}</td>
+                        <td class="grand-amount"><span class="cur">Rs. </span>{{ order.total_amount|floatformat:2 }}</td>
                     </tr>
                 </table>
             </td>
