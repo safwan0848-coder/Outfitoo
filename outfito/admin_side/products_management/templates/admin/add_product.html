@@ -265,21 +265,7 @@
   </nav>
   <h2 class="page-heading">Create New Collection Piece</h2>
 
-  {% if messages %}
-  <div class="django-messages">
-    {% for message in messages %}
-    <div class="msg-item msg-{{ message.tags }}">
-      <span class="material-icons-outlined" style="font-size:.95rem;">
-        {% if message.tags == 'success' %}check_circle{% else %}error{% endif %}
-      </span>
-      {{ message }}
-      <button type="button" class="msg-close" data-msg-close>
-        <span class="material-icons-outlined" style="font-size:.95rem;">close</span>
-      </button>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
+  
 
   <div class="form-card">
     <form id="productForm"

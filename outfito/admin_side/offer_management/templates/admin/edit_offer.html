@@ -17,13 +17,7 @@
   </div>
   <div class="bg-white rounded-2xl shadow-sm border border-[#e8e2d8] p-10">
     <h2 class="font-display text-[28px] font-bold text-center mb-8">Edit Offer</h2>
-    {% if messages %}
-    <div class="mb-6">
-      {% for message in messages %}
-      <div class="p-4 mb-2 text-sm rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">{{ message }}</div>
-      {% endfor %}
-    </div>
-    {% endif %}
+    
     <form method="POST">{% csrf_token %}
       <div class="mb-6">
         <label class="form-label">Offer Name <span class="required">*</span></label>

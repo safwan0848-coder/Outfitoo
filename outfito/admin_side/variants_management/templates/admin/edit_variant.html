@@ -75,7 +75,7 @@
     <a href="{% url 'variant_list' variant.product.id %}" class="btn-close-c" title="Close">✕</a>
   </div>
   <div class="variant-body" style="padding-bottom:0;">
-    {% if messages %}{% for message in messages %}<div class="alert-item alert-{{ message.tags }}">{{ message }}</div>{% endfor %}{% endif %}
+    
   </div>
   <form method="POST" enctype="multipart/form-data">{% csrf_token %}
     <div class="variant-body">

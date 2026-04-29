@@ -33,13 +33,7 @@
 {% block content %}
 <div class="form-container">
   <h3 class="fw-bold mb-4 page-title-sm">Edit Category</h3>
-  {% if messages %}
-    {% for message in messages %}
-    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm">
-      {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    {% endfor %}
-  {% endif %}
+  
   <div class="card card-box p-4">
     <form method="POST" enctype="multipart/form-data" novalidate>
       {% csrf_token %}

@@ -30,13 +30,7 @@
 {% block content %}
 <h3 class="page-title-sm">Add Category</h3>
 
-{% if messages %}
-{% for message in messages %}
-<div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" style="max-width:650px; margin-bottom:1rem;">
-  {{message}}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-{% endfor %}
-{% endif %}
+
 
 <div class="form-container">
   <div class="card-box p-4">

@@ -26,7 +26,7 @@ def coupon_list(request):
     active_rate    = int((active_coupons / total_coupons) * 100) if total_coupons > 0 else 0
     total_uses     = Coupon.objects.aggregate(Sum('used_count'))['used_count__sum'] or 0
 
-    paginator = Paginator(coupons_qs, 10)
+    paginator = Paginator(coupons_qs, 4)
     page_obj  = paginator.get_page(request.GET.get('page'))
 
     return render(request, 'admin/coupon_list.html', {

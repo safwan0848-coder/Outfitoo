@@ -84,17 +84,7 @@
   <a class="btn-add-pdt" href="{% url 'add_product' %}"><span class="material-icons-outlined">add</span> Add Product</a>
 </header>
 
-{% if messages %}
-<div class="django-messages">
-  {% for message in messages %}
-  <div class="msg-item msg-{{ message.tags }}">
-    <span class="material-icons-outlined" style="font-size:1rem;">{% if message.tags == 'success' %}check_circle{% elif message.tags == 'error' %}error{% else %}info{% endif %}</span>
-    {{ message }}
-    <button class="msg-close" onclick="this.parentElement.remove()"><span class="material-icons-outlined" style="font-size:1rem;">close</span></button>
-  </div>
-  {% endfor %}
-</div>
-{% endif %}
+
 
 <div class="pdt-card">
   <div class="card-top">

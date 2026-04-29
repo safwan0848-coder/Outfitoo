@@ -116,17 +116,7 @@
   </div>
 </header>
 
-{% if messages %}
-<div class="django-messages">
-  {% for message in messages %}
-  <div class="msg-item msg-{{ message.tags }}">
-    <span class="material-icons-outlined" style="font-size:1rem;">{% if message.tags == 'success' %}check_circle{% elif message.tags == 'error' %}error{% else %}info{% endif %}</span>
-    {{ message }}
-    <button class="msg-close" onclick="this.parentElement.remove()"><span class="material-icons-outlined" style="font-size:1rem;">close</span></button>
-  </div>
-  {% endfor %}
-</div>
-{% endif %}
+
 
 <div class="stats-row">
   <div class="stat-card"><div class="stat-label">Total Categories</div><div class="stat-number">{{ total_categories }}</div></div>

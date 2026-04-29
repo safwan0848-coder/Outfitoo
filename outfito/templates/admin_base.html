@@ -327,12 +327,83 @@
     @media (max-width: 600px) {
       .main-content { padding: calc(var(--topbar-height) + 1rem) 1rem 2rem; }
     }
+
+    /* ══════════════════════════════════════════════
+       GLOBAL TOAST NOTIFICATIONS
+    ══════════════════════════════════════════════ */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      background: var(--card-bg);
+      border-left: 4px solid var(--primary);
+      box-shadow: var(--shadow-lg);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 0.85rem;
+      font-weight: 500;
+      min-width: 300px;
+      max-width: 400px;
+      animation: toast-slide-in 0.3s ease-out forwards;
+      transition: opacity 0.3s ease;
+    }
+    .toast.toast-error { border-left-color: #ef4444; }
+    .toast.toast-success { border-left-color: #10b981; }
+    .toast.toast-warning { border-left-color: #f59e0b; }
+    .toast.hiding { opacity: 0; }
+    
+    @keyframes toast-slide-in {
+      from { transform: translateX(120%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .toast-icon { font-size: 1.2rem; }
+    .toast-error .toast-icon { color: #ef4444; }
+    .toast-success .toast-icon { color: #10b981; }
+    .toast-warning .toast-icon { color: #f59e0b; }
   </style>
 
   {% block extra_head %}{% endblock %}
 </head>
 
 <body>
+
+<!-- ══════════════════════════════════════════════
+     GLOBAL MESSAGES (TOAST)
+══════════════════════════════════════════════ -->
+{% if messages %}
+<div class="toast-container" id="adminToastContainer">
+  {% for message in messages %}
+  <div class="toast toast-{{ message.tags }}">
+    <span class="material-icons-outlined toast-icon">
+      {% if message.tags == 'error' %}error_outline
+      {% elif message.tags == 'success' %}check_circle
+      {% elif message.tags == 'warning' %}warning
+      {% else %}info{% endif %}
+    </span>
+    <span>{{ message }}</span>
+  </div>
+  {% endfor %}
+</div>
+<script>
+  setTimeout(() => {
+    const toasts = document.querySelectorAll('.toast');
+    toasts.forEach(t => {
+      t.classList.add('hiding');
+      setTimeout(() => t.remove(), 300);
+    });
+  }, 5000);
+</script>
+{% endif %}
 
 <!-- ══════════════════════════════════════════════
      MOBILE TOP BAR

@@ -201,19 +201,11 @@ Secure access for authorized personnel
 <h4 class="mb-4 fw-semibold">Log In</h4>
 
 {% if messages %}
-{% for message in messages %}
-<div class="
-{% if message.tags == 'error' %}
-error-text
-{% elif message.tags == 'success' %}
-success-text
-{% else %}
-warning-text
-{% endif %}
-">
-{{ message }}
-</div>
-{% endfor %}
+  {% for message in messages %}
+  <div class="{% if message.tags == 'error' %}error-text{% elif message.tags == 'success' %}success-text{% else %}warning-text{% endif %}">
+    {{ message }}
+  </div>
+  {% endfor %}
 {% endif %}
 
 <form method="POST" action="{% url 'admin-login' %}">

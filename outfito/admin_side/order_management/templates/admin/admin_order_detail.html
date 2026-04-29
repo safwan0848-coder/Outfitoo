@@ -1223,16 +1223,7 @@
             <div class="main-inner">
 
                 <!-- ── Flash messages ── -->
-                {% if messages %}
-                {% for msg in messages %}
-                <div class="msg-box msg-{{ msg.tags }}">
-                    <span class="material-icons-outlined" style="font-size:1.05rem;">
-                        {% if msg.tags == 'success' %}check_circle{% else %}error{% endif %}
-                    </span>
-                    {{ msg }}
-                </div>
-                {% endfor %}
-                {% endif %}
+                
 
                 <!-- ── Page Header ── -->
                 <div class="page-header">
