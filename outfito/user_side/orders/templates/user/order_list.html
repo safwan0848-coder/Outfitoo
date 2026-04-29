@@ -57,6 +57,7 @@
 
     /* TOOLBAR */
     .toolbar {
+      position: relative; z-index: 100;
       display: flex; align-items: center; gap: 10px;
       margin-bottom: 20px; flex-wrap: wrap;
       animation: fadeUp 0.45s 0.08s ease both;
@@ -559,6 +560,23 @@
   </div>
 
   <script>
+    /* ══ FILTER DROPDOWN TOGGLE ══ */
+    const filterBtn = document.getElementById('filterBtn');
+    const filterDropdown = document.getElementById('filterDropdown');
+
+    if (filterBtn && filterDropdown) {
+      filterBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        filterDropdown.classList.toggle('open');
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!filterDropdown.contains(e.target) && e.target !== filterBtn) {
+          filterDropdown.classList.remove('open');
+        }
+      });
+    }
+
     /* ══ APPLY FILTER — sets hidden field and submits to backend ══ */
     function applyFilter(status) {
       document.getElementById('hiddenStatus').value = status;

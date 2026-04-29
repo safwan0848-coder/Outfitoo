@@ -1,4 +1,4 @@
-﻿from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect
 from .models import OTP
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
@@ -179,7 +179,7 @@ def otp_verify(request):
         request.session.pop('email', None)
 
         if referral_applied:
-            messages.success(request, f"Referral code '{ref_code}' applied! Complete your first order to earn Ã¢â€šÂ¹50.")
+            messages.success(request, f"Referral code '{ref_code}' applied! Complete your first order to earn ₹50.")
         else:
             messages.success(request, "Email verified successfully")
 
@@ -481,7 +481,7 @@ def landing_view(request):
 
     variant_qs = Variant.objects.filter(is_active=True)
 
-    # Ã¢Å“â€¦ get all valid products
+    # ✅ get all valid products
     all_products = Product.objects.filter(
         is_deleted=False,
         is_listed=True
@@ -489,11 +489,11 @@ def landing_view(request):
         Prefetch('variants', queryset=variant_qs, to_attr='active_variants')
     ).order_by('-created_at')
 
-    # Ã¢Å“â€¦ split for Velour UI
+    # ✅ split for Velour UI
     hero_products = all_products[:4]
     grid_products = all_products[4:]
 
-    # Ã¢Å“â€¦ marquee fix
+    # ✅ marquee fix
     marquee_items = [
         "New Arrivals",
         "The Vault Collection",

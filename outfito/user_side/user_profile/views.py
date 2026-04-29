@@ -1,4 +1,4 @@
-﻿from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Profile
 from django.contrib import messages
@@ -131,7 +131,7 @@ def edit_profile(request):
             OTP.objects.filter(user=request.user).delete()
             otp = OTP.objects.create(user=request.user)
 
-            html_msg = render_to_string('user/otp_email.html', {'otp': otp.code, 'user_name': user.username, 'otp_expires_in': max(1, round((otp.expired_at - timezone.now()).total_seconds() / 60)) if otp.expired_at else 1})
+            html_msg = render_to_string('user/otp_email.html', {'otp': otp.code, 'user_name': request.user.username, 'otp_expires_in': max(1, round((otp.expired_at - timezone.now()).total_seconds() / 60)) if otp.expired_at else 1})
             send_mail(
                 subject="Verify Email Change",
                 message=f"Your OTP is {otp.code}",
