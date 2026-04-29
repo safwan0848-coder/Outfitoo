@@ -359,10 +359,21 @@
                 {% else %}{{ item.get_item_status_display|default:item.item_status }}{% endif %}
               </span>
               {% endwith %}
-              <div class="item-qty-label">Qty: {{ item.quantity }}</div>
               <div class="item-price">₹{{ item.price }}</div>
             </div>
-            
+
+            {# ── Quantity Breakdown ── #}
+            <div class="item-qty-breakdown" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;margin-top:4px;">
+              <span style="font-size:11px;color:var(--muted);">Ordered: <strong style="color:var(--text);">{{ item.quantity }}</strong></span>
+              {% if item.cancelled_quantity > 0 %}
+              <span style="font-size:11px;color:var(--muted);">Cancelled: <strong style="color:var(--danger);">{{ item.cancelled_quantity }}</strong></span>
+              {% endif %}
+              {% if item.returned_quantity > 0 %}
+              <span style="font-size:11px;color:var(--muted);">Returned: <strong style="color:#fbbf24;">{{ item.returned_quantity }}</strong></span>
+              {% endif %}
+              <span style="font-size:11px;color:var(--muted);">Remaining: <strong style="color:var(--accent2);">{{ item.remaining_quantity }}</strong></span>
+            </div>
+
             {% if item.latest_return %}
             <div class="item-return-tracker">
               <div class="irt-header">
@@ -394,46 +405,57 @@
               field name: return_reason        ← matches views.py return_order
             -->
 
-            {# CANCEL form — placed/processing/confirmed only #}
+            {# CANCEL form — placed/processing/confirmed only, and remaining > 0 #}
             {% if item.item_status|lower == 'placed' or item.item_status|lower == 'processing' or item.item_status|lower == 'confirmed' %}
+            {% if item.remaining_quantity > 0 %}
             <form id="cancelForm-{{ item.id }}" method="POST" action="{% url 'cancel_order' order.id %}" style="display:none;">
               {% csrf_token %}
               <input type="hidden" name="item_id"              value="{{ item.id }}">
               <input type="hidden" name="cancellation_reason"  id="cancelReason-{{ item.id }}" value="">
               <input type="hidden" name="custom_reason"        id="cancelCustom-{{ item.id }}"  value="">
-              <input type="hidden" name="qty"                  id="cancelQty-{{ item.id }}"    value="{{ item.quantity }}">
+              <input type="hidden" name="qty"                  id="cancelQty-{{ item.id }}"    value="{{ item.remaining_quantity }}">
             </form>
             {% endif %}
+            {% endif %}
 
-            {# RETURN form — delivered only #}
-            {% if item.item_status == 'delivered' %}
+            {# RETURN form — delivered or partially returned, remaining > 0 #}
+            {% if item.item_status == 'delivered' or item.item_status == 'return_requested' %}
+            {% if item.remaining_quantity > 0 %}
             <form id="returnForm-{{ item.id }}" method="POST" action="{% url 'return_order' order.id %}" style="display:none;">
               {% csrf_token %}
               <input type="hidden" name="item_id"       value="{{ item.id }}">
               <input type="hidden" name="return_reason" id="returnReason-{{ item.id }}" value="">
               <input type="hidden" name="custom_reason" id="returnCustom-{{ item.id }}"  value="">
-              <input type="hidden" name="qty"           id="returnQty-{{ item.id }}"    value="{{ item.quantity }}">
+              <input type="hidden" name="qty"           id="returnQty-{{ item.id }}"    value="{{ item.remaining_quantity }}">
             </form>
+            {% endif %}
             {% endif %}
 
               <!-- Visible action buttons -->
             <div class="item-actions">
               {% if item.item_status|lower == 'placed' or item.item_status|lower == 'processing' or item.item_status|lower == 'confirmed' %}
+              {% if item.remaining_quantity > 0 %}
               <button type="button"
                       class="item-action-btn cancel"
-                      onclick="openModal('cancel','item','{{ item.id }}',{{ item.quantity }})">
-                <i class="fa-solid fa-xmark"></i> Cancel Item
+                      onclick="openModal('cancel','item','{{ item.id }}',{{ item.remaining_quantity }})">
+                <i class="fa-solid fa-xmark"></i> Cancel
+                {% if item.cancelled_quantity > 0 %}More{% else %}Item{% endif %}
               </button>
+              {% endif %}
               {% endif %}
 
-              {% if item.item_status == 'delivered' and not item.latest_return %}
+              {% if item.item_status == 'delivered' or item.item_status == 'return_requested' %}
+              {% if item.remaining_quantity > 0 %}
               <button type="button"
                       class="item-action-btn return-item"
-                      onclick="openModal('return','item','{{ item.id }}',{{ item.quantity }})">
-                <i class="fa-solid fa-rotate-left"></i> Return Item
+                      onclick="openModal('return','item','{{ item.id }}',{{ item.remaining_quantity }})">
+                <i class="fa-solid fa-rotate-left"></i> Return
+                {% if item.returned_quantity > 0 %}More{% else %}Item{% endif %}
               </button>
               {% endif %}
+              {% endif %}
             </div>
+
 
           </div>
         </div>

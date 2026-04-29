@@ -2,7 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db import transaction
-from django.db.models import Q, F
+from django.db import models
+from django.db.models import Q, F, Sum
 from django.http import HttpResponse, JsonResponse
 from django.template.loader import get_template
 import json
@@ -24,26 +25,17 @@ from user_side.wallet.models import Wallet
 from user_side.wallet.refund_utils import (
     process_wallet_refund,
     process_shipping_refund,
+    calculate_coupon_adjusted_refund,
     FREE_SHIPPING_THRESHOLD,
     SHIPPING_CHARGE,
 )
 
 VALID_STATUSES = {
-    'placed', 'confirmed', 'shipped',
-    'delivered', 'returned', 'cancelled', 'pending'
+    'pending', 'shipped', 'out for delivery',
+    'delivered', 'cancelled',
 }
 
-def _coupon_adjusted_refund(order, item_price, qty):
-    item_gross=Decimal(str(item_price)) * qty
-    original_subtotal=Decimal(str(order.subtotal or 0))
-    discount=Decimal(str(order.discount_amount or 0))
 
-    if original_subtotal > 0 and discount > 0:
-        item_share    = item_gross / original_subtotal
-        item_discount = (discount * item_share).quantize(Decimal('0.01'))
-        return max(item_gross - item_discount, Decimal('0.00'))
-
-    return item_gross
 
 
 @login_required
@@ -202,55 +194,56 @@ def cancel_order(request, order_id):
     if request.method != "POST":
         return redirect('order_detail', order_id=order_id)
 
-    order=get_object_or_404(Order, id=order_id, user=request.user)
-    item_id=request.POST.get('item_id', '').strip()   # empty = full cancel
-    reason=request.POST.get('cancellation_reason', '').strip()
-    custom=request.POST.get('custom_reason', '').strip()
-
-    if reason == "Other" and custom:
-        reason=custom
-    qty_str=request.POST.get('qty', '').strip()
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    item_id = request.POST.get('item_id', '').strip()   # empty = full-order cancel
+    reason  = request.POST.get('cancellation_reason', '').strip()
+    custom  = request.POST.get('custom_reason', '').strip()
+    if reason == 'Other' and custom:
+        reason = custom
+    qty_str = request.POST.get('qty', '').strip()
 
     with transaction.atomic():
 
+        # ── FULL ORDER CANCEL ──────────────────────────────────────────────────
         if not item_id:
             if order.order_status.lower() in ['shipped', 'delivered', 'cancelled']:
                 messages.error(request, "This order can no longer be cancelled.")
                 return redirect('order_detail', order_id=order.id)
 
-            cancellable_items=order.items.exclude( item_status__in=['cancelled', 'delivered', 'shipped'])
-
-            if not cancellable_items.exists():
+            cancellable = order.items.exclude(
+                item_status__in=['cancelled', 'delivered', 'shipped']
+            )
+            if not cancellable.exists():
                 messages.error(request, "No cancellable items found.")
                 return redirect('order_detail', order_id=order.id)
 
             total_refunded = Decimal('0.00')
-
-            for item in cancellable_items:
-                item.variant.stock += item.quantity
+            for item in cancellable:
+                cancel_qty = item.remaining_quantity
+                if cancel_qty <= 0:
+                    continue
+                item.variant.stock += cancel_qty
                 item.variant.save()
 
-                item.item_status='cancelled'
-                item.cancellation_reason=reason
-                item.save()
+                item.cancelled_quantity += cancel_qty
+                item.item_status        = 'cancelled'
+                item.cancellation_reason = reason
+                item.save(update_fields=['cancelled_quantity', 'item_status', 'cancellation_reason'])
 
-                net_refund = _coupon_adjusted_refund(order, item.price, item.quantity)
-
+                net_refund = calculate_coupon_adjusted_refund(order, item.price, cancel_qty)
                 ok, credited = process_wallet_refund(
                     order_item      = item,
-                    refund_qty      = item.quantity,
+                    refund_qty      = cancel_qty,
                     description     = f"Refund for cancelled order #{order.order_number}",
                     override_amount = net_refund,
                 )
                 if ok:
                     total_refunded += credited
 
-            all_items=order.items.all()
-            all_cancelled = all(i.item_status == 'cancelled' for i in all_items)
+            all_done = all(i.item_status == 'cancelled' for i in order.items.all())
             shipping_refunded = Decimal('0.00')
-            if all_cancelled:
-                order.order_status = 'cancelled'
-
+            if all_done:
+                order.order_status = 'Cancelled'
                 ship_ok = process_shipping_refund(
                     order       = order,
                     description = f"Shipping refund — order #{order.order_number} cancelled",
@@ -258,30 +251,32 @@ def cancel_order(request, order_id):
                 if ship_ok:
                     shipping_refunded = Decimal(str(order.delivery_charge or 0))
 
-
-            active_items=order.items.exclude(item_status='cancelled')
-            order.subtotal=sum(
-                Decimal(str(i.price)) * i.quantity for i in active_items
+            # Recalculate order totals based on remaining active qty
+            active_items = order.items.exclude(item_status='cancelled')
+            order.subtotal = sum(
+                Decimal(str(i.price)) * i.remaining_quantity for i in active_items
             ) or Decimal('0.00')
-            order.total_amount=(
+            order.total_amount = max(
                 order.subtotal
                 + Decimal(str(order.tax_amount or 0))
                 + Decimal(str(order.delivery_charge or 0))
-                - Decimal(str(order.discount_amount or 0))
+                - Decimal(str(order.discount_amount or 0)),
+                Decimal('0.00')
             )
             order.save()
 
-            grand_refund = total_refunded + shipping_refunded
-            if grand_refund > 0:
-                detail = f"₹{total_refunded:.2f} (products)"
+            grand = total_refunded + shipping_refunded
+            if grand > 0:
+                detail = f"\u20b9{total_refunded:.2f} (products)"
                 if shipping_refunded > 0:
-                    detail += f" + ₹{shipping_refunded:.2f} (shipping)"
-                messages.success(request, f"Order cancelled. {detail} has been credited to your wallet.")
+                    detail += f" + \u20b9{shipping_refunded:.2f} (shipping)"
+                messages.success(request, f"Order cancelled. {detail} credited to your wallet.")
             else:
                 messages.success(request, "Order cancelled successfully.")
 
+        # ── SINGLE ITEM PARTIAL CANCEL ─────────────────────────────────────────
         else:
-            item=get_object_or_404(OrderItem, id=item_id, order=order)
+            item = get_object_or_404(OrderItem, id=item_id, order=order)
 
             if item.item_status.lower() not in ['placed', 'processing', 'confirmed']:
                 messages.error(request, "This item can no longer be cancelled.")
@@ -291,68 +286,59 @@ def cancel_order(request, order_id):
                 messages.error(request, "Invalid quantity.")
                 return redirect('order_detail', order_id=order.id)
 
-            cancel_qty=int(qty_str)
+            cancel_qty = int(qty_str)
+            remaining  = item.remaining_quantity
 
-            if cancel_qty <= 0 or cancel_qty > item.quantity:
-                messages.error(request,f"Quantity must be between 1 and {item.quantity}.")
+            if cancel_qty <= 0 or cancel_qty > remaining:
+                messages.error(
+                    request,
+                    f"You can cancel between 1 and {remaining} unit(s). "
+                    f"({item.cancelled_quantity} already cancelled, "
+                    f"{item.returned_quantity} returned.)"
+                )
                 return redirect('order_detail', order_id=order.id)
 
+            # Restore stock
             item.variant.stock += cancel_qty
             item.variant.save()
 
-            if cancel_qty < item.quantity:
-                cancelled_item = OrderItem.objects.create(
-                    order=item.order,
-                    variant=item.variant,
-                    quantity=cancel_qty,
-                    price=item.price,
-                    item_status='cancelled',
-                    cancellation_reason=reason
-                )
-                item.quantity -= cancel_qty
-                item.save()
+            # Track cancellation
+            item.cancelled_quantity += cancel_qty
+            item.cancellation_reason = reason
+            if item.cancelled_quantity >= item.quantity:
+                item.item_status = 'cancelled'
+            item.save(update_fields=['cancelled_quantity', 'cancellation_reason', 'item_status'])
 
-                net_refund = _coupon_adjusted_refund(order, item.price, cancel_qty)
-
-                ok, credited = process_wallet_refund(
-                    order_item      = cancelled_item,
-                    refund_qty      = cancel_qty,
-                    description     = f"Refund for partial cancel — order #{order.order_number}",
-                    override_amount = net_refund,
-                )
-
-            else:
-                item.item_status='cancelled'
-                item.cancellation_reason=reason
-                item.save()
-
-                net_refund = _coupon_adjusted_refund(order, item.price, cancel_qty)
-
-                ok, credited = process_wallet_refund(
-                    order_item      = item,
-                    refund_qty      = cancel_qty,
-                    description     = f"Refund for cancelled item — order #{order.order_number}",
-                    override_amount = net_refund,
-                )
-
-            active_items=order.items.exclude(item_status='cancelled')
-            order.subtotal=sum(Decimal(str(i.price)) * i.quantity for i in active_items)
-            order.total_amount=(
-                order.subtotal
-                + Decimal(str(order.tax_amount    or 0))
-                + Decimal(str(order.delivery_charge or 0))
-                - Decimal(str(order.discount_amount or 0))
+            # Proportional refund
+            net_refund = calculate_coupon_adjusted_refund(order, item.price, cancel_qty)
+            ok, credited = process_wallet_refund(
+                order_item      = item,
+                refund_qty      = cancel_qty,
+                description     = f"Partial cancel ({cancel_qty} unit(s)) — order #{order.order_number}",
+                override_amount = net_refund,
             )
 
-            order_fully_cancelled = not active_items.exists()
-            if order_fully_cancelled:
-                order.order_status='cancelled'
-            order.save()
+            # Recalculate order totals
+            order.subtotal = sum(
+                Decimal(str(i.price)) * i.remaining_quantity
+                for i in order.items.all()
+            ) or Decimal('0.00')
+            order.total_amount = max(
+                order.subtotal
+                + Decimal(str(order.tax_amount or 0))
+                + Decimal(str(order.delivery_charge or 0))
+                - Decimal(str(order.discount_amount or 0)),
+                Decimal('0.00')
+            )
 
-            refund_amount = credited if ok else Decimal('0.00')
+            # If every unit of every item is now cancelled, mark order cancelled
+            all_done = all(
+                i.remaining_quantity == 0 or i.item_status == 'cancelled'
+                for i in order.items.all()
+            )
             shipping_refunded = Decimal('0.00')
-
-            if order_fully_cancelled:
+            if all_done:
+                order.order_status = 'Cancelled'
                 ship_ok = process_shipping_refund(
                     order       = order,
                     description = f"Shipping refund — order #{order.order_number} fully cancelled",
@@ -360,20 +346,26 @@ def cancel_order(request, order_id):
                 if ship_ok:
                     shipping_refunded = Decimal(str(order.delivery_charge or 0))
 
+            order.save()
+
+            refund_amount = credited if ok else Decimal('0.00')
             if ok:
-                detail = f"₹{refund_amount:.2f} (product)"
+                detail = f"\u20b9{refund_amount:.2f}"
                 if order.discount_amount and order.discount_amount > 0:
                     gross = Decimal(str(item.price)) * cancel_qty
-                    discount_share = (gross - refund_amount).quantize(Decimal('0.01'))
-                    if discount_share > 0:
-                        detail += f" (after ₹{discount_share:.2f} coupon deduction)"
+                    deducted = (gross - refund_amount).quantize(Decimal('0.01'))
+                    if deducted > 0:
+                        detail += f" (after \u20b9{deducted:.2f} coupon deduction)"
                 if shipping_refunded > 0:
-                    detail += f" + ₹{shipping_refunded:.2f} (shipping)"
-                messages.success(request, f"Item cancelled. {detail} credited to your wallet.")
+                    detail += f" + \u20b9{shipping_refunded:.2f} (shipping)"
+                messages.success(
+                    request,
+                    f"{cancel_qty} unit(s) cancelled. {detail} credited to your wallet."
+                )
             elif order.payment_method in ('razorpay', 'wallet') and order.payment_status == 'paid':
-                messages.warning(request, f"Item cancelled. Refund could not be processed — please contact support.")
+                messages.warning(request, f"{cancel_qty} unit(s) cancelled. Refund could not be processed — please contact support.")
             else:
-                messages.success(request, "Item cancelled successfully.")
+                messages.success(request, f"{cancel_qty} unit(s) cancelled successfully.")
 
     return redirect('order_detail', order_id=order.id)
 
@@ -383,67 +375,96 @@ def return_order(request, order_id):
     if request.method != "POST":
         return redirect('order_detail', order_id=order_id)
 
-    order=get_object_or_404(Order, id=order_id, user=request.user)
+    order    = get_object_or_404(Order, id=order_id, user=request.user)
+    item_id  = request.POST.get('item_id', '').strip()
+    reason   = request.POST.get('return_reason', '').strip()
+    custom   = request.POST.get('custom_reason', '').strip()
+    qty_str  = request.POST.get('qty', '').strip()
 
-    item_id=request.POST.get('item_id')
-    reason=request.POST.get('return_reason', '').strip()
-    custom_reason=request.POST.get('custom_reason', '').strip()
-
-    if reason == 'Other' and custom_reason:
-        reason = custom_reason
+    if reason == 'Other' and custom:
+        reason = custom
 
     if not reason:
         messages.error(request, "Return reason is required.")
         return redirect('order_detail', order_id=order.id)
 
     with transaction.atomic():
+
+        # ── FULL ORDER RETURN ──────────────────────────────────────────────────
         if not item_id:
-            items=order.items.filter(item_status='delivered')
+            items = order.items.filter(item_status='delivered')
             if not items.exists():
                 messages.error(request, "No delivered items to return.")
                 return redirect('order_detail', order_id=order.id)
-            created_any=False
+
+            created_any = False
             for item in items:
-                exists=ReturnRequest.objects.filter(item=item).exists()
-                if exists:
+                ret_qty = item.remaining_quantity
+                if ret_qty <= 0:
+                    continue
+                already = ReturnRequest.objects.filter(item=item).aggregate(
+                    total=Sum('quantity')
+                )['total'] or 0
+                if already >= ret_qty:
                     continue
                 ReturnRequest.objects.create(
-                    order=order,
-                    item=item,
-                    reason=reason,
-                    description=request.POST.get('custom_reason', '').strip()
+                    order    = order,
+                    item     = item,
+                    quantity = ret_qty,
+                    reason   = reason,
+                    description = custom,
                 )
-                item.item_status='return_requested'
-                item.save()
-                created_any=True
+                item.returned_quantity += ret_qty
+                item.item_status = 'return_requested'
+                item.save(update_fields=['returned_quantity', 'item_status'])
+                created_any = True
 
             if created_any:
-                messages.success(request, "Return request submitted for order.")
+                messages.success(request, "Return request submitted for all delivered items.")
             else:
-                messages.error(request, "A return has already been processed or requested for all these items.")
+                messages.error(request, "A return has already been requested for all delivered items.")
 
+        # ── SINGLE ITEM PARTIAL RETURN ─────────────────────────────────────────
         else:
-            item=get_object_or_404(OrderItem, id=item_id, order=order)
+            item = get_object_or_404(OrderItem, id=item_id, order=order)
 
-            if item.item_status != 'delivered':
+            if item.item_status not in ('delivered', 'return_requested'):
                 messages.error(request, "Only delivered items can be returned.")
                 return redirect('order_detail', order_id=order.id)
 
-            exists=ReturnRequest.objects.filter(item=item).exists()
+            # Parse qty
+            if qty_str.isdigit():
+                ret_qty = int(qty_str)
+            else:
+                ret_qty = item.remaining_quantity  # default: all remaining
 
-            if exists:
-                messages.error(request, "A return has already been processed or requested for this item.")
+            remaining = item.remaining_quantity
+            if ret_qty <= 0 or ret_qty > remaining:
+                messages.error(
+                    request,
+                    f"You can return between 1 and {remaining} unit(s). "
+                    f"({item.cancelled_quantity} cancelled, {item.returned_quantity} already returned.)"
+                )
                 return redirect('order_detail', order_id=order.id)
 
             ReturnRequest.objects.create(
-                order=order,
-                item=item,
-                reason=reason
+                order       = order,
+                item        = item,
+                quantity    = ret_qty,
+                reason      = reason,
+                description = custom,
             )
-            
-            item.item_status='return_requested'
-            item.save()
-            messages.success(request, "Return request submitted successfully.")
+            item.returned_quantity += ret_qty
+            if item.returned_quantity + item.cancelled_quantity >= item.quantity:
+                item.item_status = 'return_requested'
+            else:
+                item.item_status = 'return_requested'
+            item.save(update_fields=['returned_quantity', 'item_status'])
+
+            messages.success(
+                request,
+                f"Return request submitted for {ret_qty} unit(s). We will process it shortly."
+            )
 
     return redirect('order_detail', order_id=order.id)
 

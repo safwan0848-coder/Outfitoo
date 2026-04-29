@@ -83,8 +83,15 @@ class OrderItem(models.Model):
     item_status=models.CharField(max_length=20, choices=STATUS_CHOICES, default='placed')
     cancellation_reason=models.TextField(blank=True, null=True)
     return_reason=models.TextField(blank=True, null=True)
-    return_qty=models.PositiveIntegerField(null=True, blank=True)
+    return_qty=models.PositiveIntegerField(null=True, blank=True)  # legacy — prefer returned_quantity
     refund_processed=models.BooleanField(default=False)   # ← prevents duplicate refunds
+    cancelled_quantity=models.PositiveIntegerField(default=0)  # how many units have been cancelled
+    returned_quantity=models.PositiveIntegerField(default=0)   # how many units have been returned
+
+    @property
+    def remaining_quantity(self):
+        """Units that are neither cancelled nor returned."""
+        return max(self.quantity - self.cancelled_quantity - self.returned_quantity, 0)
 
     def __str__(self):
         return f"{self.order.order_number} - {self.variant}"
@@ -99,10 +106,11 @@ class ReturnRequest(models.Model):
 
     order=models.ForeignKey('Order',     on_delete=models.CASCADE, related_name='return_requests')
     item=models.ForeignKey('OrderItem', on_delete=models.CASCADE, related_name='return_requests')
+    quantity=models.PositiveIntegerField(default=1)  # how many units this return request covers
     reason=models.CharField(max_length=255)
     description=models.TextField(blank=True)
     status=models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     created_at=models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Return #{self.id} — {self.order} — {self.status}"
+        return f"Return #{self.id} — {self.order} — qty {self.quantity} — {self.status}"

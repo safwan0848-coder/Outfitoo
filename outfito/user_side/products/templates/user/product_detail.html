@@ -254,7 +254,7 @@
           <!-- Action Buttons -->
           {% if display_variant and display_variant.stock > 0 %}
           <div class="flex flex-col sm:flex-row gap-3">
-            <form method="POST" action="{% url 'add_to_cart' display_variant.id %}" class="w-full">
+            <form method="POST" action="{% url 'add_to_cart' display_variant.id %}" class="w-full" onsubmit="handleAddToCartAjax(event)">
               {% csrf_token %}
               <!-- Quantity is hidden on mobile, defaulting to 1 via JS logic or hidden input -->
               <input type="hidden" name="quantity" class="mobile-qty-input" value="1">
@@ -887,6 +887,55 @@ if(mzImg) {
     lastTap = currentTime;
   });
 }
+  /* AJAX Add to Cart */
+  window.handleAddToCartAjax = async function(event) {
+      event.preventDefault();
+      const form = event.target;
+      const btn = form.querySelector('button[type="submit"]');
+      const originalHtml = btn.innerHTML;
+      
+      btn.innerHTML = '<span class="material-icons-outlined animate-spin text-lg">sync</span> Adding...';
+      btn.disabled = true;
+      
+      const formData = new URLSearchParams();
+      formData.append('csrfmiddlewaretoken', form.querySelector('[name=csrfmiddlewaretoken]').value);
+      formData.append('quantity', form.querySelector('.mobile-qty-input').value);
+      
+      try {
+          const response = await fetch(form.action, {
+              method: 'POST',
+              body: formData,
+              headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          });
+          const data = await response.json();
+          
+          if (data.ok) {
+              if (window.showToast) {
+                  showToast(data.message, 'success');
+              }
+              
+              // Update global nav badges
+              const navBadge = document.getElementById('bag-count-badge');
+              if (navBadge) {
+                  navBadge.textContent = data.item_count;
+                  navBadge.style.display = data.item_count > 0 ? 'flex' : 'none';
+              }
+              const mobBadge = document.getElementById('mob-bag-count-badge');
+              if (mobBadge) {
+                  mobBadge.textContent = data.item_count;
+                  mobBadge.style.display = data.item_count > 0 ? 'flex' : 'none';
+              }
+          } else if (data.warning) {
+              if (window.showToast) showToast(data.warning, 'warning');
+          }
+      } catch (e) {
+          if (window.showToast) showToast("Error adding to cart", 'error');
+      } finally {
+          btn.innerHTML = originalHtml;
+          btn.disabled = false;
+      }
+  };
+
 </script>
 
 {% endblock %}

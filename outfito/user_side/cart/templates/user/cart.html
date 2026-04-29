@@ -414,20 +414,7 @@
 </style>
 
 <!-- your content -->
-{% if messages %}
-<div class="toast-wrap" id="toastWrap">
-  {% for message in messages %}
-  <div class="toast-item toast-{{ message.tags }}">
-    <span class="material-icons-outlined">
-      {% if message.tags == 'success' %}check_circle
-      {% elif message.tags == 'warning' %}warning
-      {% else %}error_outline{% endif %}
-    </span>
-    {{ message }}
-  </div>
-  {% endfor %}
-</div>
-{% endif %}
+<!-- Removed local toast logic to use global base.html toasts -->
 
 <!-- ═══════════════════════════ HEADER ═══════════════════════════ -->
 
@@ -446,7 +433,7 @@
     <div class="page-title">
       Shopping Cart
       {% if items %}
-      <span class="cart-count-badge">{{ item_count }} item{{ item_count|pluralize }}</span>
+      <span class="cart-count-badge" id="cart-header-count">{{ item_count }} item{{ item_count|pluralize }}</span>
       {% endif %}
     </div>
     {% if items %}
@@ -469,7 +456,8 @@
 
       {% for item in items %}
       <div class="cart-item {% if item.variant.stock == 0 %}oos{% endif %}"
-           id="cart-item-{{ item.id }}">
+           id="cart-item-{{ item.id }}"
+           data-update-url="{% url 'update_cart_qty' item.id %}">
 
         <!-- Product info -->
         <div class="item-product">
@@ -508,36 +496,30 @@
         <!-- Quantity -->
         <div class="item-qty">
           <div class="qty-control">
-            <form method="POST" action="{% url 'update_cart_qty' item.id %}" style="display:contents;">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="decrement"/>
-              <button type="submit" class="qty-btn"
-                      {% if item.quantity <= 1 or item.variant.stock == 0 %}disabled{% endif %}
-                      title="Decrease quantity">−</button>
-            </form>
-            <div class="qty-num">{{ item.quantity }}</div>
-            <form method="POST" action="{% url 'update_cart_qty' item.id %}" style="display:contents;">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="increment"/>
-              <button type="submit" class="qty-btn"
-                      {% if item.quantity >= item.variant.stock or item.quantity >= max_qty or item.variant.stock == 0 %}disabled{% endif %}
-                      title="Increase quantity">+</button>
-            </form>
+            <button type="button" class="qty-btn" id="btn-dec-{{ item.id }}"
+                    onclick="handleCartQtyAjax({{ item.id }}, 'decrement')"
+                    {% if item.quantity <= 1 or item.variant.stock == 0 %}disabled{% endif %}
+                    title="Decrease quantity">−</button>
+            <div class="qty-num" id="qty-{{ item.id }}">{{ item.quantity }}</div>
+            <button type="button" class="qty-btn" id="btn-inc-{{ item.id }}"
+                    onclick="handleCartQtyAjax({{ item.id }}, 'increment')"
+                    {% if item.quantity >= item.variant.stock or item.quantity >= max_qty or item.variant.stock == 0 %}disabled{% endif %}
+                    title="Increase quantity">+</button>
           </div>
         </div>
 
         <!-- Price -->
         <div class="item-price">
           {% if item.offer_discount and item.offer_discount > 0 %}
-          <div class="item-price-orig" style="color:var(--text-sub); text-decoration:line-through;">₹{{ item.base_subtotal|floatformat:0 }}</div>
-          <div class="item-price-main">₹{{ item.final_subtotal|floatformat:0 }}</div>
-          <div style="font-size:11px; color:var(--accent); margin-top:4px;">-₹{{ item.offer_discount|floatformat:0 }} Offer</div>
+          <div class="item-price-orig" style="color:var(--text-sub); text-decoration:line-through;">₹<span id="orig-subtotal-{{ item.id }}">{{ item.base_subtotal|floatformat:0 }}</span></div>
+          <div class="item-price-main">₹<span id="main-subtotal-{{ item.id }}">{{ item.final_subtotal|floatformat:0 }}</span></div>
+          <div style="font-size:11px; color:var(--accent); margin-top:4px;" id="offer-disc-{{ item.id }}">-₹{{ item.offer_discount|floatformat:0 }} Offer</div>
           {% else %}
-          <div class="item-price-main">₹{{ item.base_subtotal|floatformat:0 }}</div>
+          <div class="item-price-orig" style="color:var(--text-sub); text-decoration:line-through; display:none;">₹<span id="orig-subtotal-{{ item.id }}">{{ item.base_subtotal|floatformat:0 }}</span></div>
+          <div class="item-price-main">₹<span id="main-subtotal-{{ item.id }}">{{ item.base_subtotal|floatformat:0 }}</span></div>
+          <div style="font-size:11px; color:var(--accent); margin-top:4px; display:none;" id="offer-disc-{{ item.id }}">-₹0 Offer</div>
           {% endif %}
-          {% if item.quantity > 1 %}
-          <div class="item-price-sub">₹{{ item.variant.price|floatformat:0 }} × {{ item.quantity }}</div>
-          {% endif %}
+          <div class="item-price-sub" id="price-sub-{{ item.id }}" {% if item.quantity <= 1 %}style="display:none;"{% endif %}>₹{{ item.variant.price|floatformat:0 }} × <span id="price-sub-qty-{{ item.id }}">{{ item.quantity }}</span></div>
         </div>
 
         <!-- Remove -->
@@ -586,22 +568,17 @@
 
       <div class="summary-rows">
         <div class="summary-row">
-          <span class="label">Subtotal ({{ item_count }} items)</span>
-          <span class="val">₹{{ subtotal|floatformat:0 }}</span>
+          <span class="label">Subtotal (<span id="summary-count">{{ item_count }}</span> items)</span>
+          <span class="val">₹<span id="summary-subtotal">{{ subtotal|floatformat:0 }}</span></span>
         </div>
-        {% if discount > 0 %}
-        <div class="summary-row">
+        <div class="summary-row" id="summary-discount-row" {% if discount <= 0 %}style="display:none;"{% endif %}>
           <span class="label">Discount</span>
-          <span class="val discount">−₹{{ discount|floatformat:0 }}</span>
+          <span class="val discount">−₹<span id="summary-discount">{{ discount|floatformat:0 }}</span></span>
         </div>
-        {% endif %}
         <div class="summary-row">
           <span class="label">Shipping</span>
-          {% if shipping == 0 %}
-            <span class="val free">FREE</span>
-          {% else %}
-            <span class="val">₹{{ shipping|floatformat:0 }}</span>
-          {% endif %}
+          <span class="val" id="summary-shipping" {% if shipping == 0 %}style="display:none;"{% endif %}>₹<span>{{ shipping|floatformat:0 }}</span></span>
+          <span class="val free" id="summary-shipping-free" {% if shipping > 0 %}style="display:none;"{% endif %}>FREE</span>
         </div>
       </div>
 
@@ -609,7 +586,7 @@
 
       <div class="summary-total">
         <span class="label">Total</span>
-        <span class="amount">₹{{ total|floatformat:0 }}</span>
+        <span class="amount">₹<span id="summary-total">{{ total|floatformat:0 }}</span></span>
       </div>
 
       <button class="btn-checkout" {% if has_oos or not items %}disabled{% endif %}
@@ -666,22 +643,7 @@
   </div>
 </div>
 
-
-
 <script>
-// Auto-dismiss: toast-error after 10s, others after 3.5s
-document.querySelectorAll('#toastWrap .toast-item').forEach(el => {
-  const delay = el.classList.contains('toast-error') ? 10000 : 3500;
-  setTimeout(() => {
-    el.style.transition = 'opacity .4s';
-    el.style.opacity = '0';
-    setTimeout(() => el.remove(), 400);
-  }, delay);
-});
-// Clean up container when empty
-const wrap = document.getElementById('toastWrap');
-if (wrap) setTimeout(() => { if (!wrap.children.length) wrap.remove(); }, 11000);
-
 let deleteForm = null;
 
 function openDeleteModal(button) {
@@ -693,11 +655,193 @@ function closeDeleteModal() {
   document.getElementById('deleteModal').style.display = 'none';
 }
 
-function confirmDelete() {
+async function confirmDelete() {
   if (deleteForm) {
-    deleteForm.submit();
+    const url = deleteForm.action;
+    const csrfToken = deleteForm.querySelector('[name=csrfmiddlewaretoken]').value;
+    closeDeleteModal();
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken,
+            }
+        });
+        const data = await response.json();
+        
+        if (data.ok && data.removed) {
+            const itemRow = document.getElementById(`cart-item-${data.item_id}`);
+            if (itemRow) {
+                itemRow.style.transition = 'opacity 0.3s, transform 0.3s';
+                itemRow.style.opacity = '0';
+                itemRow.style.transform = 'translateX(20px)';
+                setTimeout(() => itemRow.remove(), 300);
+            }
+            if (data.message) showToast(data.message, 'success');
+            
+            if (data.item_count === 0) {
+                setTimeout(() => window.location.reload(), 300);
+            } else {
+                updateSummary(data);
+            }
+        }
+    } catch (e) {
+        showToast("Error removing item. Please try again.", 'error');
+    }
   }
 }
+
+async function handleCartQtyAjax(itemId, action) {
+    // Build URL from data attribute on the item row to avoid string replace errors
+    const itemRow = document.getElementById(`cart-item-${itemId}`);
+    const url = itemRow ? itemRow.dataset.updateUrl : `/cart/update/${itemId}/`;
+    const csrfToken = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || 
+                      document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    
+    const formData = new URLSearchParams();
+    formData.append('csrfmiddlewaretoken', csrfToken);
+    formData.append('action', action);
+
+    // Disable buttons temporarily
+    const btnDec = document.getElementById(`btn-dec-${itemId}`);
+    const btnInc = document.getElementById(`btn-inc-${itemId}`);
+    if (btnDec) btnDec.disabled = true;
+    if (btnInc) btnInc.disabled = true;
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+
+        if (data.warning) {
+            showToast(data.warning, 'warning');
+        }
+
+        if (data.ok && data.removed) {
+            const itemRow = document.getElementById(`cart-item-${data.item_id}`);
+            if (itemRow) itemRow.remove();
+            if (data.item_count === 0) {
+                window.location.reload();
+            } else {
+                updateSummary(data);
+            }
+            return;
+        }
+
+        if (data.items && data.items[data.item_id]) {
+            const itemData = data.items[data.item_id];
+            
+            // Update quantity display
+            const qtyEl = document.getElementById(`qty-${data.item_id}`);
+            if (qtyEl) qtyEl.innerText = itemData.quantity;
+
+            // Update item pricing
+            const origSubEl = document.getElementById(`orig-subtotal-${data.item_id}`);
+            const mainSubEl = document.getElementById(`main-subtotal-${data.item_id}`);
+            const discEl = document.getElementById(`offer-disc-${data.item_id}`);
+            const priceSubEl = document.getElementById(`price-sub-${data.item_id}`);
+            const priceSubQtyEl = document.getElementById(`price-sub-qty-${data.item_id}`);
+            
+            if (mainSubEl) mainSubEl.innerText = itemData.disc_subtotal;
+            if (origSubEl) origSubEl.innerText = itemData.base_subtotal;
+            
+            if (itemData.offer_disc > 0) {
+                if (origSubEl) origSubEl.parentElement.style.display = 'block';
+                if (discEl) {
+                    discEl.style.display = 'block';
+                    discEl.innerText = `-₹${itemData.offer_disc} Offer`;
+                }
+            } else {
+                if (origSubEl) origSubEl.parentElement.style.display = 'none';
+                if (discEl) discEl.style.display = 'none';
+            }
+            
+            if (itemData.quantity > 1) {
+                if (priceSubEl) priceSubEl.style.display = 'block';
+                if (priceSubQtyEl) priceSubQtyEl.innerText = itemData.quantity;
+            } else {
+                if (priceSubEl) priceSubEl.style.display = 'none';
+            }
+            
+            // Update buttons disabled state
+            const btnDec = document.getElementById(`btn-dec-${data.item_id}`);
+            const btnInc = document.getElementById(`btn-inc-${data.item_id}`);
+            if (btnDec) btnDec.disabled = itemData.quantity <= 1;
+            if (btnInc) {
+                // If they hit the max limit, the backend warns them, but we still re-enable the button 
+                // so they can try again or the backend handles max limit. 
+                // We'll disable it if quantity >= stock limit or MAX_QTY.
+                btnInc.disabled = (itemData.quantity >= {{ max_qty|default:5 }});
+            }
+        }
+        
+        updateSummary(data);
+
+    } catch (e) {
+        showToast("Error updating cart.", 'error');
+        // Restore buttons on error
+        const btnDec = document.getElementById(`btn-dec-${itemId}`);
+        const btnInc = document.getElementById(`btn-inc-${itemId}`);
+        if (btnDec) btnDec.disabled = false;
+        if (btnInc) btnInc.disabled = false;
+    }
+}
+
+function updateSummary(data) {
+    if (data.item_count !== undefined) {
+        const hBadge = document.getElementById('cart-header-count');
+        const sCount = document.getElementById('summary-count');
+        if (hBadge) hBadge.innerText = `${data.item_count} item${data.item_count !== 1 ? 's' : ''}`;
+        if (sCount) sCount.innerText = data.item_count;
+        
+        // Global navbar bag counter if it exists
+        const navBagCount = document.getElementById('bag-count-badge');
+        if (navBagCount) {
+            navBagCount.innerText = data.item_count;
+            navBagCount.style.display = data.item_count > 0 ? 'flex' : 'none';
+        }
+        // Mobile bottom nav badge if it exists
+        const mobBagCount = document.getElementById('mob-bag-count-badge');
+        if (mobBagCount) {
+            mobBagCount.innerText = data.item_count;
+            mobBagCount.style.display = data.item_count > 0 ? 'flex' : 'none';
+        }
+    }
+    
+    if (data.subtotal !== undefined) {
+        document.getElementById('summary-subtotal').innerText = data.subtotal;
+    }
+    if (data.total !== undefined) {
+        document.getElementById('summary-total').innerText = data.total;
+    }
+    if (data.discount !== undefined) {
+        const discRow = document.getElementById('summary-discount-row');
+        if (data.discount > 0) {
+            discRow.style.display = 'flex';
+            document.getElementById('summary-discount').innerText = data.discount;
+        } else {
+            discRow.style.display = 'none';
+        }
+    }
+    if (data.shipping !== undefined) {
+        const shp = document.getElementById('summary-shipping');
+        const shpFree = document.getElementById('summary-shipping-free');
+        if (data.shipping === 0) {
+            shp.style.display = 'none';
+            shpFree.style.display = 'inline-block';
+        } else {
+            shp.style.display = 'inline-block';
+            shp.querySelector('span').innerText = data.shipping;
+            shpFree.style.display = 'none';
+        }
+    }
+}
+
 </script>
 
 {% endblock %}

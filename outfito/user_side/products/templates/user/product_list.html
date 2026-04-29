@@ -953,19 +953,21 @@
             {% endif %}
 
             {% if item.variant %}
-                {% with offer=item.product.get_active_offer %}
-                {% if offer %}
+                {% if item.has_offer and item.offer %}
                     <span class="discount-badge" style="position: absolute; top: 8px; left: 8px; z-index: 10; color: white; font-size: 11px; font-weight: bold; padding: 3px 7px; border-radius: 4px;">
-                    {% if offer.discount_type == 'percentage' %}
-                        -{{ offer.discount_value|floatformat:0 }}%
+                    {% if item.offer.discount_type == 'percentage' %}
+                        -{{ item.offer.discount_value|floatformat:0 }}%
                     {% else %}
-                        ₹{{ offer.discount_value|floatformat:0 }} OFF
+                        ₹{{ item.offer.discount_value|floatformat:0 }} OFF
                     {% endif %}
+                    </span>
+                {% elif item.discount %}
+                    <span class="discount-badge" style="position: absolute; top: 8px; left: 8px; z-index: 10; color: white; font-size: 11px; font-weight: bold; padding: 3px 7px; border-radius: 4px; background: rgba(239,68,68,0.9);">
+                        -{{ item.discount }}%
                     </span>
                 {% elif item.is_new %}
                     <span class="badge-new">NEW</span>
                 {% endif %}
-                {% endwith %}
             {% endif %}
 
             {% if item.variant %}
@@ -982,7 +984,7 @@
 
     {% if item.variant and item.variant.id %}
     {% if request.user.is_authenticated %}
-    <form method="POST" action="{% url 'add_to_cart' item.variant.id %}">
+    <form method="POST" action="{% url 'add_to_cart' item.variant.id %}" onsubmit="handleAddToCartAjax(event)">
         {% csrf_token %}
         <button type="submit" class="cart-icon-btn">
             <i class="fa-solid fa-cart-shopping"></i>
@@ -1007,17 +1009,15 @@
         <p class="card-desc">{{ item.product.description|default:"Premium quality streetwear crafted with care." }}</p>
         <div class="price-row">
             {% if item.variant %}
-                {% with offer=item.product.get_active_offer %}
-                {% if offer %}
+                {% if item.has_offer %}
                     <span class="price-old">₹{{ item.variant.price }}</span>
-                    <span class="price-new">₹{{ item.variant.get_discounted_price }}</span>
+                    <span class="price-new">₹{{ item.discounted_price|floatformat:0 }}</span>
                 {% elif item.variant.original_price %}
                     <span class="price-old">₹{{ item.variant.original_price }}</span>
                     <span class="price-new">₹{{ item.variant.price }}</span>
                 {% else %}
                     <span class="price-new">₹{{ item.variant.price }}</span>
                 {% endif %}
-                {% endwith %}
             {% else %}
                 <span class="price-na">Price unavailable</span>
             {% endif %}
@@ -1285,15 +1285,54 @@ document.addEventListener("DOMContentLoaded", function () {
         window.location.href = "{% url 'toggle_wishlist' 0 %}".replace('0', id);
     }
 
-    /* FIX: Auto-dismiss toasts after 3.2s */
-    document.querySelectorAll('.toast-item').forEach(t => {
-        setTimeout(() => {
-            t.style.transition = 'opacity .4s, transform .4s';
-            t.style.opacity = '0';
-            t.style.transform = 'translateX(100%)';
-            setTimeout(() => t.remove(), 400);
-        }, 3200);
-    });
+    /* ── AJAX ADD TO CART ── */
+    window.handleAddToCartAjax = async function(event) {
+        event.preventDefault();
+        const form = event.target;
+        const btn = form.querySelector('button[type="submit"]');
+        const originalHtml = btn.innerHTML;
+        
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+        btn.disabled = true;
+        
+        const formData = new URLSearchParams();
+        formData.append('csrfmiddlewaretoken', form.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await response.json();
+            
+            if (data.ok) {
+                if (window.showToast) {
+                    showToast(data.message, 'success');
+                }
+                updateBadge(data.item_count);
+                
+                // Update global nav badges
+                const navBadge = document.getElementById('bag-count-badge');
+                if (navBadge) {
+                    navBadge.textContent = data.item_count;
+                    navBadge.style.display = data.item_count > 0 ? 'flex' : 'none';
+                }
+                const mobBadge = document.getElementById('mob-bag-count-badge');
+                if (mobBadge) {
+                    mobBadge.textContent = data.item_count;
+                    mobBadge.style.display = data.item_count > 0 ? 'flex' : 'none';
+                }
+            } else if (data.warning) {
+                if (window.showToast) showToast(data.warning, 'warning');
+            }
+        } catch (e) {
+            if (window.showToast) showToast("Error adding to cart", 'error');
+        } finally {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    };
 
 });
 </script>

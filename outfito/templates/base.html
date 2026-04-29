@@ -86,44 +86,45 @@
 </footer>
 
 <!-- TOAST NOTIFICATION SYSTEM -->
-{% if messages %}
 <div id="toast-container" class="fixed top-[97px] left-1/2 -translate-x-1/2 md:left-auto md:right-6 md:-translate-x-0 z-[9000] flex flex-col gap-3 pointer-events-none w-[90%] md:w-auto max-w-[380px]">
-  {% for message in messages %}
-    <div class="toast-message pointer-events-auto flex items-start p-4 rounded-xl shadow-[0_10px_40px_rgb(0,0,0,0.5)] border translate-y-[-100%] opacity-0 transition-all duration-500 backdrop-blur-md
-      {% if message.tags == 'success' %}
-        bg-[#0e2b1e]/90 border-green-500/30 text-green-400
-      {% elif message.tags == 'error' %}
-        bg-[#2b0f0f]/90 border-red-500/30 text-red-400" data-toast-type="error
-      {% elif message.tags == 'warning' %}
-        bg-[#2b220f]/90 border-yellow-500/30 text-yellow-400
-      {% else %}
-        bg-[#0e1f3b]/90 border-blue-500/30 text-blue-400
-      {% endif %}">
-      
-      <!-- Icon -->
-      <div class="flex-shrink-0 mt-0.5 mr-3">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="toast-message pointer-events-auto flex items-start p-4 rounded-xl shadow-[0_10px_40px_rgb(0,0,0,0.5)] border translate-y-[-100%] opacity-0 transition-all duration-500 backdrop-blur-md
         {% if message.tags == 'success' %}
-          <i class="fa-solid fa-circle-check text-[1.1rem]"></i>
+          bg-[#0e2b1e]/90 border-green-500/30 text-green-400
         {% elif message.tags == 'error' %}
-          <i class="fa-solid fa-circle-exclamation text-[1.1rem]"></i>
+          bg-[#2b0f0f]/90 border-red-500/30 text-red-400" data-toast-type="error
         {% elif message.tags == 'warning' %}
-          <i class="fa-solid fa-triangle-exclamation text-[1.1rem]"></i>
+          bg-[#2b220f]/90 border-yellow-500/30 text-yellow-400
         {% else %}
-          <i class="fa-solid fa-circle-info text-[1.1rem]"></i>
-        {% endif %}
-      </div>
+          bg-[#0e1f3b]/90 border-blue-500/30 text-blue-400
+        {% endif %}">
+        
+        <!-- Icon -->
+        <div class="flex-shrink-0 mt-0.5 mr-3">
+          {% if message.tags == 'success' %}
+            <i class="fa-solid fa-circle-check text-[1.1rem]"></i>
+          {% elif message.tags == 'error' %}
+            <i class="fa-solid fa-circle-exclamation text-[1.1rem]"></i>
+          {% elif message.tags == 'warning' %}
+            <i class="fa-solid fa-triangle-exclamation text-[1.1rem]"></i>
+          {% else %}
+            <i class="fa-solid fa-circle-info text-[1.1rem]"></i>
+          {% endif %}
+        </div>
 
-      <!-- Message Text -->
-      <div class="flex-1 text-[0.85rem] font-medium pr-4 leading-relaxed text-white">
-        {{ message }}
-      </div>
+        <!-- Message Text -->
+        <div class="flex-1 text-[0.85rem] font-medium pr-4 leading-relaxed text-white">
+          {{ message }}
+        </div>
 
-      <!-- Close Button -->
-      <button onclick="closeToast(this.closest('.toast-message'))" class="flex-shrink-0 text-white/40 hover:text-white transition-colors focus:outline-none ml-2">
-        <i class="fa-solid fa-xmark text-lg"></i>
-      </button>
-    </div>
-  {% endfor %}
+        <!-- Close Button -->
+        <button onclick="closeToast(this.closest('.toast-message'))" class="flex-shrink-0 text-white/40 hover:text-white transition-colors focus:outline-none ml-2">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+    {% endfor %}
+  {% endif %}
 </div>
 
 <script>
@@ -159,8 +160,54 @@ function closeToast(toast) {
         }
     }, 400); // Wait for transition to complete
 }
+
+function showToast(message, type='success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    let bgClass = "bg-[#0e1f3b]/90 border-blue-500/30 text-blue-400";
+    let iconClass = "fa-circle-info";
+    let isError = false;
+
+    if (type === 'success') {
+        bgClass = "bg-[#0e2b1e]/90 border-green-500/30 text-green-400";
+        iconClass = "fa-circle-check";
+    } else if (type === 'error') {
+        bgClass = "bg-[#2b0f0f]/90 border-red-500/30 text-red-400";
+        iconClass = "fa-circle-exclamation";
+        isError = true;
+    } else if (type === 'warning') {
+        bgClass = "bg-[#2b220f]/90 border-yellow-500/30 text-yellow-400";
+        iconClass = "fa-triangle-exclamation";
+    }
+
+    const toastHTML = `
+      <div class="toast-message pointer-events-auto flex items-start p-4 rounded-xl shadow-[0_10px_40px_rgb(0,0,0,0.5)] border translate-y-[-100%] opacity-0 transition-all duration-500 backdrop-blur-md ${bgClass}" ${isError ? 'data-toast-type="error"' : ''}>
+        <div class="flex-shrink-0 mt-0.5 mr-3">
+          <i class="fa-solid ${iconClass} text-[1.1rem]"></i>
+        </div>
+        <div class="flex-1 text-[0.85rem] font-medium pr-4 leading-relaxed text-white">
+          ${message}
+        </div>
+        <button onclick="closeToast(this.closest('.toast-message'))" class="flex-shrink-0 text-white/40 hover:text-white transition-colors focus:outline-none ml-2">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+    `;
+
+    container.insertAdjacentHTML('beforeend', toastHTML);
+    const newToast = container.lastElementChild;
+
+    setTimeout(() => {
+        newToast.classList.remove('translate-y-[-100%]', 'opacity-0');
+    }, 50);
+
+    const delay = isError ? 10000 : 4000;
+    setTimeout(() => {
+        closeToast(newToast);
+    }, delay);
+}
 </script>
-{% endif %}
 
 </body>
 </html>

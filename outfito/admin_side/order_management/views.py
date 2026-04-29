@@ -6,7 +6,7 @@ from django.db.models import Q, Sum
 from django.core.paginator import Paginator
 from user_side.orders.models import Order, OrderItem, ReturnRequest
 from django.views.decorators.http import require_POST
-from user_side.wallet.refund_utils import process_wallet_refund, process_shipping_refund
+from user_side.wallet.refund_utils import process_wallet_refund, process_shipping_refund, calculate_coupon_adjusted_refund
 from user_side.wallet.referral_service import process_referral_reward
 from decimal import Decimal
 
@@ -209,7 +209,9 @@ def approve_return_request(request, return_id):
     return_req.item.item_status='returned'
     return_req.item.save()
 
-    return_req.item.variant.stock += return_req.item.quantity
+    # Note: returned_quantity on OrderItem is already incremented when the request is created.
+    # We just need to restore stock for the approved amount.
+    return_req.item.variant.stock += return_req.quantity
     return_req.item.variant.save()
 
     messages.success(request,f"Return request #{return_req.id} approved. Item marked as returned.")
@@ -234,19 +236,9 @@ def pickup_return_request(request, return_id):
     # ── Trigger wallet refund: pickup_done AND admin_approved are both satisfied ─
     item  = return_req.item
     order = return_req.order
-    qty   = item.return_qty if item.return_qty else item.quantity
+    qty   = return_req.quantity
 
-    # Prorate coupon discount — refund only what the customer actually paid
-    item_gross        = Decimal(str(item.price)) * qty
-    original_subtotal = Decimal(str(order.subtotal or 0))
-    discount          = Decimal(str(order.discount_amount or 0))
-
-    if original_subtotal > 0 and discount > 0:
-        item_share    = item_gross / original_subtotal
-        item_discount = (discount * item_share).quantize(Decimal('0.01'))
-        net_refund    = max(item_gross - item_discount, Decimal('0.00'))
-    else:
-        net_refund = item_gross
+    net_refund = calculate_coupon_adjusted_refund(order, item.price, qty)
 
     ok, credited = process_wallet_refund(
         order_item      = item,
@@ -276,9 +268,17 @@ def reject_return_request(request, return_id):
 
     return_req.status='Rejected'
     return_req.save()
-
-    return_req.item.item_status='delivered'
-    return_req.item.save()
+    # If rejected, subtract the quantity from returned_quantity so the user can request again if needed,
+    # or at least it doesn't count against their remaining quantity limit.
+    return_req.item.returned_quantity = max(return_req.item.returned_quantity - return_req.quantity, 0)
+    
+    # If there are still items returned or cancelled, don't mark as delivered.
+    if return_req.item.returned_quantity == 0 and return_req.item.cancelled_quantity == 0:
+        return_req.item.item_status='delivered'
+    elif return_req.item.returned_quantity > 0:
+        return_req.item.item_status='return_requested'
+        
+    return_req.item.save(update_fields=['returned_quantity', 'item_status'])
 
     messages.success(request,f"Return request #{return_req.id} has been rejected.")
     return redirect('admin_order_detail', order_id=return_req.order.id)

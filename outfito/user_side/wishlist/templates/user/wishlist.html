@@ -324,11 +324,19 @@
         
         <div class="wl-img-box">
           <div class="wl-badges">
+            {% with offer=product.get_active_offer %}
+            {% if offer %}
+              <div class="wl-badge sale" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: rgba(16,185,129,0.3);">
+                {% if offer.discount_type == 'percentage' %}-{{ offer.discount_value|floatformat:0 }}%{% else %}₹{{ offer.discount_value|floatformat:0 }} OFF{% endif %}
+              </div>
+            {% endif %}
+            {% endwith %}
+            
             {% if variant and variant.stock == 0 %}
               <div class="wl-badge out">Sold Out</div>
             {% elif variant and variant.stock > 0 and variant.stock <= 3 %}
               <div class="wl-badge low">Low Stock</div>
-            {% elif variant and variant.original_price and variant.original_price > variant.price %}
+            {% elif variant and variant.original_price and variant.original_price > variant.price and not product.get_active_offer %}
               <div class="wl-badge sale">Sale</div>
             {% endif %}
           </div>
@@ -368,10 +376,17 @@
 
           <div class="wl-price-box">
             {% if variant %}
-              <span class="wl-price">₹{{ variant.price|floatformat:0 }}</span>
-              {% if variant.original_price and variant.original_price > variant.price %}
-                <span class="wl-price-old">₹{{ variant.original_price|floatformat:0 }}</span>
+              {% with offer=product.get_active_offer %}
+              {% if offer %}
+                <span class="wl-price">₹{{ variant.get_discounted_price|floatformat:0 }}</span>
+                <span class="wl-price-old">₹{{ variant.price|floatformat:0 }}</span>
+              {% else %}
+                <span class="wl-price">₹{{ variant.price|floatformat:0 }}</span>
+                {% if variant.original_price and variant.original_price > variant.price %}
+                  <span class="wl-price-old">₹{{ variant.original_price|floatformat:0 }}</span>
+                {% endif %}
               {% endif %}
+              {% endwith %}
             {% else %}
                <span class="wl-price" style="font-size: 1rem; color: var(--w-sub);">Unavailable</span>
             {% endif %}

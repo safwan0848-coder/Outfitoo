@@ -3,11 +3,58 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.views.decorators.cache import never_cache
+from django.http import JsonResponse
 from decimal import Decimal
 from user_side.wallet.refund_utils import FREE_SHIPPING_THRESHOLD, SHIPPING_CHARGE
 from .utils import calculate_cart_offers
 from .models import Cart, CartItem
 from admin_side.variants_management.models import Variant
+
+
+def _is_ajax(request):
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+
+def _cart_summary_json(cart):
+    """Recalculate full cart summary and return as a dict (for AJAX responses)."""
+    items = list(cart.items.select_related('product', 'variant').order_by('id'))
+    subtotal = Decimal('0.00')
+    for item in items:
+        item.base_subtotal = item.variant.price * item.quantity
+        subtotal += item.base_subtotal
+
+    offer_data = calculate_cart_offers(items)
+    offer_discount = offer_data['total_offer_discount']
+
+    for item in items:
+        item.offer_discount = offer_data['item_discounts'].get(item.id, Decimal('0.00'))
+        item.final_subtotal = item.base_subtotal - item.offer_discount
+
+    shipping = (
+        Decimal('0.00')
+        if (subtotal - offer_discount) >= FREE_SHIPPING_THRESHOLD
+        else SHIPPING_CHARGE
+    )
+    total = subtotal - offer_discount + shipping
+    item_count = sum(i.quantity for i in items)
+
+    return {
+        'subtotal':    float(subtotal),
+        'discount':    float(offer_discount),
+        'shipping':    float(shipping),
+        'total':       float(total),
+        'item_count':  item_count,
+        'items': {
+            str(item.id): {
+                'quantity':      item.quantity,
+                'base_subtotal': float(item.base_subtotal),
+                'disc_subtotal': float(item.final_subtotal),
+                'offer_disc':    float(item.offer_discount),
+                'unit_price':    float(item.variant.price),
+            }
+            for item in items
+        },
+    }
 
 MAX_QTY = 5
 
@@ -47,7 +94,10 @@ def add_to_cart(request, pk):
     action=request.POST.get('action', 'cart')
 
     if not variant.is_active or variant.stock <= 0:
-        messages.error(request, "This product is not available.")
+        msg = "This product is not available."
+        messages.error(request, msg)
+        if _is_ajax(request):
+            return JsonResponse({'ok': False, 'warning': msg})
         return redirect('user_product_list')
 
     cart=get_or_create_cart(request.user)
@@ -62,22 +112,25 @@ def add_to_cart(request, pk):
     )
 
     new_qty=item.quantity + quantity
+    warn_msg = None
 
     if new_qty > variant.stock:
         if item.quantity >= variant.stock:
-            messages.warning(
-                request,
-                f"Maximum available stock ({variant.stock}) already in cart."
-            )
+            warn_msg = f"Maximum available stock ({variant.stock}) already in cart."
+            messages.warning(request, warn_msg)
+            if _is_ajax(request):
+                return JsonResponse({'ok': False, 'warning': warn_msg})
             return redirect(request.META.get('HTTP_REFERER', 'user_product_list'))
 
         new_qty=variant.stock
-        messages.warning(request, f"Only {variant.stock} available. Quantity adjusted.")
+        warn_msg = f"Only {variant.stock} available. Quantity adjusted."
+        messages.warning(request, warn_msg)
 
     MAX_QTY=5
     if new_qty > MAX_QTY:
         new_qty = MAX_QTY
-        messages.warning(request, f"Maximum {MAX_QTY} units allowed.")
+        warn_msg = f"Maximum {MAX_QTY} units allowed."
+        messages.warning(request, warn_msg)
 
     item.quantity=new_qty
     item.save()
@@ -95,9 +148,16 @@ def add_to_cart(request, pk):
     except Exception:
         pass
 
-    messages.success(request, f"'{variant.product.name}' added to cart!")
+    msg = f"'{variant.product.name}' added to cart!"
+    messages.success(request, msg)
 
-    if action=='buy':
+    if _is_ajax(request):
+        cart = get_or_create_cart(request.user)
+        summary = _cart_summary_json(cart)
+        # If there's a warning (like max qty reached), send it along with the success payload
+        return JsonResponse({'ok': True, 'message': msg, 'warning': warn_msg, **summary})
+
+    if action == 'buy':
         return redirect('cart_view')
 
     return redirect(request.META.get('HTTP_REFERER', 'user_product_list'))
@@ -161,27 +221,41 @@ def update_cart_qty(request, item_id):
         messages.error(request, reason)
         return redirect('cart_view')
 
+    warn_msg = None
+
     if action == 'increment':
-
         if item.quantity >= v.stock:
-            messages.warning(request, f"Only {v.stock} units in stock.")
-
+            warn_msg = f"Only {v.stock} units in stock."
+            messages.warning(request, warn_msg)
         elif item.quantity >= MAX_QTY:
-            messages.warning(request, f"Maximum {MAX_QTY} units per item.")
-
+            warn_msg = f"Maximum {MAX_QTY} units per item."
+            messages.warning(request, warn_msg)
         else:
             item.quantity += 1
             item.save()
 
     elif action == 'decrement':
-
         if item.quantity <= 1:
             item.delete()
+            if _is_ajax(request):
+                cart = get_or_create_cart(request.user)
+                summary = _cart_summary_json(cart)
+                return JsonResponse({'ok': True, 'removed': True,
+                                     'item_id': item_id, **summary})
             messages.success(request, "Item removed from cart.")
             return redirect('cart_view')
-
         item.quantity -= 1
         item.save()
+
+    if _is_ajax(request):
+        cart = get_or_create_cart(request.user)
+        summary = _cart_summary_json(cart)
+        return JsonResponse({
+            'ok':      warn_msg is None,
+            'warning': warn_msg,
+            'item_id': item_id,
+            **summary,
+        })
 
     return redirect('cart_view')
 
@@ -192,6 +266,12 @@ def remove_item(request, item_id):
     item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
     name = item.product.name
     item.delete()
-    messages.success(request, f"'{name}' removed from cart.")
+    msg = f"'{name}' removed from cart."
+    if _is_ajax(request):
+        cart = get_or_create_cart(request.user)
+        summary = _cart_summary_json(cart)
+        return JsonResponse({'ok': True, 'removed': True,
+                             'item_id': item_id, 'message': msg, **summary})
+    messages.success(request, msg)
     return redirect('cart_view')
 

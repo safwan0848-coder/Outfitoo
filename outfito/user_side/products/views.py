@@ -121,22 +121,46 @@ def product_list(request):
             if not variant:
                 variant = variants.first()
 
-        # Compute % discount from original_price if available
-        discount = None
-        if variant and getattr(variant, 'original_price', None):
-            try:
-                pct = int((1 - float(variant.price) / float(variant.original_price)) * 100)
-                if pct > 0:
-                    discount = pct
-            except (ValueError, ZeroDivisionError, TypeError):
-                pass
+        # ── Precompute offer & discounted price (avoids N+1 in template) ──
+        offer = None
+        discounted_price = None
+        has_offer = False
+        discount = None          # legacy % field (used for sort-by-discount)
+
+        if variant:
+            discounted_price = variant.get_discounted_price   # uses Variant property
+            offer = variant.get_active_offer                  # uses Variant property
+
+            if offer and discounted_price < variant.price:
+                has_offer = True
+                try:
+                    discount = int(
+                        (1 - float(discounted_price) / float(variant.price)) * 100
+                    )
+                except (ValueError, ZeroDivisionError, TypeError):
+                    discount = None
+            elif getattr(variant, 'original_price', None):
+                # Fallback: use original_price field if no active offer
+                try:
+                    pct = int(
+                        (1 - float(variant.price) / float(variant.original_price)) * 100
+                    )
+                    if pct > 0:
+                        discount = pct
+                        has_offer = True
+                        discounted_price = variant.price
+                except (ValueError, ZeroDivisionError, TypeError):
+                    pass
 
         product_data.append({
-            'product':     product,
-            'variant':     variant,
-            'discount':    discount,
-            'is_new':      False,
-            'in_wishlist': product.id in wishlist_items,
+            'product':          product,
+            'variant':          variant,
+            'offer':            offer,
+            'discounted_price': discounted_price,
+            'has_offer':        has_offer,
+            'discount':         discount,
+            'is_new':           False,
+            'in_wishlist':      product.id in wishlist_items,
         })
 
     # Sort by biggest discount in Python (avoids complex DB annotation)

@@ -1,4 +1,3 @@
-
 from decimal import Decimal
 from django.db import transaction
 
@@ -6,17 +5,48 @@ FREE_SHIPPING_THRESHOLD = Decimal('1000')
 SHIPPING_CHARGE        = Decimal('50')
 
 
-def process_wallet_refund(order_item, refund_qty, description, override_amount: "Decimal | None" = None):
+def calculate_coupon_adjusted_refund(order, item_price, qty):
+    """
+    Calculate refund for partial cancel/return using per-unit coupon distribution.
+    coupon_per_unit = total_coupon_discount / total_quantity_of_all_items
+    refund_coupon_share = coupon_per_unit * qty
+    refund = (unit_price * qty) - refund_coupon_share
+    """
+    item_gross = Decimal(str(item_price)) * qty
+    discount = Decimal(str(order.discount_amount or 0))
+
+    if discount > 0:
+        total_qty = sum(i.quantity for i in order.items.all())
+        if total_qty > 0:
+            coupon_per_unit = discount / Decimal(str(total_qty))
+            refund_coupon_share = (coupon_per_unit * Decimal(str(qty))).quantize(Decimal('0.01'))
+            return max(item_gross - refund_coupon_share, Decimal('0.00'))
+
+    return item_gross
+
+
+
+def process_wallet_refund(order_item, refund_qty, description, override_amount=None):
+    """
+    Credit the wallet for `refund_qty` units of `order_item`.
+
+    Safe to call multiple times on the same item (partial cancel/return).
+    Uses `cancelled_quantity` + `returned_quantity` to track what has
+    already been refunded so duplicates are impossible.
+
+    `override_amount`: if provided, use this exact Decimal instead of
+    calculating price * qty. Useful when coupon share is pre-calculated.
+    """
     from user_side.wallet.models import Wallet, WalletTransaction
     order = order_item.order
+
     if order.payment_status != 'paid':
         return False, Decimal('0')
     if order.payment_method not in ('razorpay', 'wallet'):
         return False, Decimal('0')
-    if order_item.refund_processed:
-        return False, Decimal('0')
     if refund_qty <= 0:
         return False, Decimal('0')
+
     if override_amount is not None:
         refund_amount = Decimal(str(override_amount))
     else:
@@ -29,11 +59,7 @@ def process_wallet_refund(order_item, refund_qty, description, override_amount: 
         from user_side.orders.models import OrderItem as _OI
         locked_item = _OI.objects.select_for_update().get(pk=order_item.pk)
 
-        if locked_item.refund_processed:
-            return False, Decimal('0')
-
         wallet = Wallet.objects.select_for_update().get(user=order.user)
-
         wallet.balance += refund_amount
         wallet.save(update_fields=['balance', 'updated_at'])
 
@@ -47,9 +73,6 @@ def process_wallet_refund(order_item, refund_qty, description, override_amount: 
             payment_status   = 'success',
             description      = description or f"Refund for order #{order.order_number}",
         )
-        locked_item.refund_processed = True
-        locked_item.save(update_fields=['refund_processed'])
-        order_item.refund_processed = True
 
     return True, refund_amount
 
