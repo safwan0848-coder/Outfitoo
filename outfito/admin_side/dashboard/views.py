@@ -39,12 +39,19 @@ def admin_dashboard(request):
     top_products = get_top_selling_products(limit=5)
     top_categories = get_top_selling_categories(limit=5)
     
+    # Also compute per-period order counts for the chart
+    orders_data = []
+    for val in chart_data['data']:
+        orders_data.append(0)  # placeholder, overridden below
+    
     context = {
         'total_revenue': report_data['total_revenue'],
         'total_orders': report_data['total_orders'],
         'products_sold': report_data['products_sold'],
         'chart_labels': json.dumps(chart_data['labels']),
         'chart_data': json.dumps(chart_data['data']),
+        'chart_orders': json.dumps(chart_data.get('orders', [])),
+        'chart_period': chart_period,
         'top_products': top_products,
         'top_categories': top_categories,
         'recent_orders': report_data['orders'][:5],
@@ -82,15 +89,44 @@ def sales_report(request):
     orders_list = report_data['orders']
     coupons_list = report_data['coupon_usage_details']
     
-    orders_paginator = Paginator(orders_list, 5)
-    coupons_paginator = Paginator(coupons_list, 5)
+    orders_paginator = Paginator(orders_list, 10)
+    coupons_paginator = Paginator(coupons_list, 10)
     
     page_orders = request.GET.get('page_orders')
     page_coupons = request.GET.get('page_coupons')
     
     orders_page = orders_paginator.get_page(page_orders)
     coupons_page = coupons_paginator.get_page(page_coupons)
-    
+
+    # Build a smart page range: 1 … (cur-2) cur (cur+2) … last
+    def smart_page_range(page_obj):
+        current = page_obj.number
+        total   = page_obj.paginator.num_pages
+        delta   = 2  # pages on each side of current
+        pages   = set()
+        pages.add(1)
+        pages.add(total)
+        for i in range(max(1, current - delta), min(total, current + delta) + 1):
+            pages.add(i)
+        result = []
+        prev = None
+        for p in sorted(pages):
+            if prev is not None and p - prev > 1:
+                result.append(None)   # None = ellipsis
+            result.append(p)
+            prev = p
+        return result
+
+    orders_page_range = smart_page_range(orders_page)
+
+    period_choices = [
+        ('',      'Custom'),
+        ('today', 'Today'),
+        ('week',  'This Week'),
+        ('month', 'This Month'),
+        ('year',  'This Year'),
+    ]
+
     context = {
         'total_revenue': report_data['total_revenue'],
         'total_orders': report_data['total_orders'],
@@ -99,9 +135,11 @@ def sales_report(request):
         'coupons_used': report_data['coupons_used'],
         'coupon_usage_details': coupons_page,
         'orders': orders_page,
+        'orders_page_range': orders_page_range,
         'start_date': start_date_str,
         'end_date': end_date_str,
-        'filter': filter_type
+        'filter': filter_type,
+        'period_choices': period_choices,
     }
     return render(request, 'admin/sales_report.html', context)
 

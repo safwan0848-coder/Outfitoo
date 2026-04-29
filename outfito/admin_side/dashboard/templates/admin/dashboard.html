@@ -113,7 +113,7 @@
                     <button type="button" onclick="document.getElementById('periodInput').value='yearly'; document.getElementById('chartFilterForm').submit();" class="text-xs font-semibold px-3 py-1.5 rounded-md transition-colors {% if request.GET.period == 'yearly' or not request.GET.period %}bg-brand-green text-white shadow-sm{% else %}text-gray-500 hover:text-gray-700{% endif %}">Yearly</button>
                 </form>
             </div>
-            <div class="h-[250px] w-full mt-auto">
+            <div class="h-[300px] w-full mt-auto">
                 <canvas id="revenueChart"></canvas>
             </div>
         </div>
@@ -233,65 +233,142 @@
 
 {% block extra_js %}
 <script>
-    const ctx = document.getElementById('revenueChart').getContext('2d');
-    let chartLabels = [];
-    let chartData = [];
-    try {
-        chartLabels = JSON.parse('{{ chart_labels|safe }}');
-        chartData = JSON.parse('{{ chart_data|safe }}');
-    } catch(e) {
-        console.error('Error parsing chart data', e);
-    }
-    const displayPointRadius = chartData.length <= 1 ? 4 : 0;
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: chartLabels.map(l => String(l).toUpperCase().substring(0,3)),
-            datasets: [{
-                label: 'Revenue',
-                data: chartData,
-                borderColor: '#107c57',
-                borderWidth: 2,
-                fill: false,
-                tension: 0,
-                pointRadius: displayPointRadius,
-                pointHoverRadius: 5,
-                pointBackgroundColor: '#107c57'
-            }]
+(function(){
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  let labels = [], revenue = [], orders = [];
+  try {
+    labels  = JSON.parse('{{ chart_labels|safe }}');
+    revenue = JSON.parse('{{ chart_data|safe }}');
+    orders  = JSON.parse('{{ chart_orders|safe }}');
+  } catch(e) {}
+
+  /* ── Gradients ── */
+  const revGrad = ctx.createLinearGradient(0, 0, 0, 280);
+  revGrad.addColorStop(0,   'rgba(16,124,87,0.28)');
+  revGrad.addColorStop(0.6, 'rgba(16,124,87,0.06)');
+  revGrad.addColorStop(1,   'rgba(16,124,87,0)');
+
+  const ordGrad = ctx.createLinearGradient(0, 0, 0, 280);
+  ordGrad.addColorStop(0,   'rgba(99,102,241,0.18)');
+  ordGrad.addColorStop(1,   'rgba(99,102,241,0)');
+
+  /* ── Peak index ── */
+  const peakIdx = revenue.indexOf(Math.max(...revenue));
+
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Revenue (₹)',
+          data: revenue,
+          yAxisID: 'yRev',
+          borderColor: '#107c57',
+          borderWidth: 2.5,
+          backgroundColor: revGrad,
+          fill: true,
+          tension: 0.42,
+          pointRadius: revenue.map((_, i) => i === peakIdx ? 7 : 0),
+          pointHoverRadius: 6,
+          pointBackgroundColor: revenue.map((_, i) => i === peakIdx ? '#107c57' : 'transparent'),
+          pointBorderColor: revenue.map((_, i) => i === peakIdx ? '#fff' : 'transparent'),
+          pointBorderWidth: 2,
+          order: 1,
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            layout: { padding: { top: 10, right: 10, bottom: 0, left: 10 } },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#111827',
-                    padding: 12,
-                    titleFont: { size: 13, weight: 'normal', family: 'Inter' },
-                    bodyFont: { size: 14, weight: 'bold', family: 'Inter' },
-                    displayColors: false,
-                    callbacks: {
-                        label: function(context) {
-                            return '₹' + context.parsed.y.toLocaleString();
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { display: false },
-                    border: { display: false },
-                    grid: { color: '#f3f4f6', drawTicks: false, borderDash: [5, 5] }
-                },
-                x: {
-                    ticks: { color: '#9ca3af', font: { size: 10, weight: '700', family: 'Inter' }, padding: 10 },
-                    border: { display: false },
-                    grid: { display: false, drawTicks: false }
-                }
-            }
+        {
+          label: 'Orders',
+          data: orders,
+          yAxisID: 'yOrd',
+          type: 'bar',
+          backgroundColor: 'rgba(99,102,241,0.18)',
+          borderColor: 'rgba(99,102,241,0.5)',
+          borderWidth: 1,
+          borderRadius: 4,
+          hoverBackgroundColor: 'rgba(99,102,241,0.35)',
+          order: 2,
         }
-    });
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 900, easing: 'easeOutQuart' },
+      interaction: { mode: 'index', intersect: false },
+      layout: { padding: { top: 16, right: 8, bottom: 0, left: 0 } },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          align: 'end',
+          labels: {
+            boxWidth: 10, boxHeight: 10, borderRadius: 3,
+            padding: 16,
+            font: { size: 11, weight: '600', family: 'Inter' },
+            color: '#6b7280',
+            usePointStyle: true,
+            pointStyle: 'circle',
+          }
+        },
+        tooltip: {
+          backgroundColor: '#111827',
+          borderColor: 'rgba(255,255,255,0.08)',
+          borderWidth: 1,
+          padding: { x: 14, y: 12 },
+          titleFont: { size: 12, weight: '600', family: 'Inter' },
+          bodyFont:  { size: 13, weight: '700', family: 'Inter' },
+          bodySpacing: 6,
+          callbacks: {
+            title: ctx => ctx[0].label,
+            label: ctx => {
+              if (ctx.dataset.label.startsWith('Revenue'))
+                return '  Revenue  ₹' + ctx.parsed.y.toLocaleString('en-IN');
+              return '  Orders   ' + ctx.parsed.y;
+            }
+          }
+        }
+      },
+      scales: {
+        yRev: {
+          type: 'linear',
+          position: 'left',
+          beginAtZero: true,
+          ticks: {
+            color: '#9ca3af',
+            font: { size: 10, family: 'Inter' },
+            callback: v => v >= 1000 ? '₹' + (v/1000).toFixed(0) + 'k' : '₹' + v,
+            maxTicksLimit: 6,
+          },
+          border: { display: false, dash: [4,4] },
+          grid: { color: 'rgba(243,244,246,0.8)', drawTicks: false },
+        },
+        yOrd: {
+          type: 'linear',
+          position: 'right',
+          beginAtZero: true,
+          ticks: {
+            color: '#a5b4fc',
+            font: { size: 10, family: 'Inter' },
+            maxTicksLimit: 5,
+            stepSize: 1,
+          },
+          border: { display: false },
+          grid: { drawOnChartArea: false },
+        },
+        x: {
+          ticks: {
+            color: '#9ca3af',
+            font: { size: 10, weight: '600', family: 'Inter' },
+            maxRotation: 0,
+            maxTicksLimit: 14,
+          },
+          border: { display: false },
+          grid: { display: false },
+        }
+      }
+    }
+  });
+})();
 </script>
 {% endblock %}
+

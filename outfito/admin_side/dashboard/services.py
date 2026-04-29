@@ -14,29 +14,42 @@ def get_filtered_orders(start_date=None, end_date=None):
         orders = orders.filter(created_at__lt=end_date)
     return orders
 
+def get_all_orders(start_date=None, end_date=None):
+    """All orders regardless of status — for the transactions table."""
+    orders = Order.objects.all()
+    if start_date:
+        orders = orders.filter(created_at__gte=start_date)
+    if end_date:
+        orders = orders.filter(created_at__lt=end_date + timedelta(days=1))
+    return orders.order_by('-created_at')
+
 def get_sales_report_data(start_date=None, end_date=None):
-    orders = get_filtered_orders(start_date, end_date)
-    
-    total_orders = orders.count()
-    aggregate_data = orders.aggregate(
+    # Stats: Delivered orders only
+    delivered = get_filtered_orders(start_date, end_date)
+
+    total_orders = delivered.count()
+    aggregate_data = delivered.aggregate(
         total_revenue=Sum('total_amount'),
         total_discount=Sum('discount_amount')
     )
-    
+
     products_sold = OrderItem.objects.filter(
-        order__in=orders, 
+        order__in=delivered,
         item_status='delivered'
     ).aggregate(total_qty=Sum('quantity'))['total_qty'] or 0
 
-    coupons_used = orders.filter(coupon__isnull=False).count()
+    coupons_used = delivered.filter(coupon__isnull=False).count()
 
-    coupon_usage_details = orders.filter(coupon__isnull=False).values(
+    coupon_usage_details = delivered.filter(coupon__isnull=False).values(
         'coupon__code',
         'coupon__discount_type',
         'coupon__discount_value',
         'coupon__usage_limit',
         'coupon__is_active'
     ).annotate(times_used=Count('id')).order_by('-times_used')
+
+    # Transactions: ALL orders for the date range
+    all_orders = get_all_orders(start_date, end_date)
 
     return {
         'total_revenue': aggregate_data['total_revenue'] or 0.00,
@@ -45,7 +58,7 @@ def get_sales_report_data(start_date=None, end_date=None):
         'total_discount': aggregate_data['total_discount'] or 0.00,
         'coupons_used': coupons_used,
         'coupon_usage_details': coupon_usage_details,
-        'orders': orders.order_by('-created_at')
+        'orders': all_orders,
     }
 
 def get_chart_data(period='yearly', year=None):
@@ -60,6 +73,7 @@ def get_chart_data(period='yearly', year=None):
             now = now.replace(month=2, day=28, year=target_year)            
     labels = []
     data_map = {}
+    orders_map = {}
     
     if period == 'daily':
         start_time = now - timedelta(hours=23)
@@ -70,12 +84,14 @@ def get_chart_data(period='yearly', year=None):
             label = dt.strftime('%I %p') # e.g. 01 PM
             labels.append(label)
             data_map[label] = 0.0
+            orders_map[label] = 0
             
         for order in orders.filter(created_at__gte=start_time):
             local_dt = timezone.localtime(order.created_at)
             label = local_dt.strftime('%I %p')
             if label in data_map:
                 data_map[label] += float(order.total_amount)
+                orders_map[label] += 1
                 
     elif period == 'weekly':
         start_date = (now - timedelta(days=6)).date()
@@ -85,12 +101,14 @@ def get_chart_data(period='yearly', year=None):
             label = dt.strftime('%a') 
             labels.append(label)
             data_map[label] = 0.0
+            orders_map[label] = 0
             
         for order in orders.filter(created_at__date__gte=start_date):
             local_dt = timezone.localtime(order.created_at)
             label = local_dt.strftime('%a')
             if label in data_map:
                 data_map[label] += float(order.total_amount)
+                orders_map[label] += 1
                 
     elif period == 'monthly':
         import calendar
@@ -101,12 +119,14 @@ def get_chart_data(period='yearly', year=None):
             label = str(i)
             labels.append(label)
             data_map[label] = 0.0
+            orders_map[label] = 0
             
         for order in orders.filter(created_at__year=start_date.year, created_at__month=start_date.month):
             local_dt = timezone.localtime(order.created_at)
             label = str(local_dt.day)
             if label in data_map:
                 data_map[label] += float(order.total_amount)
+                orders_map[label] += 1
                 
     else: 
         start_date = now.replace(month=1, day=1).date()
@@ -115,18 +135,22 @@ def get_chart_data(period='yearly', year=None):
         for month in months:
             labels.append(month)
             data_map[month] = 0.0
+            orders_map[month] = 0
             
         for order in orders.filter(created_at__year=start_date.year):
             local_dt = timezone.localtime(order.created_at)
             label = local_dt.strftime('%b')
             if label in data_map:
                 data_map[label] += float(order.total_amount)
+                orders_map[label] += 1
 
     data = [data_map[label] for label in labels]
+    order_counts = [orders_map[label] for label in labels]
 
     return {
         'labels': labels,
-        'data': data
+        'data': data,
+        'orders': order_counts,
     }
 
 def get_top_selling_products(limit=5):
