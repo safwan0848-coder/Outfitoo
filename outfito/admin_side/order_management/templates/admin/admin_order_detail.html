@@ -1364,6 +1364,17 @@
                                         <div class="item-name">{{ item.variant.product.name }}</div>
                                         <div class="item-meta">
                                             Size: {{ item.variant.size }} &middot; Color: {{ item.variant.color }}
+                                            
+                                            <div style="margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap;">
+                                                <span style="color:var(--text-muted); font-size:0.75rem;">Ordered: <strong style="color:var(--text);">{{ item.quantity }}</strong></span>
+                                                {% if item.cancelled_quantity > 0 %}
+                                                <span style="color:var(--text-muted); font-size:0.75rem;">Cancelled: <strong style="color:var(--badge-red-fg);">{{ item.cancelled_quantity }}</strong></span>
+                                                {% endif %}
+                                                {% if item.returned_quantity > 0 %}
+                                                <span style="color:var(--text-muted); font-size:0.75rem;">Returned: <strong style="color:var(--badge-yellow-fg);">{{ item.returned_quantity }}</strong></span>
+                                                {% endif %}
+                                                <span style="color:var(--text-muted); font-size:0.75rem;">Remaining: <strong style="color:var(--accent);">{{ item.remaining_quantity }}</strong></span>
+                                            </div>
 
                                             <!-- Per-item status tags -->
 {% with rr=item.latest_return %}
@@ -1596,7 +1607,7 @@
                         <div class="modal-order-ref">Order #{{ order.order_number }}</div>
                         <div class="modal-product-name">{{ item.variant.product.name }}</div>
                         <div style="font-size:.76rem;color:var(--text-muted);margin:.1rem 0 .35rem;">Size: {{ item.variant.size }} &middot; Color: {{ item.variant.color }}</div>
-                        <div class="tag-pill">Qty {{ item.quantity }}</div>
+                        <div class="tag-pill">Returning Qty: {{ rr.quantity }}</div>
                     </div>
                 </div>
                 
@@ -1625,16 +1636,17 @@
                     <div class="refund-rows">
                         <div class="refund-row">
                             <span>Item Subtotal</span>
-                            <span>₹{% widthratio item.price 1 item.quantity %}</span>
+                            <span>₹{% widthratio item.price 1 rr.quantity %}</span>
                         </div>
                         <div class="refund-row">
                             <span>Tax & Fees</span>
                             <span>₹0.00</span>
                         </div>
                         <div class="refund-total">
-                            <span>Total Refund</span>
-                            <span>₹{% widthratio item.price 1 item.quantity %}</span>
+                            <span>Base Refund (Before Coupon)</span>
+                            <span>₹{% widthratio item.price 1 rr.quantity %}</span>
                         </div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">* Actual refund will be adjusted if a coupon was applied to the order.</div>
                     </div>
                     <div class="elig-chip">
                         <div class="elig-icon">💰</div>
