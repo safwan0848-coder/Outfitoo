@@ -191,9 +191,9 @@
     </table>
   </div>
 
-  {% if categories.has_other_pages %}
   <div class="card-footer-pdt">
     <p class="showing-text">Showing {{ categories.start_index }}–{{ categories.end_index }} of {{ categories.paginator.count }} categor{{ categories.paginator.count|pluralize:"y,ies" }}</p>
+    {% if categories.has_other_pages %}
     <nav class="pagination-wrap">
       {% if categories.has_previous %}<a class="pg-btn" href="?page={{ categories.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"><span class="material-icons-outlined">chevron_left</span> Previous</a>
       {% else %}<span class="pg-btn disabled"><span class="material-icons-outlined">chevron_left</span> Previous</span>{% endif %}
@@ -205,8 +205,8 @@
       {% if categories.has_next %}<a class="pg-btn" href="?page={{ categories.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next <span class="material-icons-outlined">chevron_right</span></a>
       {% else %}<span class="pg-btn disabled">Next <span class="material-icons-outlined">chevron_right</span></span>{% endif %}
     </nav>
+    {% endif %}
   </div>
-  {% endif %}
 </div>
 {% endblock %}
 

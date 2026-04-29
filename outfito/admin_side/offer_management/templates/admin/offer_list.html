@@ -88,9 +88,9 @@
         </tbody>
       </table>
     </div>
-    {% if offers.has_other_pages %}
     <div class="flex items-center justify-between px-6 py-4 border-t border-[#ede8df]">
-      <span class="text-[12px] text-ink-4">Page {{ offers.number }} of {{ offers.paginator.num_pages }}</span>
+      <span class="text-[12px] text-ink-4">Showing {{ offers.start_index }}–{{ offers.end_index }} of {{ offers.paginator.count }} offer{{ offers.paginator.count|pluralize }}</span>
+      {% if offers.has_other_pages %}
       <div class="flex gap-1">
         {% if offers.has_previous %}<a href="?page={{ offers.previous_page_number }}&search={{ search_query }}&type={{ type_filter }}&status={{ status_filter }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0dbd0] hover:bg-cream-2"><span class="material-icons-outlined" style="font-size:14px">chevron_left</span></a>{% endif %}
         {% for num in offers.paginator.page_range %}
@@ -99,8 +99,8 @@
         {% endfor %}
         {% if offers.has_next %}<a href="?page={{ offers.next_page_number }}&search={{ search_query }}&type={{ type_filter }}&status={{ status_filter }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0dbd0] hover:bg-cream-2"><span class="material-icons-outlined" style="font-size:14px">chevron_right</span></a>{% endif %}
       </div>
+      {% endif %}
     </div>
-    {% endif %}
   </div>
 </div>
 

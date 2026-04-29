@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db import IntegrityError
+from django.core.paginator import Paginator
 from admin_side.products_management.models import Product
 import re
 from decimal import Decimal, InvalidOperation
@@ -22,13 +23,16 @@ ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 @login_required(login_url='login')
 @user_passes_test(is_admin, login_url='login')
 def variant_list(request, product_id):
+    product  = get_object_or_404(Product, id=product_id, is_deleted=False)
+    variants_qs = product.variants.filter(is_active=True).order_by('-is_default', 'id')
 
-    product=get_object_or_404(Product,id=product_id,is_deleted=False)
-    variants=product.variants.filter(is_active=True).order_by('-is_default', 'id')
+    paginator = Paginator(variants_qs, 10)
+    page_obj  = paginator.get_page(request.GET.get('page'))
 
     return render(request, 'admin/variant_list.html', {
-        'product': product,
-        'variants': variants
+        'product':  product,
+        'variants': page_obj,
+        'total_variants': variants_qs.count(),
     })
 
 

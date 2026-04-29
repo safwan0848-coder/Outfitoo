@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from admin_side.products_management.models import Product
 from admin_side.categories_management.models import Category
 
@@ -35,6 +36,41 @@ class Offer(models.Model):
 
     def __str__(self):
         return self.offer_name
+
+    def clean(self):
+        errors = {}
+
+        # Discount value
+        if self.discount_value is not None:
+            if self.discount_value <= 0:
+                errors['discount_value'] = "Discount value must be greater than 0."
+            if self.discount_type == 'percentage' and self.discount_value > 100:
+                errors['discount_value'] = "Percentage discount cannot exceed 100%."
+
+        # Min purchase amount
+        if self.minimum_purchase_amount is not None and self.minimum_purchase_amount < 0:
+            errors['minimum_purchase_amount'] = "Minimum purchase amount cannot be negative."
+
+        # Max discount only valid for percentage offers
+        if self.maximum_discount_amount is not None:
+            if self.maximum_discount_amount <= 0:
+                errors['maximum_discount_amount'] = "Maximum discount must be greater than 0."
+            if self.discount_type == 'flat':
+                errors['maximum_discount_amount'] = "Max discount cap only applies to percentage offers."
+
+        # Date range
+        if self.start_date and self.end_date:
+            if self.end_date <= self.start_date:
+                errors['end_date'] = "End date must be after the start date."
+
+        # apply_to consistency
+        if self.apply_to == 'product' and not self.product_id:
+            errors['product'] = "A product must be selected when 'Apply To' is Product."
+        if self.apply_to == 'category' and not self.category_id:
+            errors['category'] = "A category must be selected when 'Apply To' is Category."
+
+        if errors:
+            raise ValidationError(errors)
 
     @property
     def discount_display(self):

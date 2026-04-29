@@ -27,21 +27,21 @@
     <form method="POST">{% csrf_token %}
       <div class="mb-6">
         <label class="form-label">Offer Name <span class="required">*</span></label>
-        <input type="text" name="offer_name" value="{{ offer.offer_name }}" class="form-input" placeholder="e.g. Summer Special 2024" required>
+        <input type="text" name="offer_name" value="{% if post %}{{ post.offer_name }}{% else %}{{ offer.offer_name }}{% endif %}" class="form-input" placeholder="e.g. Summer Special 2024" required>
       </div>
       <div class="grid grid-cols-2 gap-8 mb-6">
         <div>
           <label class="form-label">Discount Type <span class="required">*</span></label>
           <div class="flex flex-col gap-3 mt-2">
-            <label class="flex items-center gap-2 cursor-pointer text-[14px] font-medium text-ink-2"><input type="radio" name="discount_type" value="percentage" {% if offer.discount_type == 'percentage' %}checked{% endif %} class="w-4 h-4 text-forest" onchange="toggleMaxDiscount()"> Percentage (%)</label>
-            <label class="flex items-center gap-2 cursor-pointer text-[14px] font-medium text-ink-2"><input type="radio" name="discount_type" value="flat" {% if offer.discount_type == 'flat' %}checked{% endif %} class="w-4 h-4 text-forest" onchange="toggleMaxDiscount()"> Flat (₹)</label>
+            <label class="flex items-center gap-2 cursor-pointer text-[14px] font-medium text-ink-2"><input type="radio" name="discount_type" value="percentage" {% if post and post.discount_type == 'percentage' or not post and offer.discount_type == 'percentage' %}checked{% endif %} class="w-4 h-4 text-forest" onchange="toggleMaxDiscount()"> Percentage (%)</label>
+            <label class="flex items-center gap-2 cursor-pointer text-[14px] font-medium text-ink-2"><input type="radio" name="discount_type" value="flat" {% if post and post.discount_type == 'flat' or not post and offer.discount_type == 'flat' %}checked{% endif %} class="w-4 h-4 text-forest" onchange="toggleMaxDiscount()"> Flat (₹)</label>
           </div>
         </div>
         <div>
           <label class="form-label">Apply To <span class="required">*</span></label>
           <div class="flex flex-col gap-3 mt-2">
-            <label class="flex items-center gap-2 cursor-pointer text-[14px] font-medium text-ink-2"><input type="radio" name="apply_to" value="product" {% if offer.apply_to == 'product' %}checked{% endif %} class="w-4 h-4 text-forest" onchange="toggleTargetSelect()"> Product</label>
-            <label class="flex items-center gap-2 cursor-pointer text-[14px] font-medium text-ink-2"><input type="radio" name="apply_to" value="category" {% if offer.apply_to == 'category' %}checked{% endif %} class="w-4 h-4 text-forest" onchange="toggleTargetSelect()"> Category</label>
+            <label class="flex items-center gap-2 cursor-pointer text-[14px] font-medium text-ink-2"><input type="radio" name="apply_to" value="product" {% if post and post.apply_to == 'product' or not post and offer.apply_to == 'product' %}checked{% endif %} class="w-4 h-4 text-forest" onchange="toggleTargetSelect()"> Product</label>
+            <label class="flex items-center gap-2 cursor-pointer text-[14px] font-medium text-ink-2"><input type="radio" name="apply_to" value="category" {% if post and post.apply_to == 'category' or not post and offer.apply_to == 'category' %}checked{% endif %} class="w-4 h-4 text-forest" onchange="toggleTargetSelect()"> Category</label>
           </div>
         </div>
       </div>
@@ -50,21 +50,21 @@
           <label class="form-label" id="targetLabel">Select <span class="required">*</span></label>
           <select name="category_id" id="categorySelect" class="form-input hidden">
             <option value="">Select Category</option>
-            {% for c in categories %}<option value="{{ c.id }}" {% if offer.category and offer.category.id == c.id %}selected{% endif %}>{{ c.category_name }}</option>{% endfor %}
+            {% for c in categories %}<option value="{{ c.id }}" {% if post and post.category_id|add:"0" == c.id or not post and offer.category and offer.category.id == c.id %}selected{% endif %}>{{ c.category_name }}</option>{% endfor %}
           </select>
           <select name="product_id" id="productSelect" class="form-input hidden">
             <option value="">Select Product</option>
-            {% for p in products %}<option value="{{ p.id }}" {% if offer.product and offer.product.id == p.id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+            {% for p in products %}<option value="{{ p.id }}" {% if post and post.product_id|add:"0" == p.id or not post and offer.product and offer.product.id == p.id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
           </select>
         </div>
         <div>
           <label class="form-label">Discount Value <span class="required">*</span></label>
-          <input type="number" step="0.01" min="0.01" name="discount_value" value="{{ offer.discount_value }}" class="form-input" placeholder="0.00" required>
+          <input type="number" step="0.01" min="0.01" name="discount_value" value="{% if post %}{{ post.discount_value }}{% else %}{{ offer.discount_value }}{% endif %}" class="form-input" placeholder="0.00" required>
         </div>
       </div>
       <div class="grid grid-cols-2 gap-6 mb-6">
-        <div id="minPurchaseWrapper"><label class="form-label">Minimum Purchase (₹)</label><input type="number" step="0.01" min="0" name="minimum_purchase_amount" id="minPurchaseInput" value="{{ offer.minimum_purchase_amount }}" class="form-input" placeholder="0.00"></div>
-        <div id="maxDiscountWrapper"><label class="form-label">Maximum Discount (₹)</label><input type="number" step="0.01" min="0" name="maximum_discount_amount" id="maxDiscountInput" value="{{ offer.maximum_discount_amount|default:'' }}" class="form-input" placeholder="0.00"></div>
+        <div id="minPurchaseWrapper"><label class="form-label">Minimum Purchase (₹)</label><input type="number" step="0.01" min="0" name="minimum_purchase_amount" id="minPurchaseInput" value="{% if post %}{{ post.minimum_purchase_amount }}{% else %}{{ offer.minimum_purchase_amount }}{% endif %}" class="form-input" placeholder="0.00"></div>
+        <div id="maxDiscountWrapper"><label class="form-label">Maximum Discount (₹)</label><input type="number" step="0.01" min="0" name="maximum_discount_amount" id="maxDiscountInput" value="{% if post %}{{ post.maximum_discount_amount }}{% else %}{{ offer.maximum_discount_amount|default:'' }}{% endif %}" class="form-input" placeholder="0.00"></div>
       </div>
       <div class="grid grid-cols-2 gap-6 mb-8">
         <div><label class="form-label">Start Date <span class="required">*</span></label><input type="date" name="start_date" value="{{ start_date_formatted }}" class="form-input" required></div>
@@ -73,7 +73,7 @@
       <div class="flex items-center justify-between p-4 bg-cream rounded-xl border border-[#e8e2d8] mb-8">
         <div><h4 class="text-[14px] font-bold text-ink">Active</h4><p class="text-[11px] text-ink-3">Enable this offer immediately</p></div>
         <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" name="is_active" class="sr-only peer" {% if offer.is_active %}checked{% endif %}>
+          <input type="checkbox" name="is_active" class="sr-only peer" {% if post and post.is_active == 'on' or not post and offer.is_active %}checked{% endif %}>
           <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-forest"></div>
         </label>
       </div>

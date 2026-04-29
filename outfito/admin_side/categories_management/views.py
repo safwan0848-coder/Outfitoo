@@ -59,7 +59,7 @@ def category_list(request):
 
     categories=categories.order_by('-created_at')
 
-    paginator=Paginator(categories, 5)
+    paginator=Paginator(categories, 4)
     page_number=request.GET.get('page')
     categories=paginator.get_page(page_number)
 

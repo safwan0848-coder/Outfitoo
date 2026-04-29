@@ -29,7 +29,7 @@ def offer_list(request):
             offers = offers.filter(is_active=False)
 
     # Pagination: 10 offers per page
-    paginator = Paginator(offers, 10)
+    paginator = Paginator(offers, 4)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -42,63 +42,104 @@ def offer_list(request):
     return render(request, 'admin/offer_list.html', context)
 
 def add_offer(request):
-    products = Product.objects.filter(is_deleted=False)
+    products   = Product.objects.filter(is_deleted=False)
     categories = Category.objects.filter(is_deleted=False)
+    today      = datetime.now().date()
 
     if request.method == 'POST':
-        offer_name = request.POST.get('offer_name')
-        discount_type = request.POST.get('discount_type')
-        apply_to = request.POST.get('apply_to')
-        discount_value = request.POST.get('discount_value')
-        minimum_purchase_amount = request.POST.get('minimum_purchase_amount') or 0
-        maximum_discount_amount = request.POST.get('maximum_discount_amount') or None
-        start_date_str = request.POST.get('start_date')
-        end_date_str = request.POST.get('end_date')
-        is_active = request.POST.get('is_active') == 'on'
+        # ── Collect raw values ───────────────────────────────
+        offer_name     = request.POST.get('offer_name', '').strip()
+        discount_type  = request.POST.get('discount_type', '').strip()
+        apply_to       = request.POST.get('apply_to', '').strip()
+        discount_value = request.POST.get('discount_value', '').strip()
+        min_purchase   = request.POST.get('minimum_purchase_amount') or 0
+        max_discount   = request.POST.get('maximum_discount_amount') or None
+        start_date_str = request.POST.get('start_date', '').strip()
+        end_date_str   = request.POST.get('end_date', '').strip()
+        is_active      = request.POST.get('is_active') == 'on'
+        product_id     = request.POST.get('product_id')
+        category_id    = request.POST.get('category_id')
 
-        product_id = request.POST.get('product_id')
-        category_id = request.POST.get('category_id')
+        ctx = {
+            'products': products, 'categories': categories,
+            'post': request.POST,
+        }
+        def fail(msg):
+            messages.error(request, msg)
+            return render(request, 'admin/add_offer.html', ctx)
 
-        # Validation
+        # ── Name ─────────────────────────────────────────────
+        if not offer_name:
+            return fail('Offer name is required.')
+
+        # ── Discount type & value ─────────────────────────────
+        if discount_type not in ('percentage', 'flat'):
+            return fail('Please select a valid discount type.')
+        try:
+            discount_value = float(discount_value)
+            if discount_value <= 0:
+                return fail('Discount value must be greater than 0.')
+            if discount_type == 'percentage' and discount_value > 100:
+                return fail('Percentage discount cannot exceed 100%.')
+        except (ValueError, TypeError):
+            return fail('Enter a valid discount value.')
+
+        # ── Min purchase ──────────────────────────────────────
+        try:
+            min_purchase = float(min_purchase)
+            if min_purchase < 0:
+                return fail('Minimum purchase amount cannot be negative.')
+        except (ValueError, TypeError):
+            return fail('Enter a valid minimum purchase amount.')
+
+        # ── Max discount (percentage only) ────────────────────
+        if max_discount:
+            try:
+                max_discount = float(max_discount)
+                if max_discount <= 0:
+                    return fail('Maximum discount must be greater than 0.')
+                if discount_type == 'flat':
+                    return fail('Maximum discount cap is only valid for percentage offers.')
+            except (ValueError, TypeError):
+                return fail('Enter a valid maximum discount amount.')
+        else:
+            max_discount = None
+
+        # ── Dates ─────────────────────────────────────────────
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            end_date   = datetime.strptime(end_date_str,   '%Y-%m-%d').date()
         except (ValueError, TypeError):
-            messages.error(request, 'Invalid date format.')
-            return redirect('add_offer')
+            return fail('Invalid date format. Use YYYY-MM-DD.')
 
-        if end_date < start_date:
-            messages.error(request, 'End date cannot be before start date.')
-            return redirect('add_offer')
+        if start_date < today:
+            return fail('Start date cannot be in the past.')
+        if end_date <= start_date:
+            return fail('End date must be strictly after the start date.')
 
-        try:
-            if float(discount_value) <= 0:
-                messages.error(request, 'Discount value must be greater than 0.')
-                return redirect('add_offer')
-        except ValueError:
-            messages.error(request, 'Invalid discount value.')
-            return redirect('add_offer')
-
-        product = None
+        # ── Apply-to target ───────────────────────────────────
+        product  = None
         category = None
-
         if apply_to == 'product':
             if not product_id:
-                messages.error(request, 'Please select a product.')
-                return redirect('add_offer')
+                return fail('Please select a product.')
             product = get_object_or_404(Product, id=product_id)
-            if is_active and Offer.objects.filter(apply_to='product', product=product, is_active=True).exists():
-                messages.error(request, 'An active offer already exists for this product. Deactivate it first.')
-                return redirect('add_offer')
+            if is_active and Offer.objects.filter(
+                apply_to='product', product=product, is_active=True
+            ).exists():
+                return fail('An active offer already exists for this product. Deactivate it first.')
         elif apply_to == 'category':
             if not category_id:
-                messages.error(request, 'Please select a category.')
-                return redirect('add_offer')
+                return fail('Please select a category.')
             category = get_object_or_404(Category, id=category_id)
-            if is_active and Offer.objects.filter(apply_to='category', category=category, is_active=True).exists():
-                messages.error(request, 'An active offer already exists for this category. Deactivate it first.')
-                return redirect('add_offer')
+            if is_active and Offer.objects.filter(
+                apply_to='category', category=category, is_active=True
+            ).exists():
+                return fail('An active offer already exists for this category. Deactivate it first.')
+        else:
+            return fail('Please select a valid target (Product or Category).')
 
+        # ── Save ──────────────────────────────────────────────
         Offer.objects.create(
             offer_name=offer_name,
             discount_type=discount_type,
@@ -106,92 +147,134 @@ def add_offer(request):
             product=product,
             category=category,
             discount_value=discount_value,
-            minimum_purchase_amount=minimum_purchase_amount,
-            maximum_discount_amount=maximum_discount_amount if discount_type == 'percentage' else None,
+            minimum_purchase_amount=min_purchase,
+            maximum_discount_amount=max_discount if discount_type == 'percentage' else None,
             start_date=start_date,
             end_date=end_date,
-            is_active=is_active
+            is_active=is_active,
         )
-        messages.success(request, 'Offer created successfully.')
+        messages.success(request, f'Offer "{offer_name}" created successfully.')
         return redirect('offer_list')
 
     return render(request, 'admin/add_offer.html', {
-        'products': products,
-        'categories': categories
+        'products':   products,
+        'categories': categories,
     })
 
 def edit_offer(request, pk):
-    offer = get_object_or_404(Offer, pk=pk)
-    products = Product.objects.filter(is_deleted=False)
+    offer      = get_object_or_404(Offer, pk=pk)
+    products   = Product.objects.filter(is_deleted=False)
     categories = Category.objects.filter(is_deleted=False)
 
     if request.method == 'POST':
-        offer.offer_name = request.POST.get('offer_name')
-        offer.discount_type = request.POST.get('discount_type')
-        offer.apply_to = request.POST.get('apply_to')
-        offer.discount_value = request.POST.get('discount_value')
-        offer.minimum_purchase_amount = request.POST.get('minimum_purchase_amount') or 0
-        offer.maximum_discount_amount = request.POST.get('maximum_discount_amount') or None
-        
-        start_date_str = request.POST.get('start_date')
-        end_date_str = request.POST.get('end_date')
-        offer.is_active = request.POST.get('is_active') == 'on'
+        offer_name     = request.POST.get('offer_name', '').strip()
+        discount_type  = request.POST.get('discount_type', '').strip()
+        apply_to       = request.POST.get('apply_to', '').strip()
+        discount_value = request.POST.get('discount_value', '').strip()
+        min_purchase   = request.POST.get('minimum_purchase_amount') or 0
+        max_discount   = request.POST.get('maximum_discount_amount') or None
+        start_date_str = request.POST.get('start_date', '').strip()
+        end_date_str   = request.POST.get('end_date', '').strip()
+        is_active      = request.POST.get('is_active') == 'on'
+        product_id     = request.POST.get('product_id')
+        category_id    = request.POST.get('category_id')
 
-        product_id = request.POST.get('product_id')
-        category_id = request.POST.get('category_id')
+        ctx = {
+            'offer': offer, 'products': products, 'categories': categories,
+            'post': request.POST,
+            'start_date_formatted': start_date_str,
+            'end_date_formatted':   end_date_str,
+        }
+        def fail(msg):
+            messages.error(request, msg)
+            return render(request, 'admin/edit_offer.html', ctx)
 
+        if not offer_name:
+            return fail('Offer name is required.')
+
+        if discount_type not in ('percentage', 'flat'):
+            return fail('Please select a valid discount type.')
         try:
-            offer.start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-            offer.end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            discount_value = float(discount_value)
+            if discount_value <= 0:
+                return fail('Discount value must be greater than 0.')
+            if discount_type == 'percentage' and discount_value > 100:
+                return fail('Percentage discount cannot exceed 100%.')
         except (ValueError, TypeError):
-            messages.error(request, 'Invalid date format.')
-            return redirect('edit_offer', pk=offer.pk)
-
-        if offer.end_date < offer.start_date:
-            messages.error(request, 'End date cannot be before start date.')
-            return redirect('edit_offer', pk=offer.pk)
+            return fail('Enter a valid discount value.')
 
         try:
-            if float(offer.discount_value) <= 0:
-                messages.error(request, 'Discount value must be greater than 0.')
-                return redirect('edit_offer', pk=offer.pk)
-        except ValueError:
-            messages.error(request, 'Invalid discount value.')
-            return redirect('edit_offer', pk=offer.pk)
+            min_purchase = float(min_purchase)
+            if min_purchase < 0:
+                return fail('Minimum purchase amount cannot be negative.')
+        except (ValueError, TypeError):
+            return fail('Enter a valid minimum purchase amount.')
 
-        offer.product = None
-        offer.category = None
+        if max_discount:
+            try:
+                max_discount = float(max_discount)
+                if max_discount <= 0:
+                    return fail('Maximum discount must be greater than 0.')
+                if discount_type == 'flat':
+                    return fail('Maximum discount cap is only valid for percentage offers.')
+            except (ValueError, TypeError):
+                return fail('Enter a valid maximum discount amount.')
+        else:
+            max_discount = None
 
-        if offer.apply_to == 'product':
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date   = datetime.strptime(end_date_str,   '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            return fail('Invalid date format. Use YYYY-MM-DD.')
+
+        if end_date <= start_date:
+            return fail('End date must be strictly after the start date.')
+
+        product  = None
+        category = None
+        if apply_to == 'product':
             if not product_id:
-                messages.error(request, 'Please select a product.')
-                return redirect('edit_offer', pk=offer.pk)
-            offer.product = get_object_or_404(Product, id=product_id)
-            if offer.is_active and Offer.objects.filter(apply_to='product', product=offer.product, is_active=True).exclude(pk=offer.pk).exists():
-                messages.error(request, 'An active offer already exists for this product. Deactivate it first.')
-                return redirect('edit_offer', pk=offer.pk)
-        elif offer.apply_to == 'category':
+                return fail('Please select a product.')
+            product = get_object_or_404(Product, id=product_id)
+            if is_active and Offer.objects.filter(
+                apply_to='product', product=product, is_active=True
+            ).exclude(pk=offer.pk).exists():
+                return fail('An active offer already exists for this product. Deactivate it first.')
+        elif apply_to == 'category':
             if not category_id:
-                messages.error(request, 'Please select a category.')
-                return redirect('edit_offer', pk=offer.pk)
-            offer.category = get_object_or_404(Category, id=category_id)
-            if offer.is_active and Offer.objects.filter(apply_to='category', category=offer.category, is_active=True).exclude(pk=offer.pk).exists():
-                messages.error(request, 'An active offer already exists for this category. Deactivate it first.')
-                return redirect('edit_offer', pk=offer.pk)
+                return fail('Please select a category.')
+            category = get_object_or_404(Category, id=category_id)
+            if is_active and Offer.objects.filter(
+                apply_to='category', category=category, is_active=True
+            ).exclude(pk=offer.pk).exists():
+                return fail('An active offer already exists for this category. Deactivate it first.')
+        else:
+            return fail('Please select a valid target (Product or Category).')
 
-        if offer.discount_type == 'flat':
-            offer.maximum_discount_amount = None
-
+        # Apply updates
+        offer.offer_name               = offer_name
+        offer.discount_type            = discount_type
+        offer.apply_to                 = apply_to
+        offer.product                  = product
+        offer.category                 = category
+        offer.discount_value           = discount_value
+        offer.minimum_purchase_amount  = min_purchase
+        offer.maximum_discount_amount  = max_discount if discount_type == 'percentage' else None
+        offer.start_date               = start_date
+        offer.end_date                 = end_date
+        offer.is_active                = is_active
         offer.save()
-        messages.success(request, 'Offer updated successfully.')
+
+        messages.success(request, f'Offer "{offer_name}" updated successfully.')
         return redirect('offer_list')
 
     return render(request, 'admin/edit_offer.html', {
-        'offer': offer,
-        'products': products,
-        'categories': categories,
+        'offer':               offer,
+        'products':            products,
+        'categories':          categories,
         'start_date_formatted': offer.start_date.strftime('%Y-%m-%d') if offer.start_date else '',
-        'end_date_formatted': offer.end_date.strftime('%Y-%m-%d') if offer.end_date else '',
+        'end_date_formatted':   offer.end_date.strftime('%Y-%m-%d')   if offer.end_date   else '',
     })
 
 def delete_offer(request, pk):

@@ -68,13 +68,17 @@ tailwind.config = {
   <div class="bg-surface border border-[#e8e2d8] rounded-2xl shadow-card overflow-hidden animate-fade-up-2">
     <div class="flex items-center justify-between px-6 py-4 border-b border-[#ede8df]">
       <span class="text-[10.5px] font-bold tracking-[.18em] uppercase text-ink-3">All Coupons</span>
-      <div class="relative w-72">
-        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-4 pointer-events-none">
-          <span class="material-icons-outlined" style="font-size:16px">search</span>
-        </span>
-        <input type="text" id="couponSearch" placeholder="Search by code…"
-          class="w-full pl-9 pr-4 py-2 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink placeholder-ink-4 outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all"/>
-      </div>
+      <form method="GET" action="{% url 'coupon_list' %}" class="relative w-72 flex gap-2">
+        <div class="relative flex-1">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-4 pointer-events-none">
+            <span class="material-icons-outlined" style="font-size:16px">search</span>
+          </span>
+          <input type="text" name="search" value="{{ search_query }}" placeholder="Search by code…"
+            class="w-full pl-9 pr-4 py-2 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink placeholder-ink-4 outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all"/>
+        </div>
+        <button type="submit" class="px-3 py-2 bg-forest text-white rounded-lg text-[12px] font-semibold">Search</button>
+        {% if search_query %}<a href="{% url 'coupon_list' %}" class="px-3 py-2 bg-cream border border-[#e0dbd0] rounded-lg text-[12px] text-ink-3">Clear</a>{% endif %}
+      </form>
     </div>
 
     <div class="overflow-x-auto">
@@ -157,18 +161,36 @@ tailwind.config = {
         </tbody>
       </table>
     </div>
+
+    <div class="flex items-center justify-between px-6 py-4 border-t border-[#ede8df]">
+      <p class="text-[12px] text-ink-4">Showing {{ coupons.start_index }}–{{ coupons.end_index }} of {{ coupons.paginator.count }} coupon{{ coupons.paginator.count|pluralize }}</p>
+      {% if coupons.has_other_pages %}
+      <nav class="flex items-center gap-1">
+        {% if coupons.has_previous %}
+          <a href="?page={{ coupons.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-1.5 text-[12px] border border-[#e0dbd0] rounded-lg text-ink-3 hover:bg-cream transition-colors flex items-center gap-1">
+            <span class="material-icons-outlined" style="font-size:14px">chevron_left</span> Prev
+          </a>
+        {% endif %}
+        {% for num in coupons.paginator.page_range %}
+          {% if num == coupons.number %}
+            <span class="px-3 py-1.5 text-[12px] border border-forest bg-forest text-white rounded-lg font-semibold">{{ num }}</span>
+          {% elif num == 1 or num == coupons.paginator.num_pages or num >= coupons.number|add:"-2" and num <= coupons.number|add:"2" %}
+            <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-1.5 text-[12px] border border-[#e0dbd0] rounded-lg text-ink-3 hover:bg-cream transition-colors">{{ num }}</a>
+          {% elif num == coupons.number|add:"-3" or num == coupons.number|add:"3" %}
+            <span class="px-1 text-ink-4 text-[12px]">…</span>
+          {% endif %}
+        {% endfor %}
+        {% if coupons.has_next %}
+          <a href="?page={{ coupons.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-1.5 text-[12px] border border-[#e0dbd0] rounded-lg text-ink-3 hover:bg-cream transition-colors flex items-center gap-1">
+            Next <span class="material-icons-outlined" style="font-size:14px">chevron_right</span>
+          </a>
+        {% endif %}
+      </nav>
+      {% endif %}
+    </div>
   </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-// Live search
-document.getElementById('couponSearch').addEventListener('input', function() {
-  const query = this.value.toLowerCase();
-  document.querySelectorAll('#couponTable tbody tr').forEach(row => {
-    row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none';
-  });
-});
-</script>
 {% endblock %}

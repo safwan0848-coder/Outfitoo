@@ -1,97 +1,97 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.core.paginator import Paginator
+from django.db.models import Sum, Q
+from django.utils import timezone
+
 from .models import Coupon
+from .forms import CouponForm
 
-from django.db.models import Sum
 
+# ─────────────────────────────────────────────────────────
+# LIST
+# ─────────────────────────────────────────────────────────
 def coupon_list(request):
-    coupons = Coupon.objects.all().order_by('-created_at')
-    
-    total_coupons = coupons.count()
-    active_coupons = coupons.filter(is_active=True).count()
-    active_rate = int((active_coupons / total_coupons) * 100) if total_coupons > 0 else 0
-    total_uses = coupons.aggregate(Sum('used_count'))['used_count__sum'] or 0
-    savings_given = 0 # Placeholder until linked with Order models mapping real discount subtractions
-    
-    context = {
-        'coupons': coupons,
-        'total_coupons': total_coupons,
-        'active_coupons': active_coupons,
-        'active_rate': active_rate,
-        'total_uses': total_uses,
-        'savings_given': savings_given
-    }
-    return render(request, 'admin/coupon_list.html', context)
+    search_query = request.GET.get('search', '').strip()
 
-def add_coupon(request):
-    if request.method == 'POST':
-        code = request.POST.get('code')
-        discount_type = request.POST.get('discount_type')
-        discount_value = request.POST.get('discount_value')
-        
-        min_amount = request.POST.get('min_amount') or 0
-        max_discount = request.POST.get('max_discount') or None
-        
-        usage_limit = request.POST.get('usage_limit') or None
-        usage_limit_per_user = request.POST.get('usage_limit_per_user') or 1
-        
-        start_date = request.POST.get('start_date') or None
-        expiry_date = request.POST.get('expiry_date')
-        
-        is_active = request.POST.get('is_active') == 'on'
-        
-        if Coupon.objects.filter(code__iexact=code).exists():
-            messages.error(request, 'Coupon with this code already exists.')
-            return redirect('add_coupon')
-            
-        Coupon.objects.create(
-            code=code.upper(),
-            discount_type=discount_type,
-            discount_value=discount_value,
-            min_amount=min_amount,
-            max_discount=max_discount,
-            usage_limit=usage_limit,
-            usage_limit_per_user=usage_limit_per_user,
-            start_date=start_date,
-            expiry_date=expiry_date,
-            is_active=is_active
+    coupons_qs = Coupon.objects.all().order_by('-created_at')
+    if search_query:
+        coupons_qs = coupons_qs.filter(
+            Q(code__icontains=search_query) |
+            Q(discount_type__icontains=search_query)
         )
-        messages.success(request, 'Coupon created successfully.')
-        return redirect('coupon_list')
 
-    return render(request, 'admin/add_coupon.html')
+    total_coupons  = Coupon.objects.count()
+    active_coupons = Coupon.objects.filter(is_active=True).count()
+    active_rate    = int((active_coupons / total_coupons) * 100) if total_coupons > 0 else 0
+    total_uses     = Coupon.objects.aggregate(Sum('used_count'))['used_count__sum'] or 0
 
+    paginator = Paginator(coupons_qs, 10)
+    page_obj  = paginator.get_page(request.GET.get('page'))
+
+    return render(request, 'admin/coupon_list.html', {
+        'coupons':        page_obj,
+        'search_query':   search_query,
+        'total_coupons':  total_coupons,
+        'active_coupons': active_coupons,
+        'active_rate':    active_rate,
+        'total_uses':     total_uses,
+        'savings_given':  0,
+    })
+
+
+# ─────────────────────────────────────────────────────────
+# ADD
+# ─────────────────────────────────────────────────────────
+def add_coupon(request):
+    form = CouponForm(request.POST or None)
+
+    if request.method == 'POST':
+        if form.is_valid():
+            coupon = form.save(commit=False)
+            coupon.code = coupon.code.upper()
+            coupon.save()
+            messages.success(request, f'Coupon "{coupon.code}" created successfully.')
+            return redirect('coupon_list')
+        else:
+            # Collect all form errors and flash them
+            for field, errs in form.errors.items():
+                label = form.fields[field].label if field in form.fields else field.replace('_', ' ').title()
+                for err in errs:
+                    messages.error(request, f"{label}: {err}")
+
+    return render(request, 'admin/add_coupon.html', {'form': form})
+
+
+# ─────────────────────────────────────────────────────────
+# EDIT
+# ─────────────────────────────────────────────────────────
 def edit_coupon(request, pk):
     coupon = get_object_or_404(Coupon, pk=pk)
-    
+    form   = CouponForm(request.POST or None, instance=coupon)
+
     if request.method == 'POST':
-        coupon.code = request.POST.get('code').upper()
-        coupon.discount_type = request.POST.get('discount_type')
-        coupon.discount_value = request.POST.get('discount_value')
-        
-        coupon.min_amount = request.POST.get('min_amount') or 0
-        coupon.max_discount = request.POST.get('max_discount') or None
-        
-        coupon.usage_limit = request.POST.get('usage_limit') or None
-        coupon.usage_limit_per_user = request.POST.get('usage_limit_per_user') or 1
-        
-        coupon.start_date = request.POST.get('start_date') or None
-        coupon.expiry_date = request.POST.get('expiry_date')
-        
-        coupon.is_active = request.POST.get('is_active') == 'on'
-        
-        if Coupon.objects.filter(code__iexact=coupon.code).exclude(pk=coupon.pk).exists():
-            messages.error(request, 'Another coupon with this code already exists.')
-            return redirect('edit_coupon', pk=coupon.pk)
-            
-        coupon.save()
-        messages.success(request, 'Coupon updated successfully.')
-        return redirect('coupon_list')
+        if form.is_valid():
+            updated = form.save(commit=False)
+            updated.code = updated.code.upper()
+            updated.save()
+            messages.success(request, f'Coupon "{updated.code}" updated successfully.')
+            return redirect('coupon_list')
+        else:
+            for field, errs in form.errors.items():
+                label = form.fields[field].label if field in form.fields else field.replace('_', ' ').title()
+                for err in errs:
+                    messages.error(request, f"{label}: {err}")
 
-    return render(request, 'admin/edit_coupon.html', {'coupon': coupon})
+    return render(request, 'admin/edit_coupon.html', {'form': form, 'coupon': coupon})
 
+
+# ─────────────────────────────────────────────────────────
+# DELETE
+# ─────────────────────────────────────────────────────────
 def delete_coupon(request, pk):
     coupon = get_object_or_404(Coupon, pk=pk)
+    code   = coupon.code
     coupon.delete()
-    messages.success(request, 'Coupon deleted successfully.')
+    messages.success(request, f'Coupon "{code}" deleted successfully.')
     return redirect('coupon_list')

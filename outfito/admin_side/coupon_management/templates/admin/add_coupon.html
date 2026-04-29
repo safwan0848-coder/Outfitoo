@@ -16,6 +16,23 @@
     <h1 class="font-display text-[32px] font-bold text-ink mb-1 text-center">Add New Coupon</h1>
     <div class="w-16 h-[3px] bg-forest mx-auto mt-2 rounded"></div>
   </div>
+
+  {% if messages %}
+  <div class="mb-6 space-y-2">
+    {% for message in messages %}
+    <div class="flex items-start gap-2 px-4 py-3 rounded-lg text-[13px] font-medium
+      {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+      {% elif message.tags == 'success' %}bg-green-50 text-green-700 border border-green-200
+      {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+      <span class="material-icons-outlined" style="font-size:16px;margin-top:1px">
+        {% if message.tags == 'error' %}error_outline{% elif message.tags == 'success' %}check_circle{% else %}info{% endif %}
+      </span>
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   <form method="POST" action="{% url 'add_coupon' %}">{% csrf_token %}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div class="md:col-span-2 bg-surface border border-[#e8e2d8] rounded-2xl shadow-card p-6 space-y-5">
@@ -23,11 +40,11 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-[11px] font-bold text-ink-2 mb-1.5 uppercase tracking-wide">Coupon Code *</label>
-            <input type="text" name="code" placeholder="E.G. SUM-003" required class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest uppercase"/>
+            <input type="text" name="code" value="{{ request.POST.code }}" placeholder="E.G. SUM-003" required class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest uppercase"/>
           </div>
           <div>
             <label class="block text-[11px] font-bold text-ink-2 mb-1.5 uppercase tracking-wide">Discount Value *</label>
-            <input type="number" name="discount_value" placeholder="0" required min="0" step="0.01" class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest"/>
+            <input type="number" name="discount_value" value="{{ request.POST.discount_value }}" placeholder="0" required min="0" step="0.01" class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest"/>
           </div>
           <div class="col-span-2 grid grid-cols-2 gap-3 border border-[#e0dbd0] p-1 rounded-lg">
             <label class="flex items-center justify-between p-3 border rounded-md cursor-pointer hover:bg-cream has-[:checked]:border-forest has-[:checked]:bg-forest-light">
@@ -39,11 +56,11 @@
           </div>
           <div>
             <label class="block text-[11px] font-bold text-ink-2 mb-1.5 uppercase tracking-wide">Minimum Purchase (₹)</label>
-            <input type="number" name="min_amount" placeholder="0.00" min="0" step="0.01" class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest"/>
+            <input type="number" name="min_amount" value="{{ request.POST.min_amount }}" placeholder="0.00" min="0" step="0.01" class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest"/>
           </div>
           <div>
             <label class="block text-[11px] font-bold text-ink-2 mb-1.5 uppercase tracking-wide">Maximum Discount (₹)</label>
-            <input type="number" name="max_discount" placeholder="0.00" min="0" step="0.01" class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest"/>
+            <input type="number" name="max_discount" value="{{ request.POST.max_discount }}" placeholder="0.00" min="0" step="0.01" class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest"/>
           </div>
           <div>
             <label class="block text-[11px] font-bold text-ink-2 mb-1.5 uppercase tracking-wide">Usage Limit (Per User)</label>
@@ -59,8 +76,8 @@
         <div class="bg-surface border border-[#e8e2d8] rounded-2xl shadow-card p-6">
           <h2 class="text-[15px] font-bold text-ink mb-4">Schedule</h2>
           <div class="space-y-3">
-            <div><label class="block text-[11px] font-bold text-ink-2 mb-1 uppercase tracking-wide">Start Date</label><input type="date" name="start_date" required class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest"/></div>
-            <div><label class="block text-[11px] font-bold text-ink-2 mb-1 uppercase tracking-wide">End Date</label><input type="date" name="expiry_date" required class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest"/></div>
+            <div><label class="block text-[11px] font-bold text-ink-2 mb-1 uppercase tracking-wide">Start Date</label><input type="date" name="start_date" value="{{ request.POST.start_date }}" required class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest"/></div>
+            <div><label class="block text-[11px] font-bold text-ink-2 mb-1 uppercase tracking-wide">End Date</label><input type="date" name="expiry_date" value="{{ request.POST.expiry_date }}" required class="w-full px-3 py-2.5 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink outline-none focus:border-forest"/></div>
           </div>
         </div>
         <div class="bg-surface border border-[#e8e2d8] rounded-2xl shadow-card p-5">

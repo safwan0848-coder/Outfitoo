@@ -58,7 +58,7 @@
   </div>
   <div class="text-center">
     <div style="font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);">Total Variants</div>
-    <div style="font-family:var(--font-display);font-size:1.8rem;color:var(--text);line-height:1;">{{ variants|length|default:"0" }}</div>
+    <div style="font-family:var(--font-display);font-size:1.8rem;color:var(--text);line-height:1;">{{ total_variants|default:"0" }}</div>
   </div>
 </div>
 
@@ -107,8 +107,38 @@
     </tbody>
   </table>
 </div>
-<div class="pagination-area">
-  <div class="text-muted" style="font-size:.85rem;">Showing {{ variants|length }} variants</div>
+
+<div class="pagination-area" style="display:flex;justify-content:space-between;align-items:center;padding:1.25rem 0;">
+  <div class="text-muted" style="font-size:.85rem;">
+    {% if variants.paginator.count > 0 %}
+      Showing {{ variants.start_index }}–{{ variants.end_index }} of {{ total_variants }} variant{{ total_variants|pluralize }}
+    {% else %}
+      No variants found
+    {% endif %}
+  </div>
+  {% if variants.has_other_pages %}
+  <nav style="display:flex;align-items:center;gap:.3rem;">
+    {% if variants.has_previous %}
+      <a href="?page={{ variants.previous_page_number }}" class="btn-outline-custom" style="padding:.4rem .8rem;font-size:.8rem;">
+        <i class="bi bi-chevron-left"></i> Prev
+      </a>
+    {% endif %}
+    {% for num in variants.paginator.page_range %}
+      {% if num == variants.number %}
+        <span style="width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;background:var(--primary);color:#fff;border-radius:8px;font-size:.82rem;font-weight:600;">{{ num }}</span>
+      {% elif num == 1 or num == variants.paginator.num_pages or num >= variants.number|add:"-2" and num <= variants.number|add:"2" %}
+        <a href="?page={{ num }}" style="width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:8px;font-size:.82rem;color:var(--text-muted);text-decoration:none;">{{ num }}</a>
+      {% elif num == variants.number|add:"-3" or num == variants.number|add:"3" %}
+        <span style="color:var(--text-muted);font-size:.85rem;padding:0 .2rem;">···</span>
+      {% endif %}
+    {% endfor %}
+    {% if variants.has_next %}
+      <a href="?page={{ variants.next_page_number }}" class="btn-outline-custom" style="padding:.4rem .8rem;font-size:.8rem;">
+        Next <i class="bi bi-chevron-right"></i>
+      </a>
+    {% endif %}
+  </nav>
+  {% endif %}
 </div>
 {% endblock %}
 {% block extra_js %}

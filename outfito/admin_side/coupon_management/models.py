@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 User = settings.AUTH_USER_MODEL
 
@@ -26,6 +28,38 @@ class Coupon(models.Model):
 
     def __str__(self):
         return self.code
+
+    def clean(self):
+        errors = {}
+        today = timezone.now().date()
+
+        if self.discount_value is not None:
+            if self.discount_value <= 0:
+                errors['discount_value'] = "Discount value must be greater than 0."
+            if self.discount_type == 'percentage' and self.discount_value > 100:
+                errors['discount_value'] = "Percentage discount cannot exceed 100%."
+
+        if self.min_amount is not None and self.min_amount < 0:
+            errors['min_amount'] = "Minimum amount cannot be negative."
+
+        if self.max_discount is not None:
+            if self.max_discount <= 0:
+                errors['max_discount'] = "Maximum discount must be greater than 0."
+            if self.discount_type == 'fixed':
+                errors['max_discount'] = "Max discount cap is only for percentage coupons."
+
+        if self.expiry_date and self.start_date:
+            if self.expiry_date <= self.start_date:
+                errors['expiry_date'] = "Expiry date must be after the start date."
+
+        if self.usage_limit is not None and self.usage_limit < 1:
+            errors['usage_limit'] = "Usage limit must be at least 1."
+
+        if self.usage_limit_per_user is not None and self.usage_limit_per_user < 1:
+            errors['usage_limit_per_user'] = "Per-user usage limit must be at least 1."
+
+        if errors:
+            raise ValidationError(errors)
 
     def active_usage_count_for(self, user):
         """Active (used, not yet refunded) uses of this coupon by a specific user."""
