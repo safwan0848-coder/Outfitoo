@@ -58,7 +58,9 @@ def checkout_view(request):
     offer_data=calculate_cart_offers(cart_items)
     offer_discount = offer_data['total_offer_discount']
     for item in cart_items:
-        item.offer_discount=offer_data['item_discounts'].get(item.id, Decimal('0.00'))
+        offer_info = offer_data['item_discounts'].get(item.id, {})
+        item.offer_discount = offer_info.get('amount', Decimal('0.00'))
+        item.offer_dict = offer_info
         item.final_subtotal=item.base_subtotal - item.offer_discount
     effective_subtotal=subtotal - offer_discount
 
@@ -613,7 +615,9 @@ def place_order(request):
     offer_discount = offer_data['total_offer_discount']
     
     for item in items:
-        item.offer_discount = offer_data['item_discounts'].get(item.id, Decimal('0.00'))
+        offer_info = offer_data['item_discounts'].get(item.id, {})
+        item.offer_discount = offer_info.get('amount', Decimal('0.00'))
+        item.offer_dict = offer_info
         item.final_subtotal = item.base_subtotal - item.offer_discount
     effective_subtotal = subtotal - offer_discount
     delivery = 0 if effective_subtotal >= FREE_SHIPPING_THRESHOLD else int(SHIPPING_CHARGE)

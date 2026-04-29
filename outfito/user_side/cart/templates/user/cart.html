@@ -513,11 +513,19 @@
           {% if item.offer_discount and item.offer_discount > 0 %}
           <div class="item-price-orig" style="color:var(--text-sub); text-decoration:line-through;">₹<span id="orig-subtotal-{{ item.id }}">{{ item.base_subtotal|floatformat:0 }}</span></div>
           <div class="item-price-main">₹<span id="main-subtotal-{{ item.id }}">{{ item.final_subtotal|floatformat:0 }}</span></div>
-          <div style="font-size:11px; color:var(--accent); margin-top:4px;" id="offer-disc-{{ item.id }}">-₹{{ item.offer_discount|floatformat:0 }} Offer</div>
+          <div style="font-size:11px; color:var(--accent); margin-top:4px;" id="offer-disc-{{ item.id }}">
+            {% if item.offer_dict and item.offer_dict.offer_type == 'percentage' %}
+                -{{ item.offer_dict.offer_value|floatformat:0 }}% OFF
+            {% else %}
+                -₹{{ item.offer_discount|floatformat:0 }} OFF
+            {% endif %}
+          </div>
           {% else %}
           <div class="item-price-orig" style="color:var(--text-sub); text-decoration:line-through; display:none;">₹<span id="orig-subtotal-{{ item.id }}">{{ item.base_subtotal|floatformat:0 }}</span></div>
           <div class="item-price-main">₹<span id="main-subtotal-{{ item.id }}">{{ item.base_subtotal|floatformat:0 }}</span></div>
-          <div style="font-size:11px; color:var(--accent); margin-top:4px; display:none;" id="offer-disc-{{ item.id }}">-₹0 Offer</div>
+          <div style="font-size:11px; color:var(--accent); margin-top:4px; display:none;" id="offer-disc-{{ item.id }}">
+            -₹0 OFF
+          </div>
           {% endif %}
           <div class="item-price-sub" id="price-sub-{{ item.id }}" {% if item.quantity <= 1 %}style="display:none;"{% endif %}>₹{{ item.variant.price|floatformat:0 }} × <span id="price-sub-qty-{{ item.id }}">{{ item.quantity }}</span></div>
         </div>

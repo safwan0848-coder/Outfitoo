@@ -767,9 +767,18 @@
               <div class="item-qty"><i class="fa-solid fa-xmark" style="font-size:10px;"></i> {{ item.quantity }}</div>
             </div>
             <div class="item-price">
-                ₹{{ item.variant.price }}
                 {% if item.offer_discount and item.offer_discount > 0 %}
-                <div style="font-size:11px; color:#3bdfb0; margin-top:4px;">-₹{{ item.offer_discount|floatformat:2 }} Offer</div>
+                <span style="color:var(--muted); text-decoration:line-through; font-size:12px; margin-right:4px;">₹{{ item.variant.price }}</span>
+                ₹{{ item.final_subtotal|floatformat:0 }}
+                <div style="font-size:11px; color:#3bdfb0; margin-top:4px;">
+                  {% if item.offer_dict and item.offer_dict.offer_type == 'percentage' %}
+                      -{{ item.offer_dict.offer_value|floatformat:0 }}% OFF
+                  {% else %}
+                      -₹{{ item.offer_discount|floatformat:0 }} OFF
+                  {% endif %}
+                </div>
+                {% else %}
+                ₹{{ item.variant.price }}
                 {% endif %}
             </div>
           </div>

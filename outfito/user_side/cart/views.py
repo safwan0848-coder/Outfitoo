@@ -27,7 +27,9 @@ def _cart_summary_json(cart):
     offer_discount = offer_data['total_offer_discount']
 
     for item in items:
-        item.offer_discount = offer_data['item_discounts'].get(item.id, Decimal('0.00'))
+        offer_info = offer_data['item_discounts'].get(item.id, {})
+        item.offer_discount = offer_info.get('amount', Decimal('0.00'))
+        item.offer_dict = offer_info
         item.final_subtotal = item.base_subtotal - item.offer_discount
 
     shipping = (
@@ -189,7 +191,9 @@ def cart_view(request):
     offer_discount = offer_data['total_offer_discount']
     
     for item in items:
-        item.offer_discount = offer_data['item_discounts'].get(item.id, Decimal('0.00'))
+        offer_info = offer_data['item_discounts'].get(item.id, {})
+        item.offer_discount = offer_info.get('amount', Decimal('0.00'))
+        item.offer_dict = offer_info
         item.final_subtotal = item.base_subtotal - item.offer_discount
 
     shipping=Decimal('0.00') if (subtotal - offer_discount) >= FREE_SHIPPING_THRESHOLD else SHIPPING_CHARGE

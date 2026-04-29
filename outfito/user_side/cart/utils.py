@@ -34,6 +34,8 @@ def calculate_cart_offers(cart_items):
         
         best_discount = Decimal('0.00')
         best_offer_msg = None
+        best_offer_type = None
+        best_offer_val = None
 
         for po in product_offers:
             if po.product == product:
@@ -52,6 +54,8 @@ def calculate_cart_offers(cart_items):
                     if discount > best_discount:
                         best_discount = discount
                         best_offer_msg = po.offer_name
+                        best_offer_type = po.discount_type
+                        best_offer_val = po.discount_value
 
         for co in category_offers:
             if co.category == category:
@@ -70,8 +74,14 @@ def calculate_cart_offers(cart_items):
                     if discount > best_discount:
                         best_discount = discount
                         best_offer_msg = co.offer_name
+                        best_offer_type = co.discount_type
+                        best_offer_val = co.discount_value
 
-        item_discounts[item.id] = best_discount.quantize(Decimal('0.01'))
+        item_discounts[item.id] = {
+            'amount': best_discount.quantize(Decimal('0.01')),
+            'offer_type': best_offer_type,
+            'offer_value': best_offer_val
+        }
         total_offer_discount += best_discount
 
         if best_offer_msg:
