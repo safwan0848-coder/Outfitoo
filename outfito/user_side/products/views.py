@@ -183,7 +183,7 @@ def product_list(request):
         )
     )
     global_min = int(price_bounds['min_price'] or 0)
-    global_max = int(price_bounds['max_price'] or 10000)
+    global_max = max(10000, int(price_bounds['max_price'] or 10000))
 
     # ── Pagination ───────────────────────────────────────────────────
     paginator = Paginator(product_data, 8)

@@ -517,14 +517,5 @@ def logout_view(request):
    return redirect('landing')
 
 
-@never_cache
-@login_required(login_url='login')
-def address(request):
-    return HttpResponse('address')
-@never_cache
-@login_required(login_url='login')
-def wallet(request):
-    return HttpResponse('wallet')
-
 
 

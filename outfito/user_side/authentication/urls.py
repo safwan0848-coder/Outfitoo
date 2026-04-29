@@ -13,7 +13,6 @@ urlpatterns = [
     path('reset-verify/',views.reset_verify, name='reset_verify'),
     path('set-new-password/',views.set_new_password, name='set_new_password'),
     path('back-login/',views.back_to_login, name='back_to_login'),
-    path('address/', views.address, name='address'),
     path('logout/', views.logout_view, name='logout'),
     
 ]

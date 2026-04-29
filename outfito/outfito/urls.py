@@ -23,13 +23,13 @@ urlpatterns = [
 
     # Your custom auth app
     path('', include('user_side.authentication.urls')),
-    path('user_profile/', include('user_side.user_profile.urls')),
-    path('wishlist/', include('user_side.wishlist.urls')),
-    path('address/', include('user_side.address.urls')),
-    path('categories/', include('user_side.categories.urls')),
+    path('', include('user_side.user_profile.urls')),
+    path('', include('user_side.wishlist.urls')),
+    path('', include('user_side.address.urls')),
+    path('', include('user_side.categories.urls')),
     path('products/', include('user_side.products.urls')),
-    path('cart/', include('user_side.cart.urls')),
-    path('orders/', include('user_side.orders.urls')),
+    path('', include('user_side.cart.urls')),
+    path('', include('user_side.orders.urls')),
     path('payment/', include('user_side.payment.urls')),
     path('wallet/', include('user_side.wallet.urls')),
 
