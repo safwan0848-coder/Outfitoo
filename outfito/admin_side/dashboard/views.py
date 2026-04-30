@@ -39,10 +39,9 @@ def admin_dashboard(request):
     top_products = get_top_selling_products(limit=5)
     top_categories = get_top_selling_categories(limit=5)
     
-    # Also compute per-period order counts for the chart
     orders_data = []
     for val in chart_data['data']:
-        orders_data.append(0)  # placeholder, overridden below
+        orders_data.append(0) 
     
     context = {
         'total_revenue': report_data['total_revenue'],
@@ -98,7 +97,6 @@ def sales_report(request):
     orders_page = orders_paginator.get_page(page_orders)
     coupons_page = coupons_paginator.get_page(page_coupons)
 
-    # Build a smart page range: 1 … (cur-2) cur (cur+2) … last
     def smart_page_range(page_obj):
         current = page_obj.number
         total   = page_obj.paginator.num_pages
@@ -112,7 +110,7 @@ def sales_report(request):
         prev = None
         for p in sorted(pages):
             if prev is not None and p - prev > 1:
-                result.append(None)   # None = ellipsis
+                result.append(None) 
             result.append(p)
             prev = p
         return result
@@ -120,7 +118,7 @@ def sales_report(request):
     orders_page_range = smart_page_range(orders_page)
 
     period_choices = [
-        ('',      'Custom'),
+        ('', 'Custom'),
         ('today', 'Today'),
         ('week',  'This Week'),
         ('month', 'This Month'),

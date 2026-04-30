@@ -3,21 +3,12 @@ from decimal import Decimal
 from admin_side.offer_management.models import Offer
 
 def get_best_offer(variant, apply_base_amount=None):
-    """
-    Returns the best active offer (product or category) for a given Variant.
-    Applies the highest discount value.
-    If apply_base_amount is provided, calculates discount based on that amount
-    (useful for cart subtotals). Otherwise, uses variant.price.
-    
-    Returns: (best_offer_object, best_discount_amount)
-    """
     now = timezone.now().date()
     base_price = Decimal(str(apply_base_amount)) if apply_base_amount is not None else variant.price
     
     best_discount = Decimal('0.00')
     best_offer = None
     
-    # 1. Product Offer
     product_offer = Offer.objects.filter(
         apply_to='product',
         product=variant.product,
@@ -39,7 +30,6 @@ def get_best_offer(variant, apply_base_amount=None):
             best_discount = discount
             best_offer = product_offer
             
-    # 2. Category Offer
     category_offer = Offer.objects.filter(
         apply_to='category',
         category=variant.product.category,

@@ -71,44 +71,43 @@ def verify_payment(request):
         except Coupon.DoesNotExist:
             pass
 
-    cart       = Cart.objects.get(user=request.user)
+    cart= Cart.objects.get(user=request.user)
     cart_items = cart.items.select_related('variant')
 
     try:
         with transaction.atomic():
             order = Order.objects.create(
-                user             = request.user,
+                user= request.user,
                 shipping_address = address,
-                payment_method   = 'razorpay',
-                subtotal         = Decimal(str(pending['subtotal'])),
-                tax_amount       = Decimal(str(pending['tax'])),
-                discount_amount  = Decimal(str(pending['discount'])),
-                delivery_charge  = Decimal(str(pending['delivery'])),
-                total_amount     = Decimal(str(pending['total'])),
-                coupon           = coupon,
-                payment_status   = 'paid',
+                payment_method = 'razorpay',
+                subtotal = Decimal(str(pending['subtotal'])),
+                tax_amount = Decimal(str(pending['tax'])),
+                discount_amount = Decimal(str(pending['discount'])),
+                delivery_charge = Decimal(str(pending['delivery'])),
+                total_amount = Decimal(str(pending['total'])),
+                coupon  = coupon,
+                payment_status = 'paid',
             )
 
             for item in cart_items:
                 OrderItem.objects.create(
-                    order    = order,
-                    variant  = item.variant,
-                    price    = item.variant.price,
+                    order= order,
+                    variant= item.variant,
+                    price= item.variant.price,
                     quantity = item.quantity,
                 )
                 item.variant.stock -= item.quantity
                 item.variant.save()
 
             Payment.objects.create(
-                order                = order,
-                payment_method       = 'razorpay',
-                payment_status       = 'success',
-                razorpay_order_id    = razorpay_order_id,
+                order = order,
+                payment_method = 'razorpay',
+                payment_status = 'success',
+                razorpay_order_id = razorpay_order_id,
                 razorpay_payment_id  = razorpay_payment_id,
-                razorpay_signature   = razorpay_signature,
-                amount               = Decimal(str(pending['total'])),
+                razorpay_signature = razorpay_signature,
+                amount = Decimal(str(pending['total'])),
             )
-
             if coupon:
                 CouponUsage.objects.get_or_create(
                     user=request.user, coupon=coupon, order=order,

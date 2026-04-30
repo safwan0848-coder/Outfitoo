@@ -62,34 +62,21 @@ class Coupon(models.Model):
             raise ValidationError(errors)
 
     def active_usage_count_for(self, user):
-        """Active (used, not yet refunded) uses of this coupon by a specific user."""
         return self.usage_records.filter(
             user=user, is_used=True
         ).count()
 
     def is_used_by(self, user):
-        """True if the user has reached their per-user limit (active uses only)."""
         return self.active_usage_count_for(user) >= self.usage_limit_per_user
 
 
 class CouponUsage(models.Model):
-    """
-    One row per (user, coupon, order).
-
-    Lifecycle:
-      - Created with is_used=True when an order is placed/payment confirmed.
-      - On full order cancel: is_used -> False, is_refunded -> True.
-        (Coupon is freed, but is_refunded prevents a second restoration.)
-    """
-    coupon      = models.ForeignKey(Coupon, on_delete=models.CASCADE, related_name='usage_records')
-    user        = models.ForeignKey(User,   on_delete=models.CASCADE, related_name='coupon_usages')
-    order       = models.ForeignKey(
-                      'orders.Order', on_delete=models.CASCADE,
-                      related_name='coupon_usage', null=True, blank=True
-                  )
-    is_used     = models.BooleanField(default=False)
+    coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE, related_name='usage_records')
+    user= models.ForeignKey(User,   on_delete=models.CASCADE, related_name='coupon_usages')
+    order = models.ForeignKey( 'orders.Order', on_delete=models.CASCADE,related_name='coupon_usage', null=True, blank=True)
+    is_used= models.BooleanField(default=False)
     is_refunded = models.BooleanField(default=False)
-    created_at  = models.DateTimeField(auto_now_add=True)
+    created_at= models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('user', 'coupon', 'order')

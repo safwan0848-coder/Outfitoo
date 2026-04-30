@@ -15,7 +15,6 @@ def get_filtered_orders(start_date=None, end_date=None):
     return orders
 
 def get_all_orders(start_date=None, end_date=None):
-    """All orders regardless of status — for the transactions table."""
     orders = Order.objects.all()
     if start_date:
         orders = orders.filter(created_at__gte=start_date)
@@ -24,7 +23,6 @@ def get_all_orders(start_date=None, end_date=None):
     return orders.order_by('-created_at')
 
 def get_sales_report_data(start_date=None, end_date=None):
-    # Stats: Delivered orders only
     delivered = get_filtered_orders(start_date, end_date)
 
     total_orders = delivered.count()
@@ -48,7 +46,6 @@ def get_sales_report_data(start_date=None, end_date=None):
         'coupon__is_active'
     ).annotate(times_used=Count('id')).order_by('-times_used')
 
-    # Transactions: ALL orders for the date range
     all_orders = get_all_orders(start_date, end_date)
 
     return {

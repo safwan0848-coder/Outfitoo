@@ -1,7 +1,6 @@
 import json
 import razorpay
 from decimal import Decimal
-
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
@@ -9,7 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
-
+from django.core.paginator import Paginator
 from .models import Wallet, WalletTransaction
 
 MIN_TOPUP = Decimal('10')       
@@ -17,12 +16,10 @@ MAX_TOPUP = Decimal('50000')
 
 
 def _razorpay_client():
-    key_id     = settings.RAZORPAY_KEY_ID.strip(' "\'')
+    key_id= settings.RAZORPAY_KEY_ID.strip(' "\'')
     key_secret = settings.RAZORPAY_KEY_SECRET.strip(' "\'')
     return razorpay.Client(auth=(key_id, key_secret))
 
-
-from django.core.paginator import Paginator
 
 @never_cache
 @login_required(login_url='login')
@@ -35,7 +32,7 @@ def wallet_view(request):
     transactions = paginator.get_page(page_number)
 
     context = {
-        'wallet':        wallet,
+        'wallet':wallet,
         'transactions':  transactions,
         'razorpay_key':  settings.RAZORPAY_KEY_ID.strip(' "\''),
         'quick_amounts': [100, 200, 500, 1000, 2000, 5000],
@@ -47,11 +44,10 @@ def wallet_view(request):
 @require_POST
 def create_wallet_order(request):
     try:
-        data   = json.loads(request.body)
+        data = json.loads(request.body)
         amount = Decimal(str(data.get('amount', 0)))
     except Exception:
         return JsonResponse({'success': False, 'message': 'Invalid request.'}, status=400)
-
     if amount < MIN_TOPUP:
         return JsonResponse({'success': False, 'message': f'Minimum top-up is ₹{MIN_TOPUP}.'})
     if amount > MAX_TOPUP:
@@ -59,7 +55,7 @@ def create_wallet_order(request):
     try:
         client = _razorpay_client()
         rp_order = client.order.create({
-            'amount':   int(amount * 100),   # Convert to paise
+            'amount':   int(amount * 100),
             'currency': 'INR',
             'receipt':  f'wallet_{request.user.id}',
             'payment_capture': 1,
@@ -71,14 +67,13 @@ def create_wallet_order(request):
         'amount':           str(amount),
         'razorpay_order_id': rp_order['id'],
     }
-
     return JsonResponse({
-        'success':          True,
+        'success': True,
         'razorpay_order_id': rp_order['id'],
-        'amount_paise':     int(amount * 100),
-        'razorpay_key':     settings.RAZORPAY_KEY_ID.strip(' "\''),
-        'user_email':       request.user.email,
-        'user_name':        request.user.username,
+        'amount_paise':int(amount * 100),
+        'razorpay_key':settings.RAZORPAY_KEY_ID.strip(' "\''),
+        'user_email':request.user.email,
+        'user_name':request.user.username,
     })
 
 
@@ -125,15 +120,15 @@ def verify_wallet_payment(request):
             wallet.save(update_fields=['balance', 'updated_at'])
 
             WalletTransaction.objects.create(
-                user                 = request.user,
-                transaction_type     = 'credit',
-                amount               = amount,
-                balance_after        = wallet.balance,
-                is_credit            = True,
+                user = request.user,
+                transaction_type = 'credit',
+                amount = amount,
+                balance_after = wallet.balance,
+                is_credit = True,
                 razorpay_payment_id  = razorpay_payment_id,
-                razorpay_order_id    = razorpay_order_id,
-                payment_status       = 'success',
-                description          = f'Wallet top-up via Razorpay',
+                razorpay_order_id = razorpay_order_id,
+                payment_status = 'success',
+                description = f'Wallet top-up via Razorpay',
             )
     except Exception:
         return JsonResponse({'success': False, 'message': 'Failed to credit wallet. Please contact support.'}, status=500)
@@ -141,7 +136,7 @@ def verify_wallet_payment(request):
     request.session.pop('wallet_topup', None)
 
     return JsonResponse({
-        'success':     True,
-        'message':     f'₹{amount:.0f} added to your wallet successfully!',
+        'success': True,
+        'message':f'₹{amount:.0f} added to your wallet successfully!',
         'new_balance': str(wallet.balance),
     })

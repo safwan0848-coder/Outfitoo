@@ -7,6 +7,5 @@ User = settings.AUTH_USER_MODEL
 
 @receiver(post_save, sender=User)
 def create_wallet(sender, instance, created, **kwargs):
-    """Auto-create a Wallet every time a new User is created."""
     if created:
         Wallet.objects.get_or_create(user=instance)

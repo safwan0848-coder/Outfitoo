@@ -11,14 +11,11 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 def is_admin(user):
     return user.is_authenticated and user.is_staff
 
-
 @never_cache
 @login_required(login_url='login')
 @user_passes_test(is_admin, login_url='login')
 def add_category(request):
-
     if request.method=="POST":
-
         name = request.POST.get('category_name', '').strip()
         description = request.POST.get('description', '').strip()
         image = request.FILES.get('image')
@@ -43,17 +40,12 @@ def add_category(request):
 
     return render(request, "admin/add_category.html")
 
-
-
 @never_cache
 @login_required(login_url='login')
 @user_passes_test(is_admin, login_url='login')
 def category_list(request):
-
     search_query=request.GET.get('search', '').strip()
-
     categories=Category.objects.filter(is_deleted=False).annotate(product_count=Count('products'))
-
     if search_query:
         categories=categories.filter(category_name__icontains=search_query)
 
@@ -78,7 +70,6 @@ def category_list(request):
     return render(request,"admin/category_list.html", context)
 
 
-
 def toggle_category_status(request, id):
 
     category=get_object_or_404(Category, id=id, is_deleted=False)
@@ -92,11 +83,8 @@ def toggle_category_status(request, id):
 @login_required(login_url='login')
 @user_passes_test(is_admin, login_url='login')
 def edit_category(request, id):
-
     category=get_object_or_404(Category,id=id,is_deleted=False)
-
     if request.method=="POST":
-
         name=request.POST.get("category_name", '').strip()
         description=request.POST.get("description", '').strip()
         image=request.FILES.get("image")

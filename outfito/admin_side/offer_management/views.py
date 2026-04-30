@@ -28,7 +28,6 @@ def offer_list(request):
         elif status_filter == 'inactive':
             offers = offers.filter(is_active=False)
 
-    # Pagination: 10 offers per page
     paginator = Paginator(offers, 4)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -42,24 +41,22 @@ def offer_list(request):
     return render(request, 'admin/offer_list.html', context)
 
 def add_offer(request):
-    products   = Product.objects.filter(is_deleted=False)
+    products = Product.objects.filter(is_deleted=False)
     categories = Category.objects.filter(is_deleted=False)
-    today      = datetime.now().date()
+    today = datetime.now().date()
 
     if request.method == 'POST':
-        # ── Collect raw values ───────────────────────────────
-        offer_name     = request.POST.get('offer_name', '').strip()
+        offer_name= request.POST.get('offer_name', '').strip()
         discount_type  = request.POST.get('discount_type', '').strip()
-        apply_to       = request.POST.get('apply_to', '').strip()
+        apply_to  = request.POST.get('apply_to', '').strip()
         discount_value = request.POST.get('discount_value', '').strip()
-        min_purchase   = request.POST.get('minimum_purchase_amount') or 0
-        max_discount   = request.POST.get('maximum_discount_amount') or None
+        min_purchase = request.POST.get('minimum_purchase_amount') or 0
+        max_discount = request.POST.get('maximum_discount_amount') or None
         start_date_str = request.POST.get('start_date', '').strip()
-        end_date_str   = request.POST.get('end_date', '').strip()
-        is_active      = request.POST.get('is_active') == 'on'
-        product_id     = request.POST.get('product_id')
-        category_id    = request.POST.get('category_id')
-
+        end_date_str = request.POST.get('end_date', '').strip()
+        is_active = request.POST.get('is_active') == 'on'
+        product_id = request.POST.get('product_id')
+        category_id = request.POST.get('category_id')
         ctx = {
             'products': products, 'categories': categories,
             'post': request.POST,
@@ -68,11 +65,9 @@ def add_offer(request):
             messages.error(request, msg)
             return render(request, 'admin/add_offer.html', ctx)
 
-        # ── Name ─────────────────────────────────────────────
         if not offer_name:
             return fail('Offer name is required.')
 
-        # ── Discount type & value ─────────────────────────────
         if discount_type not in ('percentage', 'flat'):
             return fail('Please select a valid discount type.')
         try:
@@ -84,7 +79,6 @@ def add_offer(request):
         except (ValueError, TypeError):
             return fail('Enter a valid discount value.')
 
-        # ── Min purchase ──────────────────────────────────────
         try:
             min_purchase = float(min_purchase)
             if min_purchase < 0:
@@ -92,7 +86,6 @@ def add_offer(request):
         except (ValueError, TypeError):
             return fail('Enter a valid minimum purchase amount.')
 
-        # ── Max discount (percentage only) ────────────────────
         if max_discount:
             try:
                 max_discount = float(max_discount)
@@ -105,7 +98,6 @@ def add_offer(request):
         else:
             max_discount = None
 
-        # ── Dates ─────────────────────────────────────────────
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
             end_date   = datetime.strptime(end_date_str,   '%Y-%m-%d').date()
@@ -117,7 +109,6 @@ def add_offer(request):
         if end_date <= start_date:
             return fail('End date must be strictly after the start date.')
 
-        # ── Apply-to target ───────────────────────────────────
         product  = None
         category = None
         if apply_to == 'product':
@@ -139,7 +130,6 @@ def add_offer(request):
         else:
             return fail('Please select a valid target (Product or Category).')
 
-        # ── Save ──────────────────────────────────────────────
         Offer.objects.create(
             offer_name=offer_name,
             discount_type=discount_type,
@@ -162,23 +152,22 @@ def add_offer(request):
     })
 
 def edit_offer(request, pk):
-    offer      = get_object_or_404(Offer, pk=pk)
-    products   = Product.objects.filter(is_deleted=False)
+    offer= get_object_or_404(Offer, pk=pk)
+    products = Product.objects.filter(is_deleted=False)
     categories = Category.objects.filter(is_deleted=False)
 
     if request.method == 'POST':
-        offer_name     = request.POST.get('offer_name', '').strip()
-        discount_type  = request.POST.get('discount_type', '').strip()
-        apply_to       = request.POST.get('apply_to', '').strip()
+        offer_name = request.POST.get('offer_name', '').strip()
+        discount_type = request.POST.get('discount_type', '').strip()
+        apply_to = request.POST.get('apply_to', '').strip()
         discount_value = request.POST.get('discount_value', '').strip()
-        min_purchase   = request.POST.get('minimum_purchase_amount') or 0
-        max_discount   = request.POST.get('maximum_discount_amount') or None
+        min_purchase = request.POST.get('minimum_purchase_amount') or 0
+        max_discount = request.POST.get('maximum_discount_amount') or None
         start_date_str = request.POST.get('start_date', '').strip()
-        end_date_str   = request.POST.get('end_date', '').strip()
-        is_active      = request.POST.get('is_active') == 'on'
-        product_id     = request.POST.get('product_id')
-        category_id    = request.POST.get('category_id')
-
+        end_date_str = request.POST.get('end_date', '').strip()
+        is_active = request.POST.get('is_active') == 'on'
+        product_id = request.POST.get('product_id')
+        category_id = request.POST.get('category_id')
         ctx = {
             'offer': offer, 'products': products, 'categories': categories,
             'post': request.POST,
@@ -252,27 +241,25 @@ def edit_offer(request, pk):
         else:
             return fail('Please select a valid target (Product or Category).')
 
-        # Apply updates
-        offer.offer_name               = offer_name
-        offer.discount_type            = discount_type
-        offer.apply_to                 = apply_to
-        offer.product                  = product
-        offer.category                 = category
-        offer.discount_value           = discount_value
-        offer.minimum_purchase_amount  = min_purchase
-        offer.maximum_discount_amount  = max_discount if discount_type == 'percentage' else None
-        offer.start_date               = start_date
-        offer.end_date                 = end_date
-        offer.is_active                = is_active
+        offer.offer_name  = offer_name
+        offer.discount_type = discount_type
+        offer.apply_to= apply_to
+        offer.product = product
+        offer.category = category
+        offer.discount_value = discount_value
+        offer.minimum_purchase_amount = min_purchase
+        offer.maximum_discount_amount = max_discount if discount_type == 'percentage' else None
+        offer.start_date = start_date
+        offer.end_date = end_date
+        offer.is_active = is_active
         offer.save()
-
         messages.success(request, f'Offer "{offer_name}" updated successfully.')
         return redirect('offer_list')
 
     return render(request, 'admin/edit_offer.html', {
-        'offer':               offer,
-        'products':            products,
-        'categories':          categories,
+        'offer':offer,
+        'products':products,
+        'categories': categories,
         'start_date_formatted': offer.start_date.strftime('%Y-%m-%d') if offer.start_date else '',
         'end_date_formatted':   offer.end_date.strftime('%Y-%m-%d')   if offer.end_date   else '',
     })
@@ -287,8 +274,6 @@ def delete_offer(request, pk):
 def toggle_offer_status(request, pk):
     if request.method == 'POST':
         offer = get_object_or_404(Offer, pk=pk)
-        
-        # Determine new status from request, handling both JSON and form data
         import json
         try:
             data = json.loads(request.body)
@@ -296,7 +281,6 @@ def toggle_offer_status(request, pk):
         except json.JSONDecodeError:
             new_status = request.POST.get('is_active') == 'true'
 
-        # Validation before toggling to active
         if new_status:
             if offer.apply_to == 'product' and offer.product:
                 if Offer.objects.filter(apply_to='product', product=offer.product, is_active=True).exclude(pk=offer.pk).exists():

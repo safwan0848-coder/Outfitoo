@@ -25,7 +25,6 @@ ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 def variant_list(request, product_id):
     product  = get_object_or_404(Product, id=product_id, is_deleted=False)
     variants_qs = product.variants.filter(is_active=True).order_by('-is_default', 'id')
-
     paginator = Paginator(variants_qs, 10)
     page_obj  = paginator.get_page(request.GET.get('page'))
 
@@ -40,9 +39,7 @@ def variant_list(request, product_id):
 @login_required(login_url='login')
 @user_passes_test(is_admin, login_url='login')
 def add_variant(request, product_id):
-
     product=get_object_or_404(Product,id=product_id,is_deleted=False)
-
     if request.method != 'POST':
         return render(request, 'admin/add_variant.html', {
             'product': product,
@@ -109,14 +106,8 @@ def add_variant(request, product_id):
     try:
         with transaction.atomic():
 
-            if Variant.objects.filter(
-                product=product,
-                size=size,
-                color=color,
-                is_active=True
-            ).exists():
+            if Variant.objects.filter(product=product,size=size,color=color,is_active=True).exists():
                 return fail("This variant already exists.")
-
             temp = Variant(product=product, size=size, color=color)
 
             for _ in range(10):
@@ -154,20 +145,16 @@ def add_variant(request, product_id):
 @login_required(login_url='login')
 @user_passes_test(is_admin, login_url='login')
 def edit_variant(request, variant_id):
-
     variant=get_object_or_404(Variant, id=variant_id)
     product=variant.product
-
     if request.method != 'POST':
         return render(request, 'admin/edit_variant.html', {
             'variant': variant,
             'sizes':   SIZES,
         })
-
     size = request.POST.get('size', '').strip().upper()
     if not size:
         size = request.POST.get('size_hidden', '').strip().upper()
-
     color=request.POST.get('color', '').strip()
     price_raw=request.POST.get('price', '').strip()
     stock_raw=request.POST.get('stock', '').strip()
@@ -234,7 +221,6 @@ def edit_variant(request, variant_id):
 
     try:
         with transaction.atomic():
-
             variant.size=size
             variant.color=color
             variant.price=price

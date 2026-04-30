@@ -14,18 +14,14 @@ class Offer(models.Model):
         ('category', 'Category'),
     ]
 
-    offer_name       = models.CharField(max_length=200)
-    discount_type    = models.CharField(max_length=20, choices=DISCOUNT_TYPE)
-    apply_to         = models.CharField(max_length=20, choices=APPLY_TO)
-
-    # Only one of these will be set based on apply_to
-    product          = models.ForeignKey(Product,  on_delete=models.CASCADE, null=True, blank=True, related_name='offers')
-    category         = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True, related_name='offers')
-
-    discount_value          = models.DecimalField(max_digits=10, decimal_places=2)
+    offer_name  = models.CharField(max_length=200)
+    discount_type= models.CharField(max_length=20, choices=DISCOUNT_TYPE)
+    apply_to= models.CharField(max_length=20, choices=APPLY_TO)
+    product = models.ForeignKey(Product,  on_delete=models.CASCADE, null=True, blank=True, related_name='offers')
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True, related_name='offers')
+    discount_value = models.DecimalField(max_digits=10, decimal_places=2)
     minimum_purchase_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    maximum_discount_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
-                                                   help_text="Only for percentage offers")
+    maximum_discount_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,help_text="Only for percentage offers")
     start_date = models.DateField()
     end_date   = models.DateField()
     is_active  = models.BooleanField(default=True)
@@ -39,31 +35,25 @@ class Offer(models.Model):
 
     def clean(self):
         errors = {}
-
-        # Discount value
         if self.discount_value is not None:
             if self.discount_value <= 0:
                 errors['discount_value'] = "Discount value must be greater than 0."
             if self.discount_type == 'percentage' and self.discount_value > 100:
                 errors['discount_value'] = "Percentage discount cannot exceed 100%."
 
-        # Min purchase amount
         if self.minimum_purchase_amount is not None and self.minimum_purchase_amount < 0:
             errors['minimum_purchase_amount'] = "Minimum purchase amount cannot be negative."
 
-        # Max discount only valid for percentage offers
         if self.maximum_discount_amount is not None:
             if self.maximum_discount_amount <= 0:
                 errors['maximum_discount_amount'] = "Maximum discount must be greater than 0."
             if self.discount_type == 'flat':
                 errors['maximum_discount_amount'] = "Max discount cap only applies to percentage offers."
 
-        # Date range
         if self.start_date and self.end_date:
             if self.end_date <= self.start_date:
                 errors['end_date'] = "End date must be after the start date."
 
-        # apply_to consistency
         if self.apply_to == 'product' and not self.product_id:
             errors['product'] = "A product must be selected when 'Apply To' is Product."
         if self.apply_to == 'category' and not self.category_id:

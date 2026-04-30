@@ -14,7 +14,6 @@ def get_or_create_wishlist(user):
 @login_required
 def wishlist_view(request):
     wishlist=get_or_create_wishlist(request.user)
-
     items=wishlist.items.select_related('product', 'variant')
     updated_items=[]
 
@@ -35,7 +34,6 @@ def wishlist_view(request):
 def toggle_wishlist(request, pk):
     product=get_object_or_404(Product, pk=pk)
     wishlist=get_or_create_wishlist(request.user)
-
     item = WishlistItem.objects.filter(wishlist=wishlist,product=product).first()
 
     if item:

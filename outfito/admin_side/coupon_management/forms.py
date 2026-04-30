@@ -4,10 +4,6 @@ from .models import Coupon
 
 
 class CouponForm(forms.ModelForm):
-    """
-    Admin form for creating / editing Coupons.
-    Performs all business-rule validation server-side.
-    """
 
     class Meta:
         model = Coupon
@@ -22,14 +18,10 @@ class CouponForm(forms.ModelForm):
             'expiry_date': forms.DateInput(attrs={'type': 'date'}),
         }
 
-    # ── Field-level ──────────────────────────────────────────────
-
     def clean_code(self):
         code = self.cleaned_data.get('code', '').strip().upper()
         if not code:
             raise forms.ValidationError("Coupon code is required.")
-
-        # Case-insensitive uniqueness (exclude self on edit)
         qs = Coupon.objects.filter(code__iexact=code)
         if self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
@@ -72,7 +64,6 @@ class CouponForm(forms.ModelForm):
     def clean_start_date(self):
         start_date = self.cleaned_data.get('start_date')
         today = timezone.now().date()
-        # Only enforce "not in the past" on CREATE
         if not self.instance.pk and start_date and start_date < today:
             raise forms.ValidationError("Start date cannot be in the past.")
         return start_date
@@ -85,28 +76,22 @@ class CouponForm(forms.ModelForm):
             raise forms.ValidationError("Expiry date cannot be in the past.")
         return expiry_date
 
-    # ── Cross-field ───────────────────────────────────────────────
-
     def clean(self):
         cleaned = super().clean()
-        discount_type  = cleaned.get('discount_type')
+        discount_type = cleaned.get('discount_type')
         discount_value = cleaned.get('discount_value')
-        max_discount   = cleaned.get('max_discount')
-        start_date     = cleaned.get('start_date')
-        expiry_date    = cleaned.get('expiry_date')
+        max_discount = cleaned.get('max_discount')
+        start_date= cleaned.get('start_date')
+        expiry_date = cleaned.get('expiry_date')
 
-        # Percentage cap
         if discount_type == 'percentage' and discount_value is not None:
             if discount_value > 100:
-                self.add_error('discount_value',
-                               "Percentage discount cannot exceed 100%.")
+                self.add_error('discount_value',"Percentage discount cannot exceed 100%.")
 
-        # max_discount only valid for percentage
         if discount_type == 'fixed' and max_discount:
             self.add_error('max_discount',
                            "Maximum discount cap is only applicable to percentage coupons.")
 
-        # Date range
         if start_date and expiry_date and expiry_date <= start_date:
             self.add_error('expiry_date',
                            "Expiry date must be after the start date.")

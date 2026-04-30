@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+﻿from django.shortcuts import render, redirect
 from .models import OTP
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
@@ -26,8 +26,7 @@ from .referral_utils import assign_referral
 def signup_view(request):
     if request.user.is_authenticated:
         return redirect('landing')
-
-    ref_code = (request.GET.get('ref', '').strip().upper() or request.session.get('ref_code', ''))
+    ref_code=(request.GET.get('ref', '').strip().upper() or request.session.get('ref_code', ''))
     if ref_code:
         request.session['ref_code']=ref_code
 
@@ -39,8 +38,6 @@ def signup_view(request):
         form_ref=request.POST.get('referral_code', '').strip().upper()
         if form_ref:
             request.session['ref_code'] = form_ref
-
-        # Helper to re-render with values preserved
         def form_error(msg):
             messages.error(request, msg)
             return render(request, 'user/signup.html', {
@@ -51,42 +48,31 @@ def signup_view(request):
 
         if not uname:
             return form_error("Username is required")
-
         if uname.isdigit():
             return form_error("Username cannot contain only numbers")
-
         if not re.match(r'^[A-Za-z0-9_ ]+$', uname):
             return form_error("Username can contain letters, numbers and underscore")
-
         if not email:
             return form_error("Email is required")
-
         try:
             validate_email(email)
         except ValidationError:
             return form_error("Enter a valid email address")
-
         if not pass1 or not pass2:
             return form_error("Password fields cannot be empty")
-
         if pass1 != pass2:
             return form_error("Passwords do not match")
-
         if len(pass1) < 8:
             return form_error("Password must be at least 8 characters")
-
         if not re.search(r'[A-Z]', pass1):
             return form_error("Password must contain at least one uppercase letter")
-
         if not re.search(r'[a-z]', pass1):
             return form_error("Password must contain at least one lowercase letter")
-
         if not re.search(r'[0-9]', pass1):
             return form_error("Password must contain at least one number")
-
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', pass1):
-            return form_error("Password must contain at least one special character")
 
+            return form_error("Password must contain at least one special character")
         existing_user = User.objects.filter(email=email).first()
 
         if existing_user:
@@ -98,16 +84,11 @@ def signup_view(request):
         if User.objects.filter(username=uname).exists():
             return form_error("Username already exists")
 
-        user = User.objects.create_user(
-            username=uname,
-            email=email,
-            password=pass1
-        )
+        user = User.objects.create_user(username=uname,email=email,password=pass1)
 
-        user.is_active = False
-        user.is_verified = False
+        user.is_active=False
+        user.is_verified=False
         user.save()
-
         request.session['email'] = user.email
 
         OTP.objects.filter(user=user).delete()
@@ -493,7 +474,6 @@ def landing_view(request):
     hero_products = all_products[:4]
     grid_products = all_products[4:]
 
-    # ✅ marquee fix
     marquee_items = [
         "New Arrivals",
         "The Vault Collection",

@@ -32,8 +32,8 @@ def admin_order_list(request):
         orders=orders.filter(order_status__iexact=status_filter)
 
     valid_sorts={
-        'newest':      '-created_at',
-        'oldest':      'created_at',
+        'newest': '-created_at',
+        'oldest':'created_at',
         'amount_high': '-total_amount',
         'amount_low':  'total_amount',
     }
@@ -56,23 +56,21 @@ def admin_order_list(request):
     page_obj=paginator.get_page(page_number)
 
     context={
-        'orders':         page_obj,
+        'orders': page_obj,
         'search_query':   query,
         'current_status': status_filter,
-        'current_sort':   sort_by,
-        'total_revenue':  total_revenue,
-        'total_orders':   total_orders,
+        'current_sort': sort_by,
+        'total_revenue': total_revenue,
+        'total_orders': total_orders,
         'pending_count':  pending_count,
         'returns_count':  returns_count,
     }
-
     return render(request, 'admin/admin_order_list.html', context)
 
 @never_cache
 @login_required(login_url='login')
 @user_passes_test(is_admin, login_url='login')
 def admin_order_detail(request, order_id):
-
     order=get_object_or_404(Order.objects.select_related('user', 'shipping_address').prefetch_related('items__variant__product','items__return_requests'),id=order_id)
 
     for item in order.items.all():
@@ -89,7 +87,6 @@ def admin_order_detail(request, order_id):
     context={
         'order': order,
     }
-
     return render(request, 'admin/admin_order_detail.html', context)
 
 
@@ -98,9 +95,7 @@ def admin_order_detail(request, order_id):
 @user_passes_test(is_admin, login_url='login')
 @require_POST
 def update_order_status(request, order_id):
-
     order=get_object_or_404(Order, id=order_id)
-
     if order.has_return_request:
         messages.error(request,
             "Order status cannot be changed while a return request is pending. "
@@ -134,13 +129,12 @@ def update_order_status(request, order_id):
     order.save()
 
     item_status_map={
-        'Pending':          'placed',
-        'Shipped':          'shipped',
+        'Pending':'placed',
+        'Shipped':'shipped',
         'Out for Delivery': 'out_for_delivery',
-        'Delivered':        'delivered',
-        'Cancelled':        'cancelled',
+        'Delivered':'delivered',
+        'Cancelled':'cancelled',
     }
-
     mapped=item_status_map.get(new_status)
 
     if mapped:
@@ -155,15 +149,12 @@ def update_order_status(request, order_id):
             item.item_status = mapped
             item.save()
 
-            # If admin bulk-cancels the order and it was paid online, refund to wallet
             if mapped == 'cancelled':
                 process_wallet_refund(
                     order_item  = item,
                     refund_qty  = item.quantity,
                     description = f"Admin cancelled order #{order.order_number} — wallet refund",
                 )
-
-    # If the entire order was cancelled, also refund the shipping fee
     if mapped == 'cancelled':
         process_shipping_refund(
             order       = order,
@@ -171,8 +162,6 @@ def update_order_status(request, order_id):
         )
 
     messages.success(request, f"Order status updated to '{new_status}'.")
-
-    # ── Trigger referral reward on first delivery ──
     if new_status == 'Delivered':
         rewarded = process_referral_reward(order)
         if rewarded:
@@ -213,18 +202,14 @@ def approve_return_request(request, return_id):
 
     return_req.status = 'Approved'
     return_req.save()
-
-    # Restore stock for the approved quantity
     return_req.item.variant.stock += return_req.quantity
     return_req.item.variant.save()
 
-    # Only mark the item as 'returned' if NO other Pending requests remain
-    # (handles sequential partial returns like returning 1-by-1)
     still_pending = return_req.item.return_requests.filter(status='Pending').exists()
     if still_pending:
-        return_req.item.item_status = 'return_requested'   # more still waiting
+        return_req.item.item_status = 'return_requested'
     else:
-        return_req.item.item_status = 'returned'           # all requests approved
+        return_req.item.item_status = 'returned'
     return_req.item.save(update_fields=['item_status'])
 
     messages.success(request, f"Return request #{return_req.id} approved. Item marked as returned.")
@@ -238,7 +223,6 @@ def approve_return_request(request, return_id):
 def pickup_return_request(request, return_id):
     return_req=get_object_or_404(ReturnRequest, id=return_id)
 
-    # Only allow Picked Up if the request was already Approved
     if return_req.status != 'Approved':
         messages.error(request, "Return must be approved before marking as Picked Up.")
         return redirect('admin_order_detail', order_id=return_req.order.id)
@@ -246,20 +230,17 @@ def pickup_return_request(request, return_id):
     return_req.status='Picked Up'
     return_req.save()
 
-    # ── Trigger wallet refund: pickup_done AND admin_approved are both satisfied ─
-    item  = return_req.item
-    order = return_req.order
-    qty   = return_req.quantity
-
+    item = return_req.item
+    order= return_req.order
+    qty= return_req.quantity
     net_refund = calculate_coupon_adjusted_refund(order, item.price, qty, order_item=item)
 
     ok, credited = process_wallet_refund(
-        order_item      = item,
-        refund_qty      = qty,
-        description     = f"Return refund — order #{order.order_number} (item picked up)",
+        order_item = item,
+        refund_qty= qty,
+        description = f"Return refund — order #{order.order_number} (item picked up)",
         override_amount = net_refund,
     )
-
     if ok:
         messages.success(
             request,
@@ -281,11 +262,8 @@ def reject_return_request(request, return_id):
 
     return_req.status='Rejected'
     return_req.save()
-    # If rejected, subtract the quantity from returned_quantity so the user can request again if needed,
-    # or at least it doesn't count against their remaining quantity limit.
     return_req.item.returned_quantity = max(return_req.item.returned_quantity - return_req.quantity, 0)
     
-    # If there are still items returned or cancelled, don't mark as delivered.
     if return_req.item.returned_quantity == 0 and return_req.item.cancelled_quantity == 0:
         return_req.item.item_status='delivered'
     elif return_req.item.returned_quantity > 0:
@@ -301,9 +279,7 @@ def reject_return_request(request, return_id):
 @login_required(login_url='login')
 @user_passes_test(is_admin, login_url='login')
 def admin_returns_list(request):
-
     query=request.GET.get('search', '').strip()
-
     returns=ReturnRequest.objects.select_related('order','item__variant__product', 'order__user').order_by('-id')
 
     if query:

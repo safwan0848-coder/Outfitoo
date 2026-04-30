@@ -15,10 +15,9 @@ def is_admin(user):
 @login_required(login_url='admin-login')
 @user_passes_test(is_admin)
 def admin_user_management(request):
+    search=request.GET.get("search")
 
-    search = request.GET.get("search")
-
-    users = User.objects.filter(is_staff=False)
+    users=User.objects.filter(is_staff=False)
 
     if search:
         users = users.filter(
@@ -26,13 +25,12 @@ def admin_user_management(request):
             Q(username__icontains=search)
         )
 
-    users = users.order_by("-date_joined")
+    users=users.order_by("-date_joined")
 
-    paginator = Paginator(users, 5)
+    paginator=Paginator(users, 5)
 
-    page = request.GET.get("page")
-
-    users = paginator.get_page(page)
+    page=request.GET.get("page")
+    users=paginator.get_page(page)
 
     return render(request, "admin/admin_user_management.html", {"users": users})
 
@@ -40,9 +38,7 @@ def admin_user_management(request):
 @login_required(login_url='admin_login')
 @user_passes_test(is_admin, login_url='admin_login')
 def admin_toggle_user(request, user_id):
-
     user = get_object_or_404(User, id=user_id)
-
     user.is_active = not user.is_active
     user.save()
 

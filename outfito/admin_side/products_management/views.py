@@ -11,6 +11,7 @@ from decimal import Decimal, InvalidOperation
 from .utils import generate_sku
 from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required, user_passes_test
+from .forms import ProductForm, VariantFormSet
 
 def is_admin(user):
     return user.is_authenticated and user.is_staff
@@ -26,11 +27,9 @@ ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 @login_required(login_url='login')
 @user_passes_test(is_admin, login_url='login')
 def product_list(request):
-
     search=request.GET.get('search', '').strip()
     category_id=request.GET.get('category', '')
     status=request.GET.get('status', '')
-
     products=Product.objects.filter(is_deleted=False).select_related('category')
 
     if search:
@@ -68,21 +67,19 @@ def product_list(request):
     return render(request,'admin/product_list.html', context)
 
 
-from .forms import ProductForm, VariantFormSet
 
 @never_cache
 @login_required(login_url='login')
 @user_passes_test(is_admin, login_url='login')
 def add_product(request):
     categories = Category.objects.filter(is_deleted=False, is_active=True)
-
-    if request.method == 'POST':
+    if request.method=='POST':
         form = ProductForm(request.POST, request.FILES)
         formset = VariantFormSet(request.POST, prefix='variants')
 
-        image_cover = request.FILES.get('image_cover')
-        image_side = request.FILES.get('image_side')
-        image_back = request.FILES.get('image_back')
+        image_cover= request.FILES.get('image_cover')
+        image_side= request.FILES.get('image_side')
+        image_back= request.FILES.get('image_back')
 
         custom_errors = []
         if not image_cover or not image_side or not image_back:
@@ -123,10 +120,8 @@ def add_product(request):
             except Exception as e:
                 custom_errors.append(f'Error: {e}')
 
-        # If we reach here, it means validation failed.
         for err in custom_errors:
             messages.error(request, err)
-        # Form and Formset errors are available in the template.
 
     else:
         form = ProductForm()
@@ -144,24 +139,23 @@ def add_product(request):
 @login_required(login_url='login')
 @user_passes_test(is_admin, login_url='login')
 def edit_product(request, pk):
-    product = get_object_or_404(Product, pk=pk, is_deleted=False)
-    categories = Category.objects.filter(is_deleted=False, is_active=True).order_by('category_name')
+    product=get_object_or_404(Product, pk=pk, is_deleted=False)
+    categories=Category.objects.filter(is_deleted=False, is_active=True).order_by('category_name')
     
-    # We get the color from the first variant to populate the product form
-    first_variant = product.variants.first()
-    initial_color = first_variant.color if first_variant else '#000000'
+    first_variant=product.variants.first()
+    initial_color=first_variant.color if first_variant else '#000000'
 
-    if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES, instance=product)
-        formset = VariantFormSet(request.POST, instance=product, prefix='variants')
+    if request.method=='POST':
+        form=ProductForm(request.POST, request.FILES, instance=product)
+        formset=VariantFormSet(request.POST, instance=product, prefix='variants')
 
-        new_cover = request.FILES.get('image_cover')
-        new_side  = request.FILES.get('image_side')
-        new_back  = request.FILES.get('image_back')
+        new_cover=request.FILES.get('image_cover')
+        new_side=request.FILES.get('image_side')
+        new_back=request.FILES.get('image_back')
 
-        keep_cover = request.POST.get('keep_image_cover', '0') == '1'
-        keep_side  = request.POST.get('keep_image_side',  '0') == '1'
-        keep_back  = request.POST.get('keep_image_back',  '0') == '1'
+        keep_cover=request.POST.get('keep_image_cover', '0') == '1'
+        keep_side=request.POST.get('keep_image_side',  '0') == '1'
+        keep_back=request.POST.get('keep_image_back',  '0') == '1'
 
         custom_errors = []
         for img_file, label in [(new_cover, 'Cover'), (new_side, 'Side'), (new_back, 'Back')]:
@@ -178,11 +172,8 @@ def edit_product(request, pk):
         if form.is_valid() and formset.is_valid() and not custom_errors:
             try:
                 with transaction.atomic():
-                    # Save Product
                     product = form.save(commit=False)
                     product.is_listed = form.cleaned_data.get('is_listed', True)
-
-                    # Handle Side Image
                     if new_side:
                         if product.image_side:
                             product.image_side.delete(save=False)
@@ -192,7 +183,6 @@ def edit_product(request, pk):
                             product.image_side.delete(save=False)
                         product.image_side = None
 
-                    # Handle Back Image
                     if new_back:
                         if product.image_back:
                             product.image_back.delete(save=False)
@@ -203,8 +193,6 @@ def edit_product(request, pk):
                         product.image_back = None
 
                     product.save()
-
-                    # Handle Variants
                     variants = formset.save(commit=False)
                     for obj in formset.deleted_objects:
                         obj.delete()
@@ -214,13 +202,11 @@ def edit_product(request, pk):
                         variant.product = product
                         variant.color = form.cleaned_data['color']
                         
-                        # Handle Cover Image for all variants
                         if new_cover:
                             variant.image = new_cover
                         elif not keep_cover:
                             variant.image = None
                         elif not variant.image and first_variant and first_variant.image:
-                             # newly added variant row syncing existing cover
                              variant.image = first_variant.image
 
                         variant.is_active = form.cleaned_data.get('is_listed', True)
@@ -231,10 +217,7 @@ def edit_product(request, pk):
                             variant.sku = generate_sku(product, variant)
                         
                         variant.save()
-                    
-                    # Ensure at least one default variant exists if not updated in above loop
-                    # Actually above loop does it via `is_first`
-                    
+
                 messages.success(request, f'Product "{product.name}" updated successfully.')
                 return redirect('product_list')
 
@@ -243,7 +226,6 @@ def edit_product(request, pk):
             except Exception as e:
                 custom_errors.append(f'Error updating: {str(e)}')
 
-        # Validation failed
         for err in custom_errors:
             messages.error(request, err)
 
@@ -253,7 +235,7 @@ def edit_product(request, pk):
 
     return render(request, 'admin/edit_product.html', {
         'product': product,
-        'variant': first_variant,  # For cover image preview
+        'variant': first_variant,
         'form': form,
         'formset': formset,
         'categories': categories,
@@ -263,7 +245,6 @@ def edit_product(request, pk):
 
 def delete_product(request, pk):
     product=get_object_or_404(Product, pk=pk)
-
     if request.method=='POST':
         name = product.name
         product.is_deleted=True
@@ -275,8 +256,6 @@ def delete_product(request, pk):
 
 def toggle_product_status(request, pk):
     product = get_object_or_404(Product, pk=pk)
-
     product.is_listed = not product.is_listed
     product.save()
-
     return redirect('product_list')

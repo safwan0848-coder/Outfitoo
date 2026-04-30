@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+﻿from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Profile
 from django.contrib import messages
@@ -41,7 +41,7 @@ def profile(request):
         user=request.user
     ).order_by('-created_at')[:20]
 
-    recent_transactions = all_transactions[:5]  # kept for backwards compat
+    recent_transactions = all_transactions[:5]  
 
     recent_orders = Order.objects.filter(
         user=request.user
@@ -66,38 +66,35 @@ def profile(request):
     referral_code  = request.user.referral_code
     referral_link  = request.build_absolute_uri(f'/signup/?ref={referral_code}')
 
-    # Count friends who actually COMPLETED their first order (reward was triggered)
     from user_side.orders.models import Order as OrderModel
     referral_count = OrderModel.objects.filter(
         user__referred_by = request.user,
         is_referral_rewarded = True,
     ).count()
 
-    # Total ₹ earned from referral bonuses
     referral_earnings = WalletTransaction.objects.filter(
         user=request.user,
         description__icontains='referral',
     ).aggregate(total=models.Sum('amount'))['total'] or 0
 
     context = {
-        "user":                request.user,
-        "profile":             profile,
-        "wallet_balance":      wallet_balance,
-        "all_transactions":    all_transactions,
+        "user":request.user,
+        "profile":profile,
+        "wallet_balance":wallet_balance,
+        "all_transactions":all_transactions,
         "recent_transactions": recent_transactions,
-        "recent_orders":       recent_orders,
-        "all_orders":          all_orders,
-        "total_orders":        total_orders,
-        "delivered_orders":    delivered_orders,
-        "coupons_count":       coupons_count,
-        "all_coupons":         all_coupons,
-        "active_coupons":      active_coupons,
-        "referral_code":       referral_code,
-        "referral_link":       referral_link,
-        "referral_count":      referral_count,
-        "referral_earnings":   referral_earnings,
+        "recent_orders":recent_orders,
+        "all_orders": all_orders,
+        "total_orders":total_orders,
+        "delivered_orders": delivered_orders,
+        "coupons_count": coupons_count,
+        "all_coupons":all_coupons,
+        "active_coupons":active_coupons,
+        "referral_code": referral_code,
+        "referral_link":referral_link,
+        "referral_count":referral_count,
+        "referral_earnings":referral_earnings,
     }
-
     return render(request, "user/profile.html", context)
 
 
@@ -108,7 +105,6 @@ def edit_profile(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
 
     if request.method == "POST":
-
         username = request.POST.get("username")
         email = request.POST.get("email")
         phone = request.POST.get("phone")
@@ -179,7 +175,6 @@ def edit_profile(request):
 def logout_view(request):
    logout(request)
    return redirect('landing')
-
 
 
 

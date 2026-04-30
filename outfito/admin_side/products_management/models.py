@@ -16,7 +16,6 @@ class Product(models.Model):
 ]
     product_type = models.CharField(max_length=20, choices=PRODUCT_TYPES)
 
-    # ✅ ADD THIS
     image_side = models.ImageField(upload_to='product_images/', blank=True, null=True)
     image_back = models.ImageField(upload_to='product_images/', blank=True, null=True)
 
@@ -29,8 +28,6 @@ class Product(models.Model):
 
     @property
     def get_active_offer(self):
-        # Proxy to the default/first variant to ensure we evaluate mathematically correct discounts
-        # (taking into account base_price and minimum_purchase_amount).
         variant = self.variants.filter(is_active=True).first()
         if variant:
             return variant.get_active_offer

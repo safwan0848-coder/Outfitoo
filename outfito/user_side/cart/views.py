@@ -16,15 +16,14 @@ def _is_ajax(request):
 
 
 def _cart_summary_json(cart):
-    """Recalculate full cart summary and return as a dict (for AJAX responses)."""
-    items = list(cart.items.select_related('product', 'variant').order_by('id'))
-    subtotal = Decimal('0.00')
+    items=list(cart.items.select_related('product', 'variant').order_by('id'))
+    subtotal=Decimal('0.00')
     for item in items:
         item.base_subtotal = item.variant.price * item.quantity
         subtotal += item.base_subtotal
 
-    offer_data = calculate_cart_offers(items)
-    offer_discount = offer_data['total_offer_discount']
+    offer_data=calculate_cart_offers(items)
+    offer_discount=offer_data['total_offer_discount']
 
     for item in items:
         offer_info = offer_data['item_discounts'].get(item.id, {})
@@ -42,19 +41,19 @@ def _cart_summary_json(cart):
     item_count = sum(i.quantity for i in items)
 
     return {
-        'subtotal':    float(subtotal),
-        'effective_subtotal': float(effective_subtotal),
-        'discount':    float(offer_discount),
-        'shipping':    float(shipping),
-        'total':       float(total),
-        'item_count':  item_count,
+        'subtotal':float(subtotal),
+        'effective_subtotal':float(effective_subtotal),
+        'discount':float(offer_discount),
+        'shipping':float(shipping),
+        'total':float(total),
+        'item_count':item_count,
         'items': {
             str(item.id): {
-                'quantity':      item.quantity,
+                'quantity':item.quantity,
                 'base_subtotal': float(item.base_subtotal),
                 'disc_subtotal': float(item.final_subtotal),
-                'offer_disc':    float(item.offer_discount),
-                'unit_price':    float(item.variant.price),
+                'offer_disc':float(item.offer_discount),
+                'unit_price':float(item.variant.price),
             }
             for item in items
         },
@@ -208,24 +207,23 @@ def cart_view(request):
     total=effective_subtotal + shipping
 
     return render(request, 'user/cart.html', {
-        'items':              items,
-        'item_count':         item_count,
-        'subtotal':           subtotal,
+        'items':items,
+        'item_count':item_count,
+        'subtotal':subtotal,
         'effective_subtotal': effective_subtotal,
-        'discount':           offer_discount,
-        'shipping':           shipping,
-        'total':              total,
-        'savings':            offer_discount,
-        'has_oos':            has_oos,
-        'max_qty':            MAX_QTY,
-        'applied_offers':     offer_data['applied_offer_messages'],
+        'discount': offer_discount,
+        'shipping':shipping,
+        'total':total,
+        'savings':offer_discount,
+        'has_oos':has_oos,
+        'max_qty':MAX_QTY,
+        'applied_offers':offer_data['applied_offer_messages'],
     })
 
 @never_cache
 @login_required(login_url='login')
 @require_POST
 def update_cart_qty(request, item_id):
-
     item = get_object_or_404( CartItem,id=item_id,cart__user=request.user)
     action = request.POST.get('action', 'increment')
     v = item.variant
