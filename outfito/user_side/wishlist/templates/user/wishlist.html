@@ -393,7 +393,9 @@
           </div>
 
           {% if variant and variant.stock > 0 and variant.is_active and not product.is_deleted and product.is_listed %}
-            <form class="wl-add-form" style="margin-top: auto;"
+            <form class="wl-add-form" method="post"
+                  action="{% url 'add_to_cart' variant.id %}"
+                  style="margin-top: auto;"
                   data-url="{% url 'add_to_cart' variant.id %}"
                   data-card="wl-card-{{ product.id }}"
                   data-product="{{ product.id }}">
@@ -443,7 +445,7 @@
   }
 
   function showToast(msg, type) {
-    if (typeof window.showSiteToast === 'function') { window.showSiteToast(msg, type); return; }
+    if (typeof window.showToast === 'function') { window.showToast(msg, type); return; }
     const t = document.createElement('div');
     t.textContent = msg;
     const bg = type === 'error' ? '#ef4444' : '#10b981';

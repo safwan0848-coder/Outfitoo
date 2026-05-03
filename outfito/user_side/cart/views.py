@@ -161,7 +161,6 @@ def add_to_cart(request, pk):
     if _is_ajax(request):
         cart = get_or_create_cart(request.user)
         summary = _cart_summary_json(cart)
-        # Include wishlist_count so the frontend can update the navbar badge instantly
         return JsonResponse({'ok': True, 'message': msg, 'warning': warn_msg,
                              'wishlist_count': wishlist_count, **summary})
 
