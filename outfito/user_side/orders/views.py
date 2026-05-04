@@ -249,16 +249,9 @@ def cancel_order(request, order_id):
                     shipping_refunded = Decimal(str(order.delivery_charge or 0))
 
             active_items = order.items.exclude(item_status='cancelled')
-            order.subtotal = sum(
-                Decimal(str(i.price)) * i.remaining_quantity for i in active_items
-            ) or Decimal('0.00')
-            order.total_amount = max(
-                order.subtotal
-                + Decimal(str(order.tax_amount or 0))
-                + Decimal(str(order.delivery_charge or 0))
-                - Decimal(str(order.discount_amount or 0)),
-                Decimal('0.00')
-            )
+            
+            # The subtotal and total are dynamically computed using properties
+            # so we do not overwrite the original values.
             order.save()
 
             grand = total_refunded + shipping_refunded
@@ -310,17 +303,8 @@ def cancel_order(request, order_id):
                 override_amount = net_refund,
             )
 
-            order.subtotal = sum(
-                Decimal(str(i.price)) * i.remaining_quantity
-                for i in order.items.all()
-            ) or Decimal('0.00')
-            order.total_amount = max(
-                order.subtotal
-                + Decimal(str(order.tax_amount or 0))
-                + Decimal(str(order.delivery_charge or 0))
-                - Decimal(str(order.discount_amount or 0)),
-                Decimal('0.00')
-            )
+            # The subtotal and total are dynamically computed using properties
+            # so we do not overwrite the original values.
 
             all_done = all(
                 i.remaining_quantity == 0 or i.item_status == 'cancelled'

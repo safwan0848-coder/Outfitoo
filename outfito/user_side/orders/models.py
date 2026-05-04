@@ -57,6 +57,40 @@ class Order(models.Model):
     def can_return_order(self):
         return self.items.filter(item_status='delivered').exclude(return_requests__isnull=False).exists()
 
+    @property
+    def computed_subtotal(self):
+        from decimal import Decimal
+        return sum((Decimal(str(i.price)) * Decimal(str(i.remaining_quantity))) for i in self.items.all())
+
+    @property
+    def computed_discount(self):
+        from decimal import Decimal
+        total_coupon = Decimal(str(self.discount_amount or 0))
+        if total_coupon <= 0:
+            return Decimal('0.00')
+            
+        all_items = list(self.items.all())
+        order_gross = sum(Decimal(str(i.price)) * Decimal(str(i.quantity)) for i in all_items)
+        if order_gross <= 0:
+            return Decimal('0.00')
+            
+        adjusted_discount = Decimal('0.00')
+        for item in all_items:
+            if item.remaining_quantity > 0:
+                item_share = (Decimal(str(item.price)) * Decimal(str(item.quantity))) / order_gross
+                coupon_for_item = total_coupon * item_share
+                coupon_per_unit = coupon_for_item / Decimal(str(item.quantity))
+                adjusted_discount += coupon_per_unit * Decimal(str(item.remaining_quantity))
+                
+        adjusted_discount = adjusted_discount.quantize(Decimal('0.01'))
+        return min(adjusted_discount, self.computed_subtotal)
+
+    @property
+    def computed_total(self):
+        from decimal import Decimal
+        total = self.computed_subtotal + Decimal(str(self.tax_amount or 0)) + Decimal(str(self.delivery_charge or 0)) - self.computed_discount
+        return max(total, Decimal('0.00'))
+
     def __str__(self):
         return self.order_number
 

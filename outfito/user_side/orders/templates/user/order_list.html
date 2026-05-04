@@ -442,7 +442,7 @@
 
               <!-- ③ TOTAL AMOUNT -->
               <div class="col-amount">
-                <div class="amount-col">₹{{ order.total_amount }}</div>
+                <div class="amount-col">₹{{ order.computed_total|floatformat:"2" }}</div>
               </div>
 
               <!-- ④ PAYMENT STATUS -->

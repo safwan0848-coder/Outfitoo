@@ -1387,13 +1387,13 @@
                                     </div>
                                 </div>
                                 <div class="item-price">₹{{ item.price|floatformat:"2" }}</div>
-                                <div class="item-qty" style="text-align:right;">{{ item.quantity }}</div>
+                                <div class="item-qty" style="text-align:right;">{{ item.remaining_quantity }}</div>
                                 <!--
                                 FIX: widthratio multiplies price × quantity correctly.
                                 widthratio A B C = (A/B)*C
                                 So: widthratio price 1 quantity = price * quantity ✓
                             -->
-                                <div class="item-total">₹{% widthratio item.price 1 item.quantity %}</div>
+                                <div class="item-total">₹{% widthratio item.price 1 item.remaining_quantity %}</div>
                             </div>
                             {% empty %}
                             <div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-size:.85rem;">
@@ -1473,7 +1473,7 @@
                             </div>
                             <div class="pay-row">
                                 <span>Subtotal</span>
-                                <span class="val">₹{{ order.subtotal|default:order.total_amount|floatformat:"2" }}</span>
+                                <span class="val">₹{{ order.computed_subtotal|floatformat:"2" }}</span>
                             </div>
                             <div class="pay-row">
                                 <span>Tax</span>
@@ -1492,12 +1492,12 @@
                             {% if order.discount_amount and order.discount_amount > 0 %}
                             <div class="pay-row discount">
                                 <span>Discount</span>
-                                <span class="val">−₹{{ order.discount_amount|floatformat:"2" }}</span>
+                                <span class="val">−₹{{ order.computed_discount|floatformat:"2" }}</span>
                             </div>
                             {% endif %}
                             <div class="pay-total">
                                 <span>Total</span>
-                                <span>₹{{ order.total_amount|floatformat:"2" }}</span>
+                                <span>₹{{ order.computed_total|floatformat:"2" }}</span>
                             </div>
                             <div class="pay-method">
                                 <div class="info-label">Payment Method</div>

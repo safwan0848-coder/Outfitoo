@@ -598,10 +598,10 @@
         <div class="card-body">
           <div class="price-row">
             <span>Subtotal ({{ order.items.count }} item{% if order.items.count != 1 %}s{% endif %})</span>
-            <span>₹{{ order.subtotal|default:order.total_amount }}</span>
+            <span>₹{{ order.computed_subtotal|floatformat:"2" }}</span>
           </div>
           {% if order.discount_amount %}
-          <div class="price-row discount"><span>Discount</span><span>-₹{{ order.discount_amount }}</span></div>
+          <div class="price-row discount"><span>Discount</span><span>-₹{{ order.computed_discount|floatformat:"2" }}</span></div>
           {% endif %}
           <div class="price-row">
             <span>Delivery Charges</span>
@@ -610,7 +610,7 @@
             {% else %}<span>₹{{ order.delivery_charge }}</span>{% endif %}
           </div>
           <div class="price-row"><span>Tax (GST)</span><span>₹{{ order.tax_amount|default:"0.00" }}</span></div>
-          <div class="price-row total"><span>Total Amount</span><span>₹{{ order.total_amount }}</span></div>
+          <div class="price-row total"><span>Total Amount</span><span>₹{{ order.computed_total|floatformat:"2" }}</span></div>
 
           <div class="payment-row">
             <div class="payment-icon">
