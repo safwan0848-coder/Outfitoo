@@ -2,102 +2,114 @@
 {% block title %}Outfito Admin – User Management{% endblock %}
 {% block extra_head %}
 <style>
-  :root { --badge-active-bg:#d1fae5;--badge-active-fg:#065f46;--badge-inactive-bg:#fee2e2;--badge-inactive-fg:#991b1b;--danger-hover-bg:#fee2e2;--danger-hover-fg:#dc2626; }
-  [data-theme="dark"] { --badge-active-bg:rgba(16,185,129,.15);--badge-active-fg:#6ee7b7;--badge-inactive-bg:rgba(239,68,68,.15);--badge-inactive-fg:#fca5a5;--danger-hover-bg:rgba(220,38,38,.15);--danger-hover-fg:#fca5a5; }
-  .page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2.5rem}
-  .page-title{font-family:var(--font-display);font-size:2.6rem;font-weight:700;color:var(--text);line-height:1;margin-bottom:.5rem;letter-spacing:-.02em}
-  .title-underline{width:52px;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:99px}
-  .pdt-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);overflow:hidden}
-  .card-top{padding:1.5rem 1.75rem;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem}
-  .card-title{font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--text);margin:0}
-  .controls{display:flex;flex-wrap:wrap;gap:.65rem;align-items:center}
-  .search-wrap{position:relative}
-  .search-wrap .material-icons-outlined{position:absolute;left:.7rem;top:50%;transform:translateY(-50%);font-size:.95rem;color:var(--text-muted);pointer-events:none}
-  .form-control-custom{padding:.5rem 1rem .5rem 2.4rem;background:var(--sidebar-bg);border:1px solid var(--border);border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);color:var(--text);width:250px;outline:none}
-  .form-control-custom:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(6,78,59,.15)}
-  .btn-search{padding:.5rem 1.1rem;background:var(--primary);color:#fff;border:none;border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);font-weight:600;cursor:pointer}
-  .btn-clear{padding:.5rem 1.1rem;background:var(--sidebar-bg);color:var(--text-muted);border:1px solid var(--border);border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);font-weight:500;cursor:pointer;text-decoration:none}
-  .table-wrap{overflow-x:auto}
-  table.pdt-table{width:100%;border-collapse:collapse}
-  .pdt-table thead tr{background:var(--sidebar-bg)}
-  .pdt-table thead th{padding:1rem 1.25rem;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border)}
-  .pdt-table tbody tr{border-bottom:1px solid var(--border);transition:background var(--tr)}
-  .pdt-table tbody tr:last-child{border-bottom:none}
-  .pdt-table tbody tr:hover{background:var(--table-hover)}
-  .pdt-table td{padding:1rem 1.25rem;font-size:.85rem;color:var(--text);vertical-align:middle}
-  .user-row-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--border);margin-right:.6rem;flex-shrink:0}
-  .user-row-name{font-weight:600;font-size:.87rem}
-  .badge-status{display:inline-flex;align-items:center;gap:.3rem;padding:.28rem .75rem;border-radius:99px;font-size:.72rem;font-weight:600;letter-spacing:.02em}
-  .badge-status::before{content:'';width:6px;height:6px;border-radius:50%;display:inline-block}
-  .badge-active{background:var(--badge-active-bg);color:var(--badge-active-fg)}
-  .badge-active::before{background:var(--badge-active-fg)}
-  .badge-blocked{background:var(--badge-inactive-bg);color:var(--badge-inactive-fg)}
-  .badge-blocked::before{background:var(--badge-inactive-fg)}
-  .action-btn-text{display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .85rem;border:none;border-radius:var(--radius);font-size:.78rem;font-weight:600;font-family:var(--font-body);cursor:pointer;text-decoration:none;transition:background var(--tr),color var(--tr)}
-  .btn-block-user{background:var(--badge-inactive-bg);color:var(--badge-inactive-fg)}
-  .btn-unblock-user{background:var(--primary-light);color:var(--primary)}
-  .empty-state{text-align:center;padding:4rem 2rem;color:var(--text-muted)}
-  .card-footer-pdt{padding:1.1rem 1.75rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
-  .showing-text{font-size:.75rem;color:var(--text-muted)}
-  .pagination-wrap{display:flex;align-items:center;gap:.3rem}
-  .pg-btn{height:34px;padding:0 .9rem;border:1px solid var(--border);background:var(--card-bg);color:var(--text-muted);border-radius:var(--radius);font-size:.8rem;font-family:var(--font-body);font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:.2rem;text-decoration:none}
+  .page-header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;margin-bottom:2rem;gap:1rem}
+  .page-title{font-family:var(--font-display);font-size:2.4rem;font-weight:700;color:var(--text);margin:0 0 .3rem;line-height:1;letter-spacing:-.02em}
+  .title-sub{font-size:.875rem;color:var(--text-muted)}
+  .title-bar{width:48px;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:99px;margin-top:.5rem}
+  .listing-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+  .card-toolbar{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;justify-content:space-between}
+  .card-label{font-family:var(--font-display);font-size:1.2rem;font-weight:600;color:var(--text);margin:0}
+  .toolbar-right{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+  .search-field{position:relative;flex:1;min-width:180px}
+  .search-field .material-icons-outlined{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);font-size:.95rem;color:var(--text-muted);pointer-events:none}
+  .search-input{padding:.52rem 1rem .52rem 2.4rem;background:var(--sidebar-bg);border:1px solid var(--border);border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);color:var(--text);width:100%;max-width:260px;outline:none;transition:border-color .2s}
+  .search-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(6,78,59,.12)}
+  .btn-search{padding:.52rem 1.1rem;background:var(--primary);color:#fff;border:none;border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);font-weight:600;cursor:pointer}
+  .btn-clear{padding:.52rem 1rem;background:var(--sidebar-bg);border:1px solid var(--border);border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);color:var(--text-muted);text-decoration:none;display:inline-flex;align-items:center}
+  .btn-clear:hover{color:var(--text)}
+  .table-scroll{overflow-x:auto}
+  .listing-table{width:100%;border-collapse:collapse;min-width:600px}
+  .listing-table thead tr{background:var(--sidebar-bg)}
+  .listing-table thead th{padding:.9rem 1.25rem;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+  .listing-table tbody tr{border-bottom:1px solid var(--border);transition:background .18s}
+  .listing-table tbody tr:last-child{border-bottom:none}
+  .listing-table tbody tr:hover{background:var(--table-hover)}
+  .listing-table td{padding:.9rem 1.25rem;font-size:.84rem;color:var(--text);vertical-align:middle}
+  .user-cell{display:flex;align-items:center;gap:.7rem}
+  .user-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0}
+  .user-name{font-weight:600;font-size:.85rem;color:var(--text)}
+  .badge{display:inline-flex;align-items:center;gap:.3rem;padding:.28rem .75rem;border-radius:99px;font-size:.7rem;font-weight:700;letter-spacing:.02em}
+  .badge::before{content:'';width:5px;height:5px;border-radius:50%;display:inline-block}
+  .badge-active{background:#d1fae5;color:#065f46}.badge-active::before{background:#065f46}
+  .badge-blocked{background:#fee2e2;color:#991b1b}.badge-blocked::before{background:#991b1b}
+
+  .act-btn{display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .85rem;border:none;border-radius:var(--radius);font-size:.78rem;font-weight:600;font-family:var(--font-body);cursor:pointer;text-decoration:none;transition:all .15s}
+  .btn-block{background:#fee2e2;color:#991b1b}.btn-block:hover{background:#fecaca;color:#7f1d1d}
+  .btn-unblock{background:var(--primary-light);color:var(--primary)}.btn-unblock:hover{background:#bbf7d0;color:#064e3b}
+  .card-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.6rem}
+  .showing{font-size:.75rem;color:var(--text-muted)}
+  .pg-wrap{display:flex;align-items:center;gap:.3rem}
+  .pg-btn,.pg-num{height:32px;padding:0 .8rem;border:1px solid var(--border);background:var(--card-bg);color:var(--text-muted);border-radius:var(--radius);font-size:.78rem;font-weight:500;font-family:var(--font-body);cursor:pointer;display:inline-flex;align-items:center;gap:.2rem;text-decoration:none;transition:all .15s}
+  .pg-btn:hover,.pg-num:hover{background:var(--sidebar-bg);color:var(--text)}
   .pg-btn.disabled{opacity:.4;pointer-events:none}
-  .pg-num{width:34px;height:34px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-muted);border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);font-weight:500;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+  .pg-num{width:32px;padding:0;justify-content:center}
   .pg-num.active{background:var(--primary);color:#fff;border-color:var(--primary);pointer-events:none}
-  .pg-dots{color:var(--text-muted);font-size:.85rem;padding:0 .2rem}
+  .pg-dots{color:var(--text-muted);font-size:.8rem;padding:0 .2rem}
+  .empty-row td{text-align:center;padding:4rem 1rem;color:var(--text-muted)}
+  .empty-icon{font-size:2.8rem;opacity:.35;display:block;margin-bottom:.6rem}
 </style>
 {% endblock %}
+
 {% block content %}
 <header class="page-header">
-  <div><h2 class="page-title">User Management</h2><div class="title-underline"></div></div>
+  <div>
+    <h1 class="page-title">User Management</h1>
+    <p class="title-sub">Manage customer accounts and access</p>
+    <div class="title-bar"></div>
+  </div>
 </header>
-<div class="pdt-card">
-  <div class="card-top">
-    <h3 class="card-title">Users</h3>
-    <div class="controls">
-      <form method="GET" style="display:contents;">
-        <div class="search-wrap">
+
+<div class="listing-card">
+  <div class="card-toolbar">
+    <h3 class="card-label">All Users</h3>
+    <div class="toolbar-right">
+      <form method="GET" style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;">
+        <div class="search-field">
           <span class="material-icons-outlined">search</span>
-          <input class="form-control-custom" type="text" name="search" value="{{ request.GET.search }}" placeholder="Search user email…"/>
+          <input class="search-input" type="text" name="search" value="{{ request.GET.search }}" placeholder="Search user email…"/>
         </div>
         <button type="submit" class="btn-search">Search</button>
         <a href="{% url 'admin-user-management' %}" class="btn-clear">Clear</a>
       </form>
     </div>
   </div>
-  <div class="table-wrap">
-    <table class="pdt-table">
-      <thead><tr><th>Sl</th><th>User</th><th>Email</th><th>Status</th><th>Joined</th><th>Action</th></tr></thead>
+
+  <div class="table-scroll">
+    <table class="listing-table">
+      <thead>
+        <tr><th>#</th><th>User</th><th>Email</th><th>Status</th><th>Joined</th><th>Action</th></tr>
+      </thead>
       <tbody>
         {% for user in users %}
         <tr>
-          <td style="font-weight:600;">{{ users.start_index|add:forloop.counter0 }}</td>
+          <td style="font-weight:600;color:var(--text-muted)">{{ users.start_index|add:forloop.counter0 }}</td>
           <td>
-            <div style="display:flex;align-items:center;">
-              <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=064e3b&color=fff" class="user-row-avatar" alt="{{ user.username }}"/>
-              <span class="user-row-name">{{ user.username }}</span>
+            <div class="user-cell">
+              <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=064e3b&color=fff&size=72" class="user-avatar" alt="{{ user.username }}"/>
+              <span class="user-name">{{ user.username }}</span>
             </div>
           </td>
-          <td style="color:var(--text-muted);">{{ user.email }}</td>
-          <td>{% if user.is_active %}<span class="badge-status badge-active">Active</span>{% else %}<span class="badge-status badge-blocked">Blocked</span>{% endif %}</td>
-          <td style="color:var(--text-muted);font-size:.8rem;">{{ user.date_joined|date:"M d, Y" }}</td>
+          <td style="color:var(--text-muted);font-size:.82rem">{{ user.email }}</td>
+          <td>{% if user.is_active %}<span class="badge badge-active">Active</span>{% else %}<span class="badge badge-blocked">Blocked</span>{% endif %}</td>
+          <td style="color:var(--text-muted);font-size:.8rem;white-space:nowrap">{{ user.date_joined|date:"M d, Y" }}</td>
           <td>
             {% if user.is_active %}
-            <a href="{% url 'admin-toggle-user' user.id %}" class="action-btn-text btn-block-user" onclick="return confirm('Block this user?')"><span class="material-icons-outlined">block</span> Block</a>
+            <a href="{% url 'admin-toggle-user' user.id %}" class="act-btn btn-block" onclick="return confirm('Block this user?')"><span class="material-icons-outlined" style="font-size:.9rem">block</span> Block</a>
             {% else %}
-            <a href="{% url 'admin-toggle-user' user.id %}" class="action-btn-text btn-unblock-user" onclick="return confirm('Unblock this user?')"><span class="material-icons-outlined">check_circle</span> Unblock</a>
+            <a href="{% url 'admin-toggle-user' user.id %}" class="act-btn btn-unblock" onclick="return confirm('Unblock this user?')"><span class="material-icons-outlined" style="font-size:.9rem">check_circle</span> Unblock</a>
             {% endif %}
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="6"><div class="empty-state"><span class="material-icons-outlined">people</span><p>No users found</p></div></td></tr>
+        <tr class="empty-row"><td colspan="6"><span class="material-icons-outlined empty-icon">people</span>No users found</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
-  <div class="card-footer-pdt">
-    <p class="showing-text">Page {{ users.number }} of {{ users.paginator.num_pages }}</p>
-    <nav class="pagination-wrap">
+
+  <div class="card-footer">
+    <p class="showing">Page {{ users.number }} of {{ users.paginator.num_pages }}</p>
+    <nav class="pg-wrap">
       {% if users.has_previous %}<a class="pg-btn" href="?page={{ users.previous_page_number }}&search={{ request.GET.search }}"><span class="material-icons-outlined">chevron_left</span> Previous</a>
       {% else %}<span class="pg-btn disabled"><span class="material-icons-outlined">chevron_left</span> Previous</span>{% endif %}
       {% for num in users.paginator.page_range %}

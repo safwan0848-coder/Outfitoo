@@ -1,24 +1,28 @@
 {% extends 'admin_base.html' %}
 {% block title %}Outfito Admin – Variant Management{% endblock %}
 {% block extra_head %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
   .page-title-sm{font-family:var(--font-display);font-size:2.2rem;color:var(--text);margin-bottom:.2rem}
-  .summary-card{background:var(--card-bg);border-radius:16px;padding:1.5rem;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow-sm);margin-bottom:2rem}
-  .product-img-large{width:80px;height:80px;border-radius:10px;overflow:hidden;background:var(--bg);display:flex;align-items:center;justify-content:center}
+  .summary-card{background:var(--card-bg);border-radius:16px;padding:1.5rem;border:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;box-shadow:var(--shadow-sm);margin-bottom:2rem}
+  .summary-card-left{display:flex;align-items:center;gap:.75rem}
+  .product-img-large{width:80px;height:80px;border-radius:10px;overflow:hidden;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .product-img-large img{width:100%;height:100%;object-fit:cover}
   .no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-muted)}
-  .search-container{position:relative;width:320px}
-  .search-container i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted)}
+  .controls-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.75rem;margin-bottom:.75rem}
+  .search-container{position:relative;flex:1;min-width:200px;max-width:320px}
+  .search-container .material-icons-outlined{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:1rem;pointer-events:none}
   .search-input{width:100%;padding:.6rem 1rem .6rem 2.5rem;border-radius:20px;border:1px solid var(--border);font-size:.95rem;outline:none;background:var(--card-bg);color:var(--text)}
-  .btn-brand{background:var(--primary);color:#fff;border-radius:8px;padding:.6rem 1.25rem;font-weight:500;border:none;display:inline-flex;align-items:center;gap:.5rem;text-decoration:none;transition:.2s}
+  .search-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(6,78,59,.1)}
+  .btn-brand{background:var(--primary);color:#fff;border-radius:8px;padding:.6rem 1.25rem;font-weight:500;border:none;display:inline-flex;align-items:center;gap:.5rem;text-decoration:none;transition:.2s;font-family:var(--font-body);font-size:.875rem}
   .btn-brand:hover{background:var(--primary-hover);color:#fff}
-  .btn-outline-custom{border:1px solid var(--border);background:var(--card-bg);color:var(--text);border-radius:8px;padding:.6rem 1.25rem;font-weight:500;display:inline-flex;align-items:center;gap:.5rem;transition:.2s;cursor:pointer}
+  .btn-outline-custom{border:1px solid var(--border);background:var(--card-bg);color:var(--text);border-radius:8px;padding:.6rem 1.25rem;font-weight:500;display:inline-flex;align-items:center;gap:.5rem;transition:.2s;cursor:pointer;font-family:var(--font-body);font-size:.875rem}
+  .controls-actions{display:flex;gap:.5rem;flex-wrap:wrap}
   .table-wrapper{background:var(--card-bg);border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-sm)}
-  .table-custom{margin-bottom:0}
-  .table-custom thead th{background:var(--sidebar-bg);color:var(--text-muted);font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:1.25rem 1rem;border-bottom:1px solid var(--border)}
-  .table-custom tbody td{padding:1.25rem 1rem;vertical-align:middle;background:var(--card-bg);border-bottom:1px solid var(--border);font-size:.95rem;color:var(--text)}
+  .table-scroll{overflow-x:auto}
+  .table-custom{width:100%;border-collapse:collapse;min-width:640px}
+  .table-custom thead th{background:var(--sidebar-bg);color:var(--text-muted);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:1rem 1rem;border-bottom:1px solid var(--border);white-space:nowrap}
+  .table-custom tbody td{padding:1rem 1rem;vertical-align:middle;background:var(--card-bg);border-bottom:1px solid var(--border);font-size:.9rem;color:var(--text)}
   .table-custom tbody tr:last-child td{border-bottom:none}
   .table-custom tbody tr:hover td{background:var(--table-hover)}
   .radio-custom{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:inline-block;position:relative;cursor:pointer;vertical-align:middle}
@@ -26,90 +30,135 @@
   .radio-custom.checked::after{content:'';position:absolute;width:10px;height:10px;background:var(--primary);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%)}
   .variant-swatch{width:36px;height:36px;border-radius:8px;object-fit:cover}
   .variant-swatch-placeholder{width:36px;height:36px;border-radius:8px;background:var(--border)}
-  .sku-text{color:var(--text-muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.5px}
-  .badge-pill{padding:.4em .8em;border-radius:50px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-  .badge-active{background:#e0f2e9;color:#0d7f4b}
+  .variant-info{display:flex;align-items:center;gap:.75rem}
+  .variant-info-text{line-height:1.3}
+  .variant-color{font-weight:600;font-size:.95rem}
+  .variant-size{font-size:.8rem;color:var(--text-muted)}
+  .sku-text{color:var(--text-muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
+  .badge-pill{padding:.35em .8em;border-radius:50px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .badge-active{background:#d1fae5;color:#065f46}
   .badge-inactive{background:var(--bg);color:var(--text-muted)}
-  .stock-in{color:#0d7f4b;background:#e0f2e9}
-  .stock-low{color:#d97706;background:#fef3c7}
-  .action-btn{color:var(--text-muted);text-decoration:none;transition:color .2s;background:transparent;border:none;padding:0;cursor:pointer}
-  .action-btn:hover{color:var(--text)}
-  .pagination-area{display:flex;justify-content:space-between;align-items:center;padding:1rem 0}
+  .stock-in{color:#065f46;background:#d1fae5}
+  .stock-low{color:#92400e;background:#fef3c7}
+  .stock-out{color:#991b1b;background:#fee2e2}
+  .action-btn{color:var(--text-muted);text-decoration:none;transition:color .2s;background:transparent;border:none;padding:0 .35rem;cursor:pointer;display:inline-flex;align-items:center}
+  .action-btn:hover{color:var(--primary)}
+  .action-btn.del:hover{color:#dc2626}
+  .pagination-area{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;padding:1rem 0;gap:.5rem}
+  .pg-nav{display:flex;align-items:center;gap:.3rem}
+  .pg-btn,.pg-num{height:34px;padding:0 .8rem;border:1px solid var(--border);background:var(--card-bg);color:var(--text-muted);border-radius:8px;font-size:.8rem;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:.2rem;text-decoration:none}
+  .pg-btn.disabled{opacity:.4;pointer-events:none}
+  .pg-num{width:34px;padding:0;justify-content:center}
+  .pg-num.active{background:var(--primary);color:#fff;border-color:var(--primary);pointer-events:none}
+  .pg-dots{color:var(--text-muted);font-size:.85rem;padding:0 .2rem}
 </style>
 {% endblock %}
 {% block content %}
 <div class="mb-4">
   <h1 class="page-title-sm">Variant Management</h1>
-  <p class="text-muted" style="font-size:.95rem;">Configure and manage product SKU variations</p>
+  <p style="color:var(--text-muted);font-size:.95rem;">Configure and manage product SKU variations</p>
 </div>
 
 <div class="summary-card">
-  <div class="d-flex align-items-center gap-3">
+  <div class="summary-card-left">
     <div class="product-img-large">
-      {% if variant and variant.image %}<img src="{{ variant.image.url }}">
-      {% elif product.image_side %}<img src="{{ product.image_side.url }}">
-      {% elif product.image_back %}<img src="{{ product.image_back.url }}">
-      {% else %}<div class="no-img"><i class="bi bi-image fs-3"></i></div>{% endif %}
+      {% if variant and variant.image %}<img src="{{ variant.image.url }}" alt="product">
+      {% elif product.image_side %}<img src="{{ product.image_side.url }}" alt="product">
+      {% elif product.image_back %}<img src="{{ product.image_back.url }}" alt="product">
+      {% else %}<div class="no-img"><span class="material-icons-outlined" style="font-size:2rem;">image_not_supported</span></div>{% endif %}
     </div>
     <div>
-      <h3 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:.25rem;">{% if product %}{{ product.name }}{% else %}Product Name{% endif %}</h3>
+      <h3 style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin:0 0 .25rem;">{% if product %}{{ product.name }}{% else %}Product Name{% endif %}</h3>
       <div style="font-size:.85rem;color:var(--text-muted);">Luxe Collection / Outfito Couture</div>
     </div>
   </div>
-  <div class="text-center">
+  <div style="text-align:center;">
     <div style="font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);">Total Variants</div>
     <div style="font-family:var(--font-display);font-size:1.8rem;color:var(--text);line-height:1;">{{ total_variants|default:"0" }}</div>
   </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <div class="search-container"><i class="bi bi-search"></i><input type="text" class="search-input" placeholder="Search SKU or attribute..."></div>
-  <div class="d-flex gap-2">
-    <button class="btn-outline-custom"><i class="bi bi-funnel"></i> Filter</button>
-    <a href="{% url 'add_variant' product.id %}" class="btn-brand"><i class="bi bi-plus-lg"></i> Add Variant</a>
+<div class="controls-row">
+  <div class="search-container">
+    <span class="material-icons-outlined">search</span>
+    <input type="text" class="search-input" placeholder="Search SKU or attribute..." id="variantSearch" onkeyup="filterVariants(this.value)">
+  </div>
+  <div class="controls-actions">
+    <a href="{% url 'add_variant' product.id %}" class="btn-brand">
+      <span class="material-icons-outlined" style="font-size:1rem;">add</span> Add Variant
+    </a>
   </div>
 </div>
 
 <div class="table-wrapper">
-  <table class="table table-custom">
-    <thead><tr>
-      <th style="width:80px;text-align:center;">Default</th>
-      <th>Variants</th><th>SKU</th><th>Price</th><th>Status</th>
-      <th style="text-align:center;">Stock</th><th>Stock Status</th><th style="text-align:center;">Actions</th>
-    </tr></thead>
-    <tbody>
-      {% for v in variants %}
-      <tr>
-        <td class="text-center"><a href="{% url 'set_default_variant' v.id %}" style="text-decoration:none;"><span class="radio-custom {% if v.is_default %}checked{% endif %}"></span></a></td>
-        <td>
-          <div class="d-flex align-items-center gap-3">
-            {% if v.image %}<img src="{{ v.image.url }}" class="variant-swatch" alt="variant">
-            {% else %}<div class="variant-swatch-placeholder"></div>{% endif %}
-            <div style="line-height:1.3;">
-              <div style="font-weight:600;font-size:.95rem;">{{ v.color }}</div>
-              <div class="text-muted" style="font-size:.8rem;">{{ v.size }}</div>
+  <div class="table-scroll">
+    <table class="table-custom">
+      <thead>
+        <tr>
+          <th style="width:70px;text-align:center;">Default</th>
+          <th>Variant</th>
+          <th>SKU</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th style="text-align:center;">Stock</th>
+          <th>Stock Status</th>
+          <th style="text-align:center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="variantTableBody">
+        {% for v in variants %}
+        <tr>
+          <td style="text-align:center;">
+            <a href="{% url 'set_default_variant' v.id %}" style="text-decoration:none;">
+              <span class="radio-custom {% if v.is_default %}checked{% endif %}"></span>
+            </a>
+          </td>
+          <td>
+            <div class="variant-info">
+              {% if v.image %}<img src="{{ v.image.url }}" class="variant-swatch" alt="variant">
+              {% else %}<div class="variant-swatch-placeholder"></div>{% endif %}
+              <div class="variant-info-text">
+                <div class="variant-color">{{ v.color }}</div>
+                <div class="variant-size">{{ v.size }}</div>
+              </div>
             </div>
-          </div>
-        </td>
-        <td><div class="sku-text">{{ v.sku }}</div></td>
-        <td style="font-weight:700;color:var(--text);">₹{{ v.price }}</td>
-        <td>{% if v.is_active %}<span class="badge-pill badge-active">Active</span>{% else %}<span class="badge-pill badge-inactive">Inactive</span>{% endif %}</td>
-        <td class="text-center" style="font-weight:600;">{{ v.stock }}</td>
-        <td>{% if v.stock <= 5 %}<span class="badge-pill stock-low">Low Stock</span>{% else %}<span class="badge-pill stock-in">In Stock</span>{% endif %}</td>
-        <td class="text-center">
-          <a href="{% url 'edit_variant' v.id %}" class="action-btn me-3" title="Edit"><i class="bi bi-pencil" style="font-size:1.1rem;"></i></a>
-          <a href="{% url 'delete_variant' v.id %}" class="action-btn" title="Delete" onclick="return confirm('Delete this variant?')"><i class="bi bi-trash" style="font-size:1.1rem;"></i></a>
-        </td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="8" class="text-center text-muted py-5"><i class="bi bi-inbox fs-2 d-block mb-2"></i>No variants found for this product.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+          </td>
+          <td><span class="sku-text">{{ v.sku }}</span></td>
+          <td style="font-weight:700;color:var(--text);">₹{{ v.price }}</td>
+          <td>
+            {% if v.is_active %}<span class="badge-pill badge-active">Active</span>
+            {% else %}<span class="badge-pill badge-inactive">Inactive</span>{% endif %}
+          </td>
+          <td style="text-align:center;font-weight:600;">{{ v.stock }}</td>
+          <td>
+            {% if v.stock == 0 %}<span class="badge-pill stock-out">Out of Stock</span>
+            {% elif v.stock <= 5 %}<span class="badge-pill stock-low">Low Stock</span>
+            {% else %}<span class="badge-pill stock-in">In Stock</span>{% endif %}
+          </td>
+          <td style="text-align:center;">
+            <a href="{% url 'edit_variant' v.id %}" class="action-btn" title="Edit">
+              <span class="material-icons-outlined" style="font-size:1.1rem;">edit</span>
+            </a>
+            <a href="{% url 'delete_variant' v.id %}" class="action-btn del" title="Delete" onclick="return confirm('Delete this variant?')">
+              <span class="material-icons-outlined" style="font-size:1.1rem;">delete</span>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" style="text-align:center;padding:3.5rem 1rem;color:var(--text-muted);">
+            <span class="material-icons-outlined" style="font-size:2.5rem;display:block;margin-bottom:.5rem;opacity:.4;">inventory_2</span>
+            No variants found for this product.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
-<div class="pagination-area" style="display:flex;justify-content:space-between;align-items:center;padding:1.25rem 0;">
-  <div class="text-muted" style="font-size:.85rem;">
+<div class="pagination-area">
+  <div style="font-size:.85rem;color:var(--text-muted);">
     {% if variants.paginator.count > 0 %}
       Showing {{ variants.start_index }}–{{ variants.end_index }} of {{ total_variants }} variant{{ total_variants|pluralize }}
     {% else %}
@@ -117,24 +166,23 @@
     {% endif %}
   </div>
   {% if variants.has_other_pages %}
-  <nav style="display:flex;align-items:center;gap:.3rem;">
+  <nav class="pg-nav">
     {% if variants.has_previous %}
-      <a href="?page={{ variants.previous_page_number }}" class="btn-outline-custom" style="padding:.4rem .8rem;font-size:.8rem;">
-        <i class="bi bi-chevron-left"></i> Prev
+      <a href="?page={{ variants.previous_page_number }}" class="pg-btn">
+        <span class="material-icons-outlined">chevron_left</span> Prev
       </a>
     {% endif %}
     {% for num in variants.paginator.page_range %}
-      {% if num == variants.number %}
-        <span style="width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;background:var(--primary);color:#fff;border-radius:8px;font-size:.82rem;font-weight:600;">{{ num }}</span>
+      {% if num == variants.number %}<span class="pg-num active">{{ num }}</span>
       {% elif num == 1 or num == variants.paginator.num_pages or num >= variants.number|add:"-2" and num <= variants.number|add:"2" %}
-        <a href="?page={{ num }}" style="width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:8px;font-size:.82rem;color:var(--text-muted);text-decoration:none;">{{ num }}</a>
+        <a href="?page={{ num }}" class="pg-num">{{ num }}</a>
       {% elif num == variants.number|add:"-3" or num == variants.number|add:"3" %}
-        <span style="color:var(--text-muted);font-size:.85rem;padding:0 .2rem;">···</span>
+        <span class="pg-dots">···</span>
       {% endif %}
     {% endfor %}
     {% if variants.has_next %}
-      <a href="?page={{ variants.next_page_number }}" class="btn-outline-custom" style="padding:.4rem .8rem;font-size:.8rem;">
-        Next <i class="bi bi-chevron-right"></i>
+      <a href="?page={{ variants.next_page_number }}" class="pg-btn">
+        Next <span class="material-icons-outlined">chevron_right</span>
       </a>
     {% endif %}
   </nav>
@@ -142,5 +190,13 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function filterVariants(q) {
+  const rows = document.querySelectorAll('#variantTableBody tr');
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+</script>
 {% endblock %}

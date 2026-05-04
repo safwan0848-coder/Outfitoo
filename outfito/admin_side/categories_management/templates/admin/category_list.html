@@ -1,137 +1,130 @@
 {% extends 'admin_base.html' %}
-
 {% block title %}Outfito Admin – Category Management{% endblock %}
-
 {% block extra_head %}
 <style>
-  :root {
-    --badge-active-bg:#d1fae5; --badge-active-fg:#065f46;
-    --badge-inactive-bg:#fee2e2; --badge-inactive-fg:#991b1b;
-    --danger-hover-bg:#fee2e2; --danger-hover-fg:#dc2626;
-  }
-  [data-theme="dark"] {
-    --badge-active-bg:rgba(16,185,129,.15); --badge-active-fg:#6ee7b7;
-    --badge-inactive-bg:rgba(239,68,68,.15); --badge-inactive-fg:#fca5a5;
-    --danger-hover-bg:rgba(220,38,38,.15); --danger-hover-fg:#fca5a5;
-  }
-  .page-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2.5rem; }
-  .page-title { font-family:var(--font-display); font-size:2.6rem; font-weight:700; color:var(--text); line-height:1; margin-bottom:.5rem; letter-spacing:-.02em; }
-  .title-underline { width:52px; height:3px; background:linear-gradient(90deg,var(--primary),var(--accent)); border-radius:99px; }
-  .header-actions { display:flex; align-items:center; gap:.75rem; }
-  .btn-add { display:inline-flex; align-items:center; gap:.4rem; padding:.6rem 1.4rem; background:var(--primary); color:#fff; border:none; border-radius:var(--radius); font-size:.85rem; font-weight:600; font-family:var(--font-body); cursor:pointer; text-decoration:none; box-shadow:0 4px 14px rgba(6,78,59,.35); transition:background var(--tr),transform var(--tr),box-shadow var(--tr); }
-  .btn-add:hover { background:var(--primary-hover); color:#fff; transform:translateY(-2px); box-shadow:0 6px 20px rgba(6,78,59,.4); }
-  .btn-add .material-icons-outlined { font-size:1rem; }
-  .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:1.25rem; margin-bottom:2rem; }
-  @media(max-width:600px){ .stats-row { grid-template-columns:1fr; } }
-  .stat-card { background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius-xl); padding:1.5rem 1.75rem; box-shadow:var(--shadow-sm); }
-  .stat-label { font-size:.72rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); margin-bottom:.6rem; }
-  .stat-number { font-family:var(--font-display); font-size:2.4rem; font-weight:700; color:var(--text); line-height:1; }
-  .stat-card.active .stat-number { color:var(--badge-active-fg); }
-  .stat-card.inactive .stat-number { color:var(--badge-inactive-fg); }
-  .django-messages { margin-bottom:1.25rem; }
-  .msg-item { display:flex; align-items:center; gap:.6rem; padding:.75rem 1rem; border-radius:var(--radius); font-size:.83rem; font-weight:500; margin-bottom:.5rem; animation:fadeIn .3s ease; }
-  .msg-success { background:var(--badge-active-bg); color:var(--badge-active-fg); border:1px solid rgba(16,185,129,.2); }
-  .msg-error { background:var(--badge-inactive-bg); color:var(--badge-inactive-fg); border:1px solid rgba(239,68,68,.2); }
-  .msg-close { margin-left:auto; background:none; border:none; cursor:pointer; color:inherit; opacity:.6; font-size:1rem; display:flex; align-items:center; }
-  .msg-close:hover { opacity:1; }
-  @keyframes fadeIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
-  .pdt-card { background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); overflow:hidden; }
-  .card-top { padding:1.5rem 1.75rem; border-bottom:1px solid var(--border); display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:1rem; }
-  .card-title { font-family:var(--font-display); font-size:1.4rem; font-weight:600; color:var(--text); margin:0; }
-  .controls { display:flex; flex-wrap:wrap; gap:.65rem; align-items:center; }
-  .search-wrap { position:relative; }
-  .search-wrap .material-icons-outlined { position:absolute; left:.7rem; top:50%; transform:translateY(-50%); font-size:.95rem; color:var(--text-muted); pointer-events:none; }
-  .form-control-custom { padding:.5rem 1rem .5rem 2.4rem; background:var(--sidebar-bg); border:1px solid var(--border); border-radius:var(--radius); font-size:.82rem; font-family:var(--font-body); color:var(--text); width:230px; outline:none; }
-  .form-control-custom:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(6,78,59,.15); }
-  .btn-search { padding:.5rem 1.1rem; background:var(--primary); color:#fff; border:none; border-radius:var(--radius); font-size:.82rem; font-family:var(--font-body); font-weight:600; cursor:pointer; }
-  .btn-clear { padding:.5rem 1.1rem; background:var(--sidebar-bg); color:var(--text-muted); border:1px solid var(--border); border-radius:var(--radius); font-size:.82rem; font-family:var(--font-body); font-weight:500; cursor:pointer; text-decoration:none; }
-  .table-wrap { overflow-x:auto; }
-  table.pdt-table { width:100%; border-collapse:collapse; }
-  .pdt-table thead tr { background:var(--sidebar-bg); }
-  .pdt-table thead th { padding:1rem 1.25rem; font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text-muted); border-bottom:1px solid var(--border); }
-  .pdt-table tbody tr { border-bottom:1px solid var(--border); transition:background var(--tr); }
-  .pdt-table tbody tr:last-child { border-bottom:none; }
-  .pdt-table tbody tr:hover { background:var(--table-hover); }
-  .pdt-table td { padding:1rem 1.25rem; font-size:.85rem; color:var(--text); vertical-align:middle; }
-  .cat-img-wrap { width:48px; height:48px; border-radius:calc(var(--radius) - 2px); overflow:hidden; background:var(--sidebar-bg); box-shadow:var(--shadow-sm); border:1px solid var(--border); }
-  .cat-img-wrap img { width:100%; height:100%; object-fit:cover; display:block; }
-  .cat-no-img { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-muted); }
-  .cat-name { font-weight:600; font-size:.87rem; }
-  .count-badge { display:inline-flex; align-items:center; justify-content:center; background:var(--primary); color:#fff; border-radius:99px; padding:.18rem .65rem; font-size:.75rem; font-weight:700; min-width:28px; }
-  .badge-status { display:inline-flex; align-items:center; gap:.3rem; padding:.28rem .75rem; border-radius:99px; font-size:.72rem; font-weight:600; letter-spacing:.02em; }
-  .badge-status::before { content:''; width:6px; height:6px; border-radius:50%; display:inline-block; }
-  .badge-active { background:var(--badge-active-bg); color:var(--badge-active-fg); }
-  .badge-active::before { background:var(--badge-active-fg); }
-  .badge-inactive { background:var(--badge-inactive-bg); color:var(--badge-inactive-fg); }
-  .badge-inactive::before { background:var(--badge-inactive-fg); }
-  .toggle-switch { position:relative; width:40px; height:22px; display:inline-block; cursor:pointer; }
-  .toggle-switch input { display:none; }
-  .toggle-slider { position:absolute; inset:0; background:var(--border); border-radius:99px; transition:background var(--tr); }
-  .toggle-slider::before { content:''; position:absolute; width:16px; height:16px; border-radius:50%; background:#fff; top:3px; left:3px; transition:transform var(--tr); box-shadow:0 1px 3px rgba(0,0,0,.2); }
-  .toggle-switch input:checked + .toggle-slider { background:var(--accent); }
-  .toggle-switch input:checked + .toggle-slider::before { transform:translateX(18px); }
-  .action-btns { display:flex; align-items:center; gap:.25rem; }
-  .action-btn { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; border-radius:var(--radius); cursor:pointer; color:var(--text-muted); transition:background var(--tr),color var(--tr),transform .15s; text-decoration:none; }
-  .action-btn:hover { transform:scale(1.12); }
-  .action-btn .material-icons-outlined { font-size:1.1rem; }
-  .action-btn.del:hover { background:var(--danger-hover-bg); color:var(--danger-hover-fg); }
-  .action-btn.edit:hover { background:var(--primary-light); color:var(--primary); }
-  .empty-state { text-align:center; padding:4rem 2rem; color:var(--text-muted); }
-  .empty-state .material-icons-outlined { font-size:3rem; opacity:.4; display:block; margin-bottom:.75rem; }
-  .card-footer-pdt { padding:1.1rem 1.75rem; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem; }
-  .showing-text { font-size:.75rem; color:var(--text-muted); }
-  .pagination-wrap { display:flex; align-items:center; gap:.3rem; }
-  .pg-btn { height:34px; padding:0 .9rem; border:1px solid var(--border); background:var(--card-bg); color:var(--text-muted); border-radius:var(--radius); font-size:.8rem; font-family:var(--font-body); font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:.2rem; text-decoration:none; transition:background var(--tr),color var(--tr); }
-  .pg-btn:hover { background:var(--sidebar-bg); color:var(--text); }
-  .pg-btn.disabled { opacity:.4; pointer-events:none; }
-  .pg-num { width:34px; height:34px; border:1px solid var(--border); background:var(--card-bg); color:var(--text-muted); border-radius:var(--radius); font-size:.82rem; font-family:var(--font-body); font-weight:500; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
-  .pg-num:hover { background:var(--sidebar-bg); color:var(--text); }
-  .pg-num.active { background:var(--primary); color:#fff; border-color:var(--primary); pointer-events:none; }
-  .pg-dots { color:var(--text-muted); font-size:.85rem; padding:0 .2rem; }
-  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); backdrop-filter:blur(4px); z-index:1000; align-items:center; justify-content:center; }
-  .modal-overlay.show { display:flex; }
-  .modal-box { background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius-xl); padding:2rem; width:min(96%,420px); box-shadow:var(--shadow-lg); animation:slideUp .25s ease; }
-  .modal-icon-circle { width:60px; height:60px; border-radius:50%; background:var(--badge-inactive-bg); display:flex; align-items:center; justify-content:center; margin:0 auto 1.25rem; }
-  .modal-icon-circle .material-icons-outlined { font-size:1.8rem; color:#dc2626; }
-  .modal-box h4 { font-family:var(--font-display); font-size:1.4rem; font-weight:700; margin:0 0 .5rem; text-align:center; }
-  .modal-box p { font-size:.85rem; color:var(--text-muted); margin:0 0 1.5rem; text-align:center; }
-  .modal-footer { display:flex; gap:.75rem; justify-content:center; }
-  .btn-cancel { padding:.6rem 1.3rem; border:1px solid var(--border); background:var(--sidebar-bg); color:var(--text); border-radius:var(--radius); font-family:var(--font-body); font-size:.85rem; font-weight:500; cursor:pointer; }
-  .btn-danger { padding:.6rem 1.3rem; border:none; background:#dc2626; color:#fff; border-radius:var(--radius); font-family:var(--font-body); font-size:.85rem; font-weight:600; cursor:pointer; box-shadow:0 4px 12px rgba(220,38,38,.3); display:inline-flex; align-items:center; gap:.35rem; }
-  .btn-danger:hover { background:#b91c1c; }
-  @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .page-header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;margin-bottom:2rem;gap:1rem}
+  .page-title{font-family:var(--font-display);font-size:2.4rem;font-weight:700;color:var(--text);margin:0 0 .3rem;line-height:1;letter-spacing:-.02em}
+  .title-sub{font-size:.875rem;color:var(--text-muted)}
+  .title-bar{width:48px;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:99px;margin-top:.5rem}
+  .btn-primary{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.35rem;background:var(--primary);color:#fff;border:none;border-radius:var(--radius);font-size:.84rem;font-weight:600;font-family:var(--font-body);cursor:pointer;text-decoration:none;box-shadow:0 4px 14px rgba(6,78,59,.3);transition:all .2s}
+  .btn-primary:hover{background:var(--primary-hover);color:#fff;transform:translateY(-1px)}
+  .btn-primary .material-icons-outlined{font-size:1rem}
+  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-bottom:1.75rem}
+  @media(max-width:600px){.stats-grid{grid-template-columns:1fr 1fr}}
+  .stat-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-xl);padding:1.35rem 1.5rem;box-shadow:var(--shadow-sm)}
+  .stat-label{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.55rem;display:block}
+  .stat-value{font-family:var(--font-display);font-size:2.2rem;font-weight:700;color:var(--text);line-height:1}
+  .stat-card.s-active .stat-value{color:#065f46}
+  .stat-card.s-inactive .stat-value{color:#991b1b}
+  .msg-item{display:flex;align-items:center;gap:.6rem;padding:.7rem 1rem;border-radius:var(--radius);font-size:.82rem;font-weight:500;margin-bottom:.5rem;animation:fadeIn .3s ease}
+  .msg-success{background:#d1fae5;color:#065f46;border:1px solid rgba(16,185,129,.2)}
+  .msg-error{background:#fee2e2;color:#991b1b;border:1px solid rgba(239,68,68,.2)}
+  .msg-close{margin-left:auto;background:none;border:none;cursor:pointer;color:inherit;opacity:.6;font-size:1rem;display:flex;align-items:center}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+  .listing-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+  .card-toolbar{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;justify-content:space-between}
+  .card-label{font-family:var(--font-display);font-size:1.2rem;font-weight:600;color:var(--text);margin:0}
+  .toolbar-right{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+  .search-field{position:relative;flex:1;min-width:180px}
+  .search-field .material-icons-outlined{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);font-size:.95rem;color:var(--text-muted);pointer-events:none}
+  .search-input{padding:.52rem 1rem .52rem 2.4rem;background:var(--sidebar-bg);border:1px solid var(--border);border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);color:var(--text);width:100%;max-width:240px;outline:none;transition:border-color .2s}
+  .search-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(6,78,59,.12)}
+  .btn-search{padding:.52rem 1.1rem;background:var(--primary);color:#fff;border:none;border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);font-weight:600;cursor:pointer}
+  .btn-clear{padding:.52rem 1rem;background:var(--sidebar-bg);border:1px solid var(--border);border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);color:var(--text-muted);text-decoration:none;display:inline-flex;align-items:center}
+  .btn-clear:hover{color:var(--text)}
+  .table-scroll{overflow-x:auto}
+  .listing-table{width:100%;border-collapse:collapse;min-width:750px}
+  .listing-table thead tr{background:var(--sidebar-bg)}
+  .listing-table thead th{padding:.9rem 1.25rem;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+  .listing-table tbody tr{border-bottom:1px solid var(--border);transition:background .18s}
+  .listing-table tbody tr:last-child{border-bottom:none}
+  .listing-table tbody tr:hover{background:var(--table-hover)}
+  .listing-table td{padding:.9rem 1.25rem;font-size:.84rem;color:var(--text);vertical-align:middle}
+  .cat-img{width:46px;height:46px;border-radius:8px;overflow:hidden;background:var(--sidebar-bg);border:1px solid var(--border)}
+  .cat-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .cat-no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-muted)}
+  .cat-name{font-weight:600;font-size:.85rem}
+  .count-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--primary);color:#fff;border-radius:99px;padding:.18rem .65rem;font-size:.73rem;font-weight:700;min-width:28px}
+  .badge{display:inline-flex;align-items:center;gap:.3rem;padding:.28rem .72rem;border-radius:99px;font-size:.7rem;font-weight:700;letter-spacing:.02em}
+  .badge::before{content:'';width:5px;height:5px;border-radius:50%;display:inline-block}
+  .badge-active{background:#d1fae5;color:#065f46}.badge-active::before{background:#065f46}
+  .badge-inactive{background:#fee2e2;color:#991b1b}.badge-inactive::before{background:#991b1b}
+
+  .toggle-switch{position:relative;width:40px;height:22px;display:inline-block;cursor:pointer}
+  .toggle-switch input{display:none}
+  .toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:99px;transition:background .2s}
+  .toggle-slider::before{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .toggle-switch input:checked+.toggle-slider{background:var(--accent)}
+  .toggle-switch input:checked+.toggle-slider::before{transform:translateX(18px)}
+  .act-group{display:flex;align-items:center;gap:.2rem}
+  .act-btn{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:var(--radius);cursor:pointer;color:var(--text-muted);transition:all .15s;text-decoration:none}
+  .act-btn .material-icons-outlined{font-size:1.05rem}
+  .act-btn:hover{transform:scale(1.1)}
+  .act-btn.edit:hover{background:var(--primary-light);color:var(--primary)}
+  .act-btn.del:hover{background:#fee2e2;color:#dc2626}
+  .empty-row td{text-align:center;padding:4rem 1rem;color:var(--text-muted)}
+  .empty-icon{font-size:2.8rem;opacity:.35;display:block;margin-bottom:.6rem}
+  .card-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.6rem}
+  .showing{font-size:.75rem;color:var(--text-muted)}
+  .pg-wrap{display:flex;align-items:center;gap:.3rem}
+  .pg-btn,.pg-num{height:32px;padding:0 .8rem;border:1px solid var(--border);background:var(--card-bg);color:var(--text-muted);border-radius:var(--radius);font-size:.78rem;font-weight:500;font-family:var(--font-body);cursor:pointer;display:inline-flex;align-items:center;gap:.2rem;text-decoration:none;transition:all .15s}
+  .pg-btn:hover,.pg-num:hover{background:var(--sidebar-bg);color:var(--text)}
+  .pg-btn.disabled{opacity:.4;pointer-events:none}
+  .pg-num{width:32px;padding:0;justify-content:center}
+  .pg-num.active{background:var(--primary);color:#fff;border-color:var(--primary);pointer-events:none}
+  .pg-dots{color:var(--text-muted);font-size:.8rem;padding:0 .2rem}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center}
+  .modal-overlay.show{display:flex}
+  .modal-box{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-xl);padding:2rem;width:min(96%,420px);box-shadow:0 20px 50px rgba(0,0,0,.18);animation:mup .22s ease}
+  @keyframes mup{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .modal-icon{width:52px;height:52px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+  .modal-icon .material-icons-outlined{font-size:1.5rem;color:#dc2626}
+  .modal-box h4{font-family:var(--font-display);font-size:1.35rem;font-weight:700;margin:0 0 .4rem;text-align:center;color:var(--text)}
+  .modal-box p{font-size:.83rem;color:var(--text-muted);margin:0 0 1.5rem;text-align:center;line-height:1.6}
+  .modal-btns{display:flex;gap:.65rem;justify-content:center}
+  .btn-cancel{padding:.6rem 1.25rem;border:1px solid var(--border);background:var(--sidebar-bg);color:var(--text);border-radius:var(--radius);font-family:var(--font-body);font-size:.83rem;font-weight:500;cursor:pointer}
+  .btn-danger{padding:.6rem 1.25rem;border:none;background:#dc2626;color:#fff;border-radius:var(--radius);font-family:var(--font-body);font-size:.83rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+  .btn-danger:hover{background:#b91c1c}
 </style>
 {% endblock %}
 
 {% block content %}
 <header class="page-header">
   <div>
-    <h2 class="page-title">Category Management</h2>
-    <div class="title-underline"></div>
+    <h1 class="page-title">Category Management</h1>
+    <p class="title-sub">Organise your product categories</p>
+    <div class="title-bar"></div>
   </div>
-  <div class="header-actions">
-    <a class="btn-add" href="{% url 'add_category' %}">
-      <span class="material-icons-outlined">add</span> Add Category
-    </a>
-  </div>
+  <a class="btn-primary" href="{% url 'add_category' %}">
+    <span class="material-icons-outlined">add</span> Add Category
+  </a>
 </header>
 
+{% if messages %}
+<div style="margin-bottom:1.25rem">
+  {% for message in messages %}
+  <div class="msg-item {% if message.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">
+    <span class="material-icons-outlined" style="font-size:1rem">{% if message.tags == 'error' %}error_outline{% else %}check_circle_outline{% endif %}</span>
+    {{ message }}<button class="msg-close" onclick="this.parentElement.remove()">✕</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
 
-
-<div class="stats-row">
-  <div class="stat-card"><div class="stat-label">Total Categories</div><div class="stat-number">{{ total_categories }}</div></div>
-  <div class="stat-card active"><div class="stat-label">Active Categories</div><div class="stat-number">{{ active_categories }}</div></div>
-  <div class="stat-card inactive"><div class="stat-label">Inactive Categories</div><div class="stat-number">{{ inactive_categories }}</div></div>
+<div class="stats-grid">
+  <div class="stat-card"><span class="stat-label">Total Categories</span><div class="stat-value">{{ total_categories }}</div></div>
+  <div class="stat-card s-active"><span class="stat-label">Active</span><div class="stat-value">{{ active_categories }}</div></div>
+  <div class="stat-card s-inactive"><span class="stat-label">Inactive</span><div class="stat-value">{{ inactive_categories }}</div></div>
 </div>
 
-<div class="pdt-card">
-  <div class="card-top">
-    <h3 class="card-title">All Categories</h3>
-    <div class="controls">
-      <form method="GET" action="{% url 'category_list' %}" style="display:contents;">
-        <div class="search-wrap">
+<div class="listing-card">
+  <div class="card-toolbar">
+    <h3 class="card-label">All Categories</h3>
+    <div class="toolbar-right">
+      <form method="GET" action="{% url 'category_list' %}" style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;">
+        <div class="search-field">
           <span class="material-icons-outlined">search</span>
-          <input class="form-control-custom" type="text" name="search" value="{{ search_query }}" placeholder="Search categories…"/>
+          <input class="search-input" type="text" name="search" value="{{ search_query }}" placeholder="Search categories…"/>
         </div>
         <button type="submit" class="btn-search">Search</button>
         <a href="{% url 'category_list' %}" class="btn-clear">Clear</a>
@@ -139,26 +132,26 @@
     </div>
   </div>
 
-  <div class="table-wrap">
-    <table class="pdt-table">
+  <div class="table-scroll">
+    <table class="listing-table">
       <thead>
-        <tr><th>Sl No</th><th>Category ID</th><th>Image</th><th>Name</th><th>Description</th><th>Products</th><th>Status</th><th>Active</th><th>Actions</th></tr>
+        <tr><th>#</th><th>ID</th><th>Image</th><th>Name</th><th>Description</th><th>Products</th><th>Status</th><th>Toggle</th><th>Actions</th></tr>
       </thead>
       <tbody>
         {% for category in categories %}
         <tr>
-          <td style="font-weight:600;">{{ categories.start_index|add:forloop.counter0 }}</td>
-          <td><span style="font-family:'Courier New',monospace;font-size:.75rem;color:var(--text-muted);">CT-{{ category.id }}</span></td>
+          <td style="font-weight:600;color:var(--text-muted)">{{ categories.start_index|add:forloop.counter0 }}</td>
+          <td><span style="font-family:'Courier New',monospace;font-size:.75rem;color:var(--text-muted)">CT-{{ category.id }}</span></td>
           <td>
-            <div class="cat-img-wrap">
+            <div class="cat-img">
               {% if category.image %}<img src="{{ category.image.url }}" alt="{{ category.category_name }}" loading="lazy">
-              {% else %}<div class="cat-no-img"><span class="material-icons-outlined">image_not_supported</span></div>{% endif %}
+              {% else %}<div class="cat-no-img"><span class="material-icons-outlined" style="font-size:1.2rem">image_not_supported</span></div>{% endif %}
             </div>
           </td>
           <td><div class="cat-name">{{ category.category_name }}</div></td>
-          <td style="color:var(--text-muted);max-width:200px;font-size:.8rem;">{{ category.description|truncatechars:60 }}</td>
+          <td style="color:var(--text-muted);max-width:180px;font-size:.8rem">{{ category.description|truncatechars:55 }}</td>
           <td><span class="count-badge">{{ category.product_count|default:0 }}</span></td>
-          <td>{% if category.is_active %}<span class="badge-status badge-active">Active</span>{% else %}<span class="badge-status badge-inactive">Inactive</span>{% endif %}</td>
+          <td>{% if category.is_active %}<span class="badge badge-active">Active</span>{% else %}<span class="badge badge-inactive">Inactive</span>{% endif %}</td>
           <td>
             <form method="POST" action="{% url 'toggle_category_status' category.id %}">{% csrf_token %}
               <label class="toggle-switch" title="Toggle status">
@@ -168,25 +161,25 @@
             </form>
           </td>
           <td>
-            <div class="action-btns">
-              <a class="action-btn edit" href="{% url 'edit_category' category.id %}" title="Edit"><span class="material-icons-outlined">edit</span></a>
-              <button class="action-btn del" title="Delete" onclick="confirmDelete('{% url 'delete_category' category.id %}', '{{ category.category_name|escapejs }}')"><span class="material-icons-outlined">delete</span></button>
+            <div class="act-group">
+              <a class="act-btn edit" href="{% url 'edit_category' category.id %}" title="Edit"><span class="material-icons-outlined">edit</span></a>
+              <button class="act-btn del" title="Delete" onclick="confirmDelete('{% url 'delete_category' category.id %}','{{ category.category_name|escapejs }}')"><span class="material-icons-outlined">delete_outline</span></button>
             </div>
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="9"><div class="empty-state"><span class="material-icons-outlined">category</span><p>No categories found</p></div></td></tr>
+        <tr class="empty-row"><td colspan="9"><span class="material-icons-outlined empty-icon">category</span>No categories found</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 
-  <div class="card-footer-pdt">
-    <p class="showing-text">Showing {{ categories.start_index }}–{{ categories.end_index }} of {{ categories.paginator.count }} categor{{ categories.paginator.count|pluralize:"y,ies" }}</p>
+  <div class="card-footer">
+    <p class="showing">Showing {{ categories.start_index }}–{{ categories.end_index }} of {{ categories.paginator.count }} categor{{ categories.paginator.count|pluralize:"y,ies" }}</p>
     {% if categories.has_other_pages %}
-    <nav class="pagination-wrap">
-      {% if categories.has_previous %}<a class="pg-btn" href="?page={{ categories.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"><span class="material-icons-outlined">chevron_left</span> Previous</a>
-      {% else %}<span class="pg-btn disabled"><span class="material-icons-outlined">chevron_left</span> Previous</span>{% endif %}
+    <nav class="pg-wrap">
+      {% if categories.has_previous %}<a class="pg-btn" href="?page={{ categories.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"><span class="material-icons-outlined">chevron_left</span> Prev</a>
+      {% else %}<span class="pg-btn disabled"><span class="material-icons-outlined">chevron_left</span> Prev</span>{% endif %}
       {% for num in categories.paginator.page_range %}
         {% if num == categories.number %}<span class="pg-num active">{{ num }}</span>
         {% elif num == 1 or num == categories.paginator.num_pages or num >= categories.number|add:"-2" and num <= categories.number|add:"2" %}<a class="pg-num" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
@@ -202,28 +195,26 @@
 
 {% block extra_js %}
 <script>
-function confirmDelete(url, name) {
-  document.getElementById('deleteModalMsg').textContent = 'Delete "' + name + '"? This action cannot be undone.';
-  document.getElementById('deleteForm').action = url;
+function confirmDelete(url,name){
+  document.getElementById('deleteModalMsg').textContent='Delete "'+name+'"? This cannot be undone.';
+  document.getElementById('deleteForm').action=url;
   document.getElementById('deleteModal').classList.add('show');
 }
-function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('show'); }
-document.getElementById('deleteModal').addEventListener('click', function(e) {
-  if (e.target === this) closeDeleteModal();
-});
+function closeDeleteModal(){document.getElementById('deleteModal').classList.remove('show');}
+document.getElementById('deleteModal').addEventListener('click',function(e){if(e.target===this)closeDeleteModal();});
 </script>
 {% endblock %}
 
 <!-- Delete Modal -->
 <div class="modal-overlay" id="deleteModal">
   <div class="modal-box">
-    <div class="modal-icon-circle"><span class="material-icons-outlined">delete_outline</span></div>
+    <div class="modal-icon"><span class="material-icons-outlined">delete_outline</span></div>
     <h4>Delete Category?</h4>
     <p id="deleteModalMsg">This action cannot be undone.</p>
-    <div class="modal-footer">
+    <div class="modal-btns">
       <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
       <form method="POST" id="deleteForm" style="margin:0;">{% csrf_token %}
-        <button type="submit" class="btn-danger"><span class="material-icons-outlined" style="font-size:.95rem;">delete</span> Yes, Delete</button>
+        <button type="submit" class="btn-danger"><span class="material-icons-outlined" style="font-size:.9rem">delete</span> Delete</button>
       </form>
     </div>
   </div>

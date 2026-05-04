@@ -1,120 +1,198 @@
 {% extends 'admin_base.html' %}
 {% block title %}Outfito | Offer Management{% endblock %}
 {% block extra_head %}
-<script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={theme:{extend:{colors:{cream:{DEFAULT:'#faf8f4',2:'#f3f0ea'},forest:{DEFAULT:'#1a5c3a',mid:'#2a7a50',light:'#e8f4ee',dim:'#134a2c'},gold:{DEFAULT:'#b18a4c',light:'#f5edd8'},ink:{DEFAULT:'#0e0e1a',2:'#3a3a52',3:'#7878a0',4:'#a8a8c0'},surface:{DEFAULT:'#ffffff',2:'#f8f6f1'}},fontFamily:{display:['Cormorant Garamond','serif'],body:['DM Sans','sans-serif']},boxShadow:{'card':'0 1px 3px rgba(14,14,26,.06)','card-hover':'0 4px 16px rgba(14,14,26,.09)'}}}}</script>
+<style>
+  .page-header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;margin-bottom:2rem;gap:1rem}
+  .page-title{font-family:var(--font-display);font-size:2.4rem;font-weight:700;color:var(--text);margin:0 0 .3rem;line-height:1;letter-spacing:-.02em}
+  .title-sub{font-size:.875rem;color:var(--text-muted)}
+  .title-bar{width:48px;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:99px;margin-top:.5rem}
+  .btn-primary{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.35rem;background:var(--primary);color:#fff;border:none;border-radius:var(--radius);font-size:.84rem;font-weight:600;font-family:var(--font-body);cursor:pointer;text-decoration:none;box-shadow:0 4px 14px rgba(6,78,59,.3);transition:all .2s}
+  .btn-primary:hover{background:var(--primary-hover);color:#fff;transform:translateY(-1px)}
+  .btn-primary .material-icons-outlined{font-size:1rem}
+  .listing-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+  .card-toolbar{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
+  .search-field{position:relative;flex:1;min-width:160px}
+  .search-field .material-icons-outlined{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);font-size:.95rem;color:var(--text-muted);pointer-events:none}
+  .search-input{padding:.52rem 1rem .52rem 2.4rem;background:var(--sidebar-bg);border:1px solid var(--border);border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);color:var(--text);width:100%;outline:none;transition:border-color .2s}
+  .search-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(6,78,59,.12)}
+  .filter-select{padding:.52rem 2rem .52rem .85rem;background:var(--sidebar-bg);border:1px solid var(--border);border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);color:var(--text);outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' fill='none'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .7rem center}
+  .filter-select:focus{border-color:var(--primary);outline:none}
+  .table-scroll{overflow-x:auto}
+  .listing-table{width:100%;border-collapse:collapse;min-width:750px}
+  .listing-table thead tr{background:var(--sidebar-bg)}
+  .listing-table thead th{padding:.9rem 1.25rem;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+  .listing-table tbody tr{border-bottom:1px solid var(--border);transition:background .18s}
+  .listing-table tbody tr:last-child{border-bottom:none}
+  .listing-table tbody tr:hover{background:var(--table-hover)}
+  .listing-table td{padding:.9rem 1.25rem;font-size:.84rem;color:var(--text);vertical-align:middle}
+  .offer-name{font-weight:600;font-size:.85rem}
+  .offer-target{font-size:.75rem;color:var(--text-muted);margin-top:2px}
+  .badge{display:inline-flex;align-items:center;padding:.28rem .72rem;border-radius:99px;font-size:.7rem;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+  .badge-product{background:#fff7ed;color:#9a3412}
+  .badge-category{background:#eff6ff;color:#1e40af}
+  .badge-active{background:#d1fae5;color:#065f46}
+  .badge-inactive{background:var(--sidebar-bg);color:var(--text-muted)}
+
+  .toggle-switch{position:relative;width:38px;height:21px;display:inline-block;cursor:pointer}
+  .toggle-switch input{display:none}
+  .toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:99px;transition:background .2s}
+  .toggle-slider::before{content:'';position:absolute;width:15px;height:15px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .toggle-switch input:checked+.toggle-slider{background:var(--accent)}
+  .toggle-switch input:checked+.toggle-slider::before{transform:translateX(17px)}
+  .act-group{display:flex;align-items:center;gap:.3rem}
+  .act-btn{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:var(--radius);cursor:pointer;color:var(--text-muted);transition:all .15s;text-decoration:none}
+  .act-btn .material-icons-outlined{font-size:1.05rem}
+  .act-btn:hover{transform:scale(1.1)}
+  .act-btn.edit:hover{background:var(--primary-light);color:var(--primary)}
+  .act-btn.del:hover{background:#fee2e2;color:#dc2626}
+  .empty-row td{text-align:center;padding:4rem 1rem;color:var(--text-muted)}
+  .empty-icon{font-size:2.8rem;opacity:.35;display:block;margin-bottom:.6rem}
+  .card-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.6rem}
+  .showing{font-size:.75rem;color:var(--text-muted)}
+  .pg-wrap{display:flex;align-items:center;gap:.3rem}
+  .pg-btn,.pg-num{height:32px;padding:0 .8rem;border:1px solid var(--border);background:var(--card-bg);color:var(--text-muted);border-radius:var(--radius);font-size:.78rem;font-weight:500;font-family:var(--font-body);cursor:pointer;display:inline-flex;align-items:center;gap:.2rem;text-decoration:none;transition:all .15s}
+  .pg-btn:hover,.pg-num:hover{background:var(--sidebar-bg);color:var(--text)}
+  .pg-btn.disabled{opacity:.4;pointer-events:none}
+  .pg-num{width:32px;padding:0;justify-content:center}
+  .pg-num.active{background:var(--primary);color:#fff;border-color:var(--primary);pointer-events:none}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);backdrop-filter:blur(4px);z-index:9000;align-items:center;justify-content:center;transition:opacity .2s}
+  .modal-overlay.open{display:flex}
+  .modal-box{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-xl);padding:2rem;width:min(96%,420px);box-shadow:0 20px 50px rgba(0,0,0,.18);animation:mup .22s ease}
+  @keyframes mup{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .modal-icon{width:52px;height:52px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+  .modal-icon .material-icons-outlined{font-size:1.5rem;color:#dc2626}
+  .modal-box h4{font-family:var(--font-display);font-size:1.35rem;font-weight:700;margin:0 0 .4rem;text-align:center;color:var(--text)}
+  .modal-box p{font-size:.83rem;color:var(--text-muted);margin:0 0 1.5rem;text-align:center;line-height:1.6}
+  .modal-btns{display:flex;gap:.65rem;justify-content:center}
+  .btn-cancel{padding:.6rem 1.25rem;border:1px solid var(--border);background:var(--sidebar-bg);color:var(--text);border-radius:var(--radius);font-family:var(--font-body);font-size:.83rem;font-weight:500;cursor:pointer}
+  .btn-danger{padding:.6rem 1.25rem;border:none;background:#dc2626;color:#fff;border-radius:var(--radius);font-family:var(--font-body);font-size:.83rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+  .btn-danger:hover{background:#b91c1c}
+</style>
 {% endblock %}
+
 {% block content %}
-<div class="max-w-[1100px] mx-auto">
-  <div class="flex flex-wrap items-start justify-between gap-4 mb-8">
-    <div>
-      <h1 class="font-display text-[46px] font-bold leading-none tracking-tight text-ink mb-2">Offers</h1>
-      <p class="text-[13.5px] text-ink-3">Manage discounts, coupons, and special product offers.</p>
-    </div>
-    <a href="{% url 'add_offer' %}" class="flex items-center gap-2 bg-forest text-white px-5 py-2.5 rounded-lg text-[13px] font-semibold shadow-card hover:bg-forest-dim transition-all shrink-0">
-      <span class="material-icons-outlined" style="font-size:17px">add</span> Add Offer
-    </a>
+<header class="page-header">
+  <div>
+    <h1 class="page-title">Offer Management</h1>
+    <p class="title-sub">Create and manage product & category discounts</p>
+    <div class="title-bar"></div>
   </div>
-  
-  <form method="GET" class="flex gap-4 mb-6 bg-surface border border-[#e8e2d8] p-3 rounded-xl shadow-sm">
-    <div class="relative flex-1">
-      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-4"><span class="material-icons-outlined" style="font-size:18px">search</span></span>
-      <input type="text" name="search" value="{{ search_query }}" placeholder="Search offers..." class="w-full pl-10 pr-4 py-2 text-[13.5px] bg-cream border-none rounded-lg text-ink focus:ring-2 focus:ring-forest/20 outline-none"/>
-    </div>
-    <select name="type" onchange="this.form.submit()" class="bg-cream text-[13.5px] text-ink border-none rounded-lg px-4 py-2 focus:ring-2 focus:ring-forest/20 outline-none cursor-pointer">
-      <option value="">All Types</option>
-      <option value="product" {% if type_filter == 'product' %}selected{% endif %}>Product Offers</option>
-      <option value="category" {% if type_filter == 'category' %}selected{% endif %}>Category Offers</option>
-    </select>
-    <select name="status" onchange="this.form.submit()" class="bg-cream text-[13.5px] text-ink border-none rounded-lg px-4 py-2 focus:ring-2 focus:ring-forest/20 outline-none cursor-pointer">
-      <option value="">All Status</option>
-      <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
-      <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
-    </select>
-  </form>
-  <div class="bg-surface border border-[#e8e2d8] rounded-2xl shadow-card overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="w-full text-left">
-        <thead>
-          <tr class="bg-cream-2 border-b border-[#e0dbd0]">
-            <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Offer Name</th>
-            <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Apply To</th>
-            <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Discount &amp; Type</th>
-            <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Min / Max</th>
-            <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Dates</th>
-            <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4">Status</th>
-            <th class="px-6 py-4 text-[10px] font-bold tracking-[.15em] uppercase text-ink-4 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[#f0ece4]">
-          {% for offer in offers %}
-          <tr class="hover:bg-cream-2 transition-colors">
-            <td class="px-6 py-5"><p class="font-bold text-[14px] text-ink">{{ offer.offer_name }}</p><p class="text-[11.5px] text-ink-3">{{ offer.applies_to_name }}</p></td>
-            <td class="px-6 py-5"><span class="inline-block px-3 py-1 rounded-full text-[11px] font-semibold {% if offer.apply_to == 'product' %}bg-orange-100 text-orange-700{% else %}bg-blue-100 text-blue-700{% endif %}">{{ offer.get_apply_to_display }}</span></td>
-            <td class="px-6 py-5"><p class="font-bold text-[14px] text-ink">{{ offer.discount_display }}</p><p class="text-[11.5px] text-ink-3">{{ offer.get_discount_type_display }}</p></td>
-            <td class="px-6 py-5"><p class="text-[12.5px] text-ink-2">Min: ₹{{ offer.minimum_purchase_amount }}</p>{% if offer.maximum_discount_amount %}<p class="text-[12.5px] text-ink-2">Max: ₹{{ offer.maximum_discount_amount }}</p>{% endif %}</td>
-            <td class="px-6 py-5"><p class="text-[12.5px] text-ink-2 font-medium">{{ offer.start_date|date:"M d, Y" }}</p><p class="text-[11.5px] text-ink-3">to {{ offer.end_date|date:"M d, Y" }}</p></td>
-            <td class="px-6 py-5"><span id="status-badge-{{ offer.id }}" class="inline-block px-3 py-1 rounded-full text-[11px] font-bold {% if offer.is_active %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-600{% endif %}">{% if offer.is_active %}Active{% else %}Inactive{% endif %}</span></td>
-            <td class="px-6 py-5 text-right">
-              <div class="flex items-center justify-end gap-3">
-                <a href="{% url 'edit_offer' offer.id %}" class="text-ink-3 hover:text-gold transition-colors"><span class="material-icons-outlined" style="font-size:18px">edit</span></a>
-                <button type="button" onclick="openDeleteModal({{ offer.id }})" class="text-ink-3 hover:text-red-500 transition-colors"><span class="material-icons-outlined" style="font-size:18px">delete_outline</span></button>
-                <label class="relative inline-flex items-center cursor-pointer ml-2">
-                  <input type="checkbox" class="sr-only peer" {% if offer.is_active %}checked{% endif %} onchange="toggleOfferStatus({{ offer.id }}, this)">
-                  <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-forest"></div>
-                </label>
-              </div>
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="7" class="py-16 text-center">
-              <div class="flex flex-col items-center justify-center">
-                <span class="material-icons-outlined text-ink-4 mb-2" style="font-size:48px">local_offer</span>
-                <p class="text-ink-3 text-[14px] mb-4">No offers found.</p>
-                <a href="{% url 'add_offer' %}" class="inline-flex items-center gap-2 bg-forest text-white px-5 py-2.5 rounded-lg text-[13px] font-semibold shadow-card hover:bg-forest-dim transition-all">
-                  <span class="material-icons-outlined" style="font-size:17px">add</span> Add Offer
-                </a>
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    <div class="flex items-center justify-between px-6 py-4 border-t border-[#ede8df]">
-      <span class="text-[12px] text-ink-4">Showing {{ offers.start_index }}–{{ offers.end_index }} of {{ offers.paginator.count }} offer{{ offers.paginator.count|pluralize }}</span>
-      {% if offers.has_other_pages %}
-      <div class="flex gap-1">
-        {% if offers.has_previous %}<a href="?page={{ offers.previous_page_number }}&search={{ search_query }}&type={{ type_filter }}&status={{ status_filter }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0dbd0] hover:bg-cream-2"><span class="material-icons-outlined" style="font-size:14px">chevron_left</span></a>{% endif %}
-        {% for num in offers.paginator.page_range %}
-          {% if offers.number == num %}<span class="w-8 h-8 flex items-center justify-center rounded-lg bg-ink text-white font-bold text-[12px]">{{ num }}</span>
-          {% else %}<a href="?page={{ num }}&search={{ search_query }}&type={{ type_filter }}&status={{ status_filter }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0dbd0] hover:bg-cream-2 text-[12px] text-ink-3">{{ num }}</a>{% endif %}
-        {% endfor %}
-        {% if offers.has_next %}<a href="?page={{ offers.next_page_number }}&search={{ search_query }}&type={{ type_filter }}&status={{ status_filter }}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0dbd0] hover:bg-cream-2"><span class="material-icons-outlined" style="font-size:14px">chevron_right</span></a>{% endif %}
+  <a href="{% url 'add_offer' %}" class="btn-primary">
+    <span class="material-icons-outlined">add</span> Add Offer
+  </a>
+</header>
+
+<div class="listing-card">
+  <div class="card-toolbar">
+    <form method="GET" style="display:flex;flex-wrap:wrap;width:100%;gap:.65rem;align-items:center;">
+      <div class="search-field">
+        <span class="material-icons-outlined">search</span>
+        <input class="search-input" type="text" name="search" value="{{ search_query }}" placeholder="Search offers…"/>
       </div>
-      {% endif %}
-    </div>
+      <select name="type" class="filter-select" onchange="this.form.submit()">
+        <option value="">All Types</option>
+        <option value="product" {% if type_filter == 'product' %}selected{% endif %}>Product Offers</option>
+        <option value="category" {% if type_filter == 'category' %}selected{% endif %}>Category Offers</option>
+      </select>
+      <select name="status" class="filter-select" onchange="this.form.submit()">
+        <option value="">All Status</option>
+        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+      </select>
+    </form>
+  </div>
+
+  <div class="table-scroll">
+    <table class="listing-table">
+      <thead>
+        <tr>
+          <th>Offer Name</th><th>Apply To</th><th>Discount</th><th>Min / Max</th><th>Dates</th><th>Status</th><th style="text-align:center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for offer in offers %}
+        <tr>
+          <td>
+            <div class="offer-name">{{ offer.offer_name }}</div>
+            <div class="offer-target">{{ offer.applies_to_name }}</div>
+          </td>
+          <td>
+            <span class="badge {% if offer.apply_to == 'product' %}badge-product{% else %}badge-category{% endif %}">
+              {{ offer.get_apply_to_display }}
+            </span>
+          </td>
+          <td>
+            <div style="font-weight:700;font-size:.88rem">{{ offer.discount_display }}</div>
+            <div style="font-size:.75rem;color:var(--text-muted)">{{ offer.get_discount_type_display }}</div>
+          </td>
+          <td style="font-size:.82rem;color:var(--text-muted)">
+            <div>Min: ₹{{ offer.minimum_purchase_amount }}</div>
+            {% if offer.maximum_discount_amount %}<div>Max: ₹{{ offer.maximum_discount_amount }}</div>{% endif %}
+          </td>
+          <td style="font-size:.82rem;white-space:nowrap">
+            <div style="font-weight:500;color:var(--text)">{{ offer.start_date|date:"M d, Y" }}</div>
+            <div style="color:var(--text-muted)">→ {{ offer.end_date|date:"M d, Y" }}</div>
+          </td>
+          <td>
+            <span id="status-badge-{{ offer.id }}" class="badge {% if offer.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+              {% if offer.is_active %}Active{% else %}Inactive{% endif %}
+            </span>
+          </td>
+          <td>
+            <div class="act-group" style="justify-content:center">
+              <a href="{% url 'edit_offer' offer.id %}" class="act-btn edit" title="Edit"><span class="material-icons-outlined">edit</span></a>
+              <button type="button" class="act-btn del" title="Delete" onclick="openDeleteModal({{ offer.id }})"><span class="material-icons-outlined">delete_outline</span></button>
+              <label class="toggle-switch" title="Toggle status">
+                <input type="checkbox" {% if offer.is_active %}checked{% endif %} onchange="toggleOfferStatus({{ offer.id }},this)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr class="empty-row"><td colspan="7"><span class="material-icons-outlined empty-icon">local_offer</span>No offers found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card-footer">
+    <p class="showing">Showing {{ offers.start_index }}–{{ offers.end_index }} of {{ offers.paginator.count }} offer{{ offers.paginator.count|pluralize }}</p>
+    {% if offers.has_other_pages %}
+    <nav class="pg-wrap">
+      {% if offers.has_previous %}<a class="pg-btn" href="?page={{ offers.previous_page_number }}&search={{ search_query }}&type={{ type_filter }}&status={{ status_filter }}"><span class="material-icons-outlined">chevron_left</span> Prev</a>{% endif %}
+      {% for num in offers.paginator.page_range %}
+        {% if offers.number == num %}<span class="pg-num active">{{ num }}</span>
+        {% else %}<a class="pg-num" href="?page={{ num }}&search={{ search_query }}&type={{ type_filter }}&status={{ status_filter }}">{{ num }}</a>{% endif %}
+      {% endfor %}
+      {% if offers.has_next %}<a class="pg-btn" href="?page={{ offers.next_page_number }}&search={{ search_query }}&type={{ type_filter }}&status={{ status_filter }}">Next <span class="material-icons-outlined">chevron_right</span></a>{% endif %}
+    </nav>
+    {% endif %}
   </div>
 </div>
 
 <!-- Delete Modal -->
-<div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm opacity-0">
-  <div class="bg-white rounded-2xl shadow-xl w-[400px] p-8 text-center scale-95 transition-transform duration-200" id="deleteModalContent">
-    <div class="w-16 h-16 mx-auto bg-red-50 rounded-full flex items-center justify-center mb-5"><span class="material-icons-outlined text-red-500" style="font-size:32px">delete_outline</span></div>
-    <h3 class="font-display text-[24px] font-bold text-ink mb-2">Are you sure want to delete this offer?</h3>
-    <form method="POST" id="deleteForm" class="flex gap-4 mt-8">{% csrf_token %}
-      <button type="submit" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-700">DELETE</button>
-      <button type="button" onclick="closeDeleteModal()" class="flex-1 bg-[#3a3a3a] text-white font-bold py-3 rounded-xl hover:bg-[#222]">CANCEL</button>
-    </form>
+<div id="deleteModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-icon"><span class="material-icons-outlined">delete_outline</span></div>
+    <h4>Delete Offer?</h4>
+    <p>This action cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <form method="POST" id="deleteForm" style="margin:0;">{% csrf_token %}
+        <button type="submit" class="btn-danger"><span class="material-icons-outlined" style="font-size:.9rem">delete</span> Delete</button>
+      </form>
+    </div>
   </div>
 </div>
 {% endblock %}
+
 {% block extra_js %}
 <script>
-function getCookie(name){let v=null;if(document.cookie){const c=document.cookie.split(';');for(let i=0;i<c.length;i++){const k=c[i].trim();if(k.substring(0,name.length+1)===(name+'=')){v=decodeURIComponent(k.substring(name.length+1));break;}}}return v;}
-function toggleOfferStatus(id,cb){const ch=cb.checked;fetch(`/admin_side/offers/toggle/${id}/`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},body:JSON.stringify({is_active:ch})}).then(r=>r.json()).then(d=>{if(d.success){const b=document.getElementById(`status-badge-${id}`);b.className=`inline-block px-3 py-1 rounded-full text-[11px] font-bold ${d.is_active?'bg-green-100 text-green-700':'bg-gray-100 text-gray-600'}`;b.innerText=d.is_active?'Active':'Inactive';}else{alert(d.error||'Failed');cb.checked=!ch;}}).catch(()=>{alert('Error');cb.checked=!ch;});}
-function openDeleteModal(id){const m=document.getElementById('deleteModal'),f=document.getElementById('deleteForm'),c=document.getElementById('deleteModalContent');f.action=`/admin_side/offers/delete/${id}/`;m.classList.remove('hidden');m.classList.add('flex');setTimeout(()=>{m.classList.remove('opacity-0');c.classList.remove('scale-95');},10);}
-function closeDeleteModal(){const m=document.getElementById('deleteModal'),c=document.getElementById('deleteModalContent');m.classList.add('opacity-0');c.classList.add('scale-95');setTimeout(()=>{m.classList.add('hidden');m.classList.remove('flex');},200);}
+function getCookie(n){let v=null;if(document.cookie){const c=document.cookie.split(';');for(let i=0;i<c.length;i++){const k=c[i].trim();if(k.substring(0,n.length+1)===(n+'=')){v=decodeURIComponent(k.substring(n.length+1));break;}}}return v;}
+function toggleOfferStatus(id,cb){const ch=cb.checked;fetch(`/admin_side/offers/toggle/${id}/`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},body:JSON.stringify({is_active:ch})}).then(r=>r.json()).then(d=>{if(d.success){const b=document.getElementById(`status-badge-${id}`);b.className=`badge ${d.is_active?'badge-active':'badge-inactive'}`;b.innerText=d.is_active?'Active':'Inactive';}else{alert(d.error||'Failed');cb.checked=!ch;}}).catch(()=>{alert('Error');cb.checked=!ch;});}
+function openDeleteModal(id){document.getElementById('deleteForm').action=`/admin_side/offers/delete/${id}/`;document.getElementById('deleteModal').classList.add('open');}
+function closeDeleteModal(){document.getElementById('deleteModal').classList.remove('open');}
+document.getElementById('deleteModal').addEventListener('click',function(e){if(e.target===this)closeDeleteModal();});
 </script>
 {% endblock %}

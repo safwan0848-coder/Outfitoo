@@ -15,7 +15,7 @@
   <div class="mb-8">
     <a href="{% url 'offer_list' %}" class="text-ink-3 hover:text-ink font-semibold text-[14px] flex items-center gap-1"><span class="material-icons-outlined" style="font-size:16px">arrow_back</span> Back to Offers</a>
   </div>
-  <div class="bg-white rounded-2xl shadow-sm border border-[#e8e2d8] p-10">
+  <div class="bg-white rounded-2xl shadow-sm border border-[#e8e2d8] p-6 md:p-10">
     <h2 class="font-display text-[28px] font-bold text-center mb-8">Edit Offer</h2>
     
     <form method="POST">{% csrf_token %}
@@ -23,7 +23,7 @@
         <label class="form-label">Offer Name <span class="required">*</span></label>
         <input type="text" name="offer_name" value="{% if post %}{{ post.offer_name }}{% else %}{{ offer.offer_name }}{% endif %}" class="form-input" placeholder="e.g. Summer Special 2024" required>
       </div>
-      <div class="grid grid-cols-2 gap-8 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6">
         <div>
           <label class="form-label">Discount Type <span class="required">*</span></label>
           <div class="flex flex-col gap-3 mt-2">
@@ -39,7 +39,7 @@
           </div>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-6 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
           <label class="form-label" id="targetLabel">Select <span class="required">*</span></label>
           <select name="category_id" id="categorySelect" class="form-input hidden">
@@ -56,11 +56,11 @@
           <input type="number" step="0.01" min="0.01" name="discount_value" value="{% if post %}{{ post.discount_value }}{% else %}{{ offer.discount_value }}{% endif %}" class="form-input" placeholder="0.00" required>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-6 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div id="minPurchaseWrapper"><label class="form-label">Minimum Purchase (₹)</label><input type="number" step="0.01" min="0" name="minimum_purchase_amount" id="minPurchaseInput" value="{% if post %}{{ post.minimum_purchase_amount }}{% else %}{{ offer.minimum_purchase_amount }}{% endif %}" class="form-input" placeholder="0.00"></div>
         <div id="maxDiscountWrapper"><label class="form-label">Maximum Discount (₹)</label><input type="number" step="0.01" min="0" name="maximum_discount_amount" id="maxDiscountInput" value="{% if post %}{{ post.maximum_discount_amount }}{% else %}{{ offer.maximum_discount_amount|default:'' }}{% endif %}" class="form-input" placeholder="0.00"></div>
       </div>
-      <div class="grid grid-cols-2 gap-6 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div><label class="form-label">Start Date <span class="required">*</span></label><input type="date" name="start_date" value="{{ start_date_formatted }}" class="form-input" required></div>
         <div><label class="form-label">End Date <span class="required">*</span></label><input type="date" name="end_date" value="{{ end_date_formatted }}" class="form-input" required></div>
       </div>

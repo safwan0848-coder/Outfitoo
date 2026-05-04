@@ -1,196 +1,187 @@
 {% extends 'admin_base.html' %}
-
 {% block title %}Outfito | Coupon Management{% endblock %}
-
 {% block extra_head %}
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-tailwind.config = {
-  theme: { extend: {
-    colors: {
-      cream: { DEFAULT: '#faf8f4', 2: '#f3f0ea' },
-      forest: { DEFAULT: '#1a5c3a', mid: '#2a7a50', light: '#e8f4ee', dim: '#134a2c' },
-      gold: { DEFAULT: '#b18a4c', light: '#f5edd8' },
-      ink: { DEFAULT: '#0e0e1a', 2: '#3a3a52', 3: '#7878a0', 4: '#a8a8c0' },
-      surface: { DEFAULT: '#ffffff', 2: '#f8f6f1' },
-    },
-    fontFamily: { display: ['Cormorant Garamond','Georgia','serif'], body: ['DM Sans','sans-serif'] },
-    boxShadow: { 'card': '0 1px 3px rgba(14,14,26,.06),0 1px 2px rgba(14,14,26,.04)', 'card-hover': '0 4px 16px rgba(14,14,26,.09)' },
-    keyframes: { fadeUp: { '0%': { opacity:'0', transform:'translateY(12px)' }, '100%': { opacity:'1', transform:'translateY(0)' } } },
-    animation: { 'fade-up':'fadeUp .38s ease both', 'fade-up-1':'fadeUp .38s .08s ease both', 'fade-up-2':'fadeUp .38s .16s ease both' },
-  }}
-}
-</script>
 <style>
-  .bar-fill { transition: width .6s cubic-bezier(.4,0,.2,1); }
-  .code-chip { transition: box-shadow .18s ease, transform .18s ease; }
-  .code-chip:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,92,58,.18); }
+  .page-header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;margin-bottom:2rem;gap:1rem}
+  .page-title{font-family:var(--font-display);font-size:2.4rem;font-weight:700;color:var(--text);margin:0 0 .3rem;line-height:1;letter-spacing:-.02em}
+  .title-sub{font-size:.875rem;color:var(--text-muted)}
+  .title-bar{width:48px;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:99px;margin-top:.5rem}
+  .btn-primary{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.35rem;background:var(--primary);color:#fff;border:none;border-radius:var(--radius);font-size:.84rem;font-weight:600;font-family:var(--font-body);cursor:pointer;text-decoration:none;box-shadow:0 4px 14px rgba(6,78,59,.3);transition:all .2s}
+  .btn-primary:hover{background:var(--primary-hover);color:#fff;transform:translateY(-1px)}
+  .btn-primary .material-icons-outlined{font-size:1rem}
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;margin-bottom:1.75rem}
+  @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:480px){.stats-grid{grid-template-columns:1fr 1fr}}
+  .stat-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-xl);padding:1.35rem 1.5rem;box-shadow:var(--shadow-sm)}
+  .stat-label{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.55rem;display:block}
+  .stat-value{font-family:var(--font-display);font-size:2.2rem;font-weight:700;color:var(--text);line-height:1;margin-bottom:.4rem}
+  .stat-chip{display:inline-block;padding:.18rem .65rem;border-radius:99px;font-size:.7rem;font-weight:600;background:var(--primary-light);color:var(--primary)}
+  .listing-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+  .card-toolbar{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;justify-content:space-between}
+  .card-label{font-family:var(--font-display);font-size:1.2rem;font-weight:600;color:var(--text);margin:0}
+  .toolbar-right{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+  .search-field{position:relative;flex:1;min-width:160px}
+  .search-field .material-icons-outlined{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);font-size:.95rem;color:var(--text-muted);pointer-events:none}
+  .search-input{padding:.52rem 1rem .52rem 2.4rem;background:var(--sidebar-bg);border:1px solid var(--border);border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);color:var(--text);width:100%;max-width:240px;outline:none;transition:border-color .2s}
+  .search-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(6,78,59,.12)}
+  .btn-search{padding:.52rem 1.1rem;background:var(--primary);color:#fff;border:none;border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);font-weight:600;cursor:pointer}
+  .btn-clear{padding:.52rem 1rem;background:var(--sidebar-bg);border:1px solid var(--border);border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);color:var(--text-muted);text-decoration:none;display:inline-flex;align-items:center}
+  .btn-clear:hover{color:var(--text)}
+  .table-scroll{overflow-x:auto}
+  .listing-table{width:100%;border-collapse:collapse;min-width:720px}
+  .listing-table thead tr{background:var(--sidebar-bg)}
+  .listing-table thead th{padding:.9rem 1.25rem;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+  .listing-table tbody tr{border-bottom:1px solid var(--border);transition:background .18s}
+  .listing-table tbody tr:last-child{border-bottom:none}
+  .listing-table tbody tr:hover{background:var(--table-hover)}
+  .listing-table td{padding:.9rem 1.25rem;font-size:.84rem;color:var(--text);vertical-align:middle}
+  .code-chip{display:inline-block;font-family:'Courier New',monospace;font-size:.78rem;font-weight:700;letter-spacing:.12em;background:var(--primary-light);color:var(--primary);border:1px solid rgba(6,78,59,.15);padding:.3rem .8rem;border-radius:var(--radius);transition:transform .18s,box-shadow .18s}
+  .code-chip:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(6,78,59,.18)}
+  .discount-val{font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--text);line-height:1}
+  .discount-type{font-size:.72rem;color:var(--text-muted);margin-top:2px}
+  .usage-bar-track{width:72px;height:5px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:5px}
+  .usage-bar-fill{height:100%;background:var(--accent);border-radius:99px;transition:width .5s ease}
+  .badge{display:inline-flex;align-items:center;gap:.3rem;padding:.28rem .72rem;border-radius:99px;font-size:.7rem;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+  .badge::before{content:'';width:5px;height:5px;border-radius:50%;display:inline-block}
+  .badge-active{background:#d1fae5;color:#065f46}.badge-active::before{background:#065f46}
+  .badge-inactive{background:var(--sidebar-bg);color:var(--text-muted)}.badge-inactive::before{background:var(--text-muted)}
+  .act-group{display:flex;align-items:center;gap:.2rem}
+  .act-btn{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:var(--radius);cursor:pointer;color:var(--text-muted);transition:all .15s;text-decoration:none}
+  .act-btn .material-icons-outlined{font-size:1.05rem}
+  .act-btn:hover{transform:scale(1.1)}
+  .act-btn.edit:hover{background:var(--primary-light);color:var(--primary)}
+  .act-btn.del:hover{background:#fee2e2;color:#dc2626}
+  .empty-row td{text-align:center;padding:4rem 1rem;color:var(--text-muted)}
+  .empty-icon{font-size:2.8rem;opacity:.35;display:block;margin-bottom:.6rem}
+  .card-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.6rem}
+  .showing{font-size:.75rem;color:var(--text-muted)}
+  .pg-wrap{display:flex;align-items:center;gap:.3rem}
+  .pg-btn,.pg-num{height:32px;padding:0 .8rem;border:1px solid var(--border);background:var(--card-bg);color:var(--text-muted);border-radius:var(--radius);font-size:.78rem;font-weight:500;font-family:var(--font-body);cursor:pointer;display:inline-flex;align-items:center;gap:.2rem;text-decoration:none;transition:all .15s}
+  .pg-btn:hover,.pg-num:hover{background:var(--sidebar-bg);color:var(--text)}
+  .pg-btn.disabled{opacity:.4;pointer-events:none}
+  .pg-num{width:32px;padding:0;justify-content:center}
+  .pg-num.active{background:var(--primary);color:#fff;border-color:var(--primary);pointer-events:none}
+  .pg-dots{color:var(--text-muted);font-size:.8rem;padding:0 .2rem}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-[1100px] mx-auto">
-  <!-- Page header -->
-  <div class="flex items-start justify-between gap-6 mb-8 animate-fade-up">
-    <div>
-      <h1 class="font-display text-[46px] font-bold leading-none tracking-tight text-ink mb-2">Coupons</h1>
-      <p class="text-[13.5px] text-ink-3">Manage discount codes, promotions &amp; usage limits.</p>
-    </div>
-    <a href="{% url 'add_coupon' %}" class="flex items-center gap-2 bg-forest text-white px-5 py-2.5 rounded-lg text-[13px] font-semibold shadow-card hover:bg-forest-dim hover:-translate-y-px active:translate-y-0 transition-all duration-150 shrink-0">
-      <span class="material-icons-outlined" style="font-size:17px">add_circle_outline</span> Add Coupon
-    </a>
+<header class="page-header">
+  <div>
+    <h1 class="page-title">Coupon Management</h1>
+    <p class="title-sub">Manage discount codes, promotions &amp; usage limits</p>
+    <div class="title-bar"></div>
   </div>
+  <a href="{% url 'add_coupon' %}" class="btn-primary">
+    <span class="material-icons-outlined">add_circle_outline</span> Add Coupon
+  </a>
+</header>
 
-  <!-- Stats strip -->
-  <div class="grid grid-cols-4 gap-4 mb-7 animate-fade-up-1">
-    <div class="bg-surface border border-[#e8e2d8] rounded-xl p-5 shadow-card hover:shadow-card-hover transition-shadow">
-      <p class="text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4 mb-3">Total Coupons</p>
-      <p class="font-display text-[34px] font-bold text-ink leading-none">{{ total_coupons }}</p>
-      <span class="inline-block mt-2.5 text-[10px] font-semibold bg-forest-light text-forest-mid px-2.5 py-1 rounded-full">All time records</span>
-    </div>
-    <div class="bg-surface border border-[#e8e2d8] rounded-xl p-5 shadow-card hover:shadow-card-hover transition-shadow">
-      <p class="text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4 mb-3">Active</p>
-      <p class="font-display text-[34px] font-bold text-ink leading-none">{{ active_coupons }}</p>
-      <span class="inline-block mt-2.5 text-[10px] font-semibold bg-forest-light text-forest-mid px-2.5 py-1 rounded-full">{{ active_rate }}% active rate</span>
-    </div>
-    <div class="bg-surface border border-[#e8e2d8] rounded-xl p-5 shadow-card hover:shadow-card-hover transition-shadow">
-      <p class="text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4 mb-3">Total Uses</p>
-      <p class="font-display text-[34px] font-bold text-ink leading-none">{{ total_uses }}</p>
-      <span class="inline-block mt-2.5 text-[10px] font-semibold bg-forest-light text-forest-mid px-2.5 py-1 rounded-full">Coupon applications</span>
-    </div>
-    <div class="bg-surface border border-[#e8e2d8] rounded-xl p-5 shadow-card hover:shadow-card-hover transition-shadow">
-      <p class="text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4 mb-3">Savings Given</p>
-      <p class="font-display text-[34px] font-bold text-ink leading-none">Rs.{{ savings_given }}</p>
-    </div>
+<div class="stats-grid">
+  <div class="stat-card">
+    <span class="stat-label">Total Coupons</span>
+    <div class="stat-value">{{ total_coupons }}</div>
+    <span class="stat-chip">All records</span>
   </div>
+  <div class="stat-card">
+    <span class="stat-label">Active</span>
+    <div class="stat-value">{{ active_coupons }}</div>
+    <span class="stat-chip">{{ active_rate }}% active</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Total Uses</span>
+    <div class="stat-value">{{ total_uses }}</div>
+    <span class="stat-chip">Applications</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Savings Given</span>
+    <div class="stat-value" style="font-size:1.7rem">₹{{ savings_given }}</div>
+    <span class="stat-chip">Total discounted</span>
+  </div>
+</div>
 
-  <!-- Table card -->
-  <div class="bg-surface border border-[#e8e2d8] rounded-2xl shadow-card overflow-hidden animate-fade-up-2">
-    <div class="flex items-center justify-between px-6 py-4 border-b border-[#ede8df]">
-      <span class="text-[10.5px] font-bold tracking-[.18em] uppercase text-ink-3">All Coupons</span>
-      <form method="GET" action="{% url 'coupon_list' %}" class="relative w-72 flex gap-2">
-        <div class="relative flex-1">
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-4 pointer-events-none">
-            <span class="material-icons-outlined" style="font-size:16px">search</span>
-          </span>
-          <input type="text" name="search" value="{{ search_query }}" placeholder="Search by code…"
-            class="w-full pl-9 pr-4 py-2 text-[13px] bg-cream border border-[#e0dbd0] rounded-lg text-ink placeholder-ink-4 outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all"/>
+<div class="listing-card">
+  <div class="card-toolbar">
+    <h3 class="card-label">All Coupons</h3>
+    <div class="toolbar-right">
+      <form method="GET" action="{% url 'coupon_list' %}" style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;">
+        <div class="search-field">
+          <span class="material-icons-outlined">search</span>
+          <input class="search-input" type="text" name="search" value="{{ search_query }}" placeholder="Search by code…"/>
         </div>
-        <button type="submit" class="px-3 py-2 bg-forest text-white rounded-lg text-[12px] font-semibold">Search</button>
-        {% if search_query %}<a href="{% url 'coupon_list' %}" class="px-3 py-2 bg-cream border border-[#e0dbd0] rounded-lg text-[12px] text-ink-3">Clear</a>{% endif %}
+        <button type="submit" class="btn-search">Search</button>
+        {% if search_query %}<a href="{% url 'coupon_list' %}" class="btn-clear">Clear</a>{% endif %}
       </form>
     </div>
+  </div>
 
-    <div class="overflow-x-auto">
-      <table class="w-full" id="couponTable">
-        <thead>
-          <tr class="bg-cream-2 border-b border-[#e0dbd0]">
-            <th class="px-6 py-3.5 text-left text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4">Code</th>
-            <th class="px-5 py-3.5 text-left text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4">Discount</th>
-            <th class="px-5 py-3.5 text-left text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4">Min / Max</th>
-            <th class="px-5 py-3.5 text-left text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4">Usage</th>
-            <th class="px-5 py-3.5 text-left text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4">Expiry</th>
-            <th class="px-5 py-3.5 text-left text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4">Status</th>
-            <th class="px-6 py-3.5 text-right text-[9.5px] font-bold tracking-[.2em] uppercase text-ink-4">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[#f0ece4]">
-          {% for coupon in coupons %}
-          <tr class="group hover:bg-cream-2 transition-colors">
-            <td class="px-6 py-[18px]">
-              <span class="code-chip inline-block font-mono text-[12px] font-bold tracking-widest text-forest bg-forest-light border border-forest/10 px-3.5 py-1.5 rounded-lg">{{ coupon.code }}</span>
-            </td>
-            <td class="px-5 py-[18px]">
-              <div class="font-display text-[18px] font-bold text-ink leading-tight">
-                {% if coupon.discount_type == 'percentage' %}{{ coupon.discount_value }}%{% else %}Rs.{{ coupon.discount_value }}{% endif %}
-              </div>
-              <div class="text-[10.5px] text-ink-4 mt-0.5">{{ coupon.get_discount_type_display }}</div>
-            </td>
-            <td class="px-5 py-[18px]">
-              <div class="text-[11.5px] text-ink-3 space-y-0.5">
-                {% if coupon.min_amount %}<div><span class="font-semibold text-ink-2">Min</span> Rs.{{ coupon.min_amount }}</div>{% endif %}
-                {% if coupon.max_discount %}<div><span class="font-semibold text-ink-2">Max</span> Rs.{{ coupon.max_discount }}</div>{% endif %}
-                {% if not coupon.min_amount and not coupon.max_discount %}<span class="text-ink-4">—</span>{% endif %}
-              </div>
-            </td>
-            <td class="px-5 py-[18px]">
-              <div class="flex items-baseline gap-1 mb-1.5">
-                <span class="text-[14px] font-bold text-ink">{{ coupon.used_count|default:0 }}</span>
-                <span class="text-[10px] text-ink-4">/</span>
-                <span class="text-[11px] text-ink-4">{{ coupon.usage_limit|default:"∞" }}</span>
-              </div>
-              {% if coupon.usage_limit %}
-              <div class="w-20 h-1 bg-[#e8e2d8] rounded-full overflow-hidden">
-                <div class="bar-fill h-full bg-gold rounded-full" style="width: {% widthratio coupon.used_count|default:0 coupon.usage_limit 100 %}%"></div>
-              </div>
-              {% endif %}
-            </td>
-            <td class="px-5 py-[18px]">
-              <div class="text-[13px] font-medium text-ink-2">{{ coupon.expiry_date|date:"M d, Y" }}</div>
-            </td>
-            <td class="px-5 py-[18px]">
-              {% if coupon.is_active %}
-              <span class="inline-flex items-center gap-1.5 text-[9.5px] font-bold uppercase tracking-[.08em] text-forest-mid bg-forest-light border border-forest/20 px-3 py-1.5 rounded-full">
-                <span class="w-1.5 h-1.5 rounded-full bg-forest-mid"></span>Active
-              </span>
-              {% else %}
-              <span class="inline-flex items-center gap-1.5 text-[9.5px] font-bold uppercase tracking-[.08em] text-ink-4 bg-surface-2 border border-[#e0dbd0] px-3 py-1.5 rounded-full">
-                <span class="w-1.5 h-1.5 rounded-full bg-ink-4"></span>Inactive
-              </span>
-              {% endif %}
-            </td>
-            <td class="px-6 py-[18px]">
-              <div class="flex items-center justify-end gap-1">
-                <a href="{% url 'edit_coupon' coupon.id %}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-transparent text-ink-4 hover:text-gold-dim hover:bg-gold-light hover:border-gold/20 transition-all" title="Edit">
-                  <span class="material-icons-outlined" style="font-size:16px">edit</span>
-                </a>
-                <a href="{% url 'delete_coupon' coupon.id %}" onclick="return confirm('Are you sure you want to delete this coupon?');" class="w-8 h-8 flex items-center justify-center rounded-lg border border-transparent text-ink-4 hover:text-red-600 hover:bg-red-50 hover:border-red-200 transition-all" title="Delete">
-                  <span class="material-icons-outlined" style="font-size:16px">delete_outline</span>
-                </a>
-              </div>
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="7" class="py-20 text-center">
-              <div class="text-[#e0dbd0]"><span class="material-icons-outlined" style="font-size:48px">confirmation_number</span></div>
-              <p class="text-[13.5px] text-ink-4 mt-3">No coupons found. Create your first coupon.</p>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="flex items-center justify-between px-6 py-4 border-t border-[#ede8df]">
-      <p class="text-[12px] text-ink-4">Showing {{ coupons.start_index }}–{{ coupons.end_index }} of {{ coupons.paginator.count }} coupon{{ coupons.paginator.count|pluralize }}</p>
-      {% if coupons.has_other_pages %}
-      <nav class="flex items-center gap-1">
-        {% if coupons.has_previous %}
-          <a href="?page={{ coupons.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-1.5 text-[12px] border border-[#e0dbd0] rounded-lg text-ink-3 hover:bg-cream transition-colors flex items-center gap-1">
-            <span class="material-icons-outlined" style="font-size:14px">chevron_left</span> Prev
-          </a>
-        {% endif %}
-        {% for num in coupons.paginator.page_range %}
-          {% if num == coupons.number %}
-            <span class="px-3 py-1.5 text-[12px] border border-forest bg-forest text-white rounded-lg font-semibold">{{ num }}</span>
-          {% elif num == 1 or num == coupons.paginator.num_pages or num >= coupons.number|add:"-2" and num <= coupons.number|add:"2" %}
-            <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-1.5 text-[12px] border border-[#e0dbd0] rounded-lg text-ink-3 hover:bg-cream transition-colors">{{ num }}</a>
-          {% elif num == coupons.number|add:"-3" or num == coupons.number|add:"3" %}
-            <span class="px-1 text-ink-4 text-[12px]">…</span>
-          {% endif %}
+  <div class="table-scroll">
+    <table class="listing-table" id="couponTable">
+      <thead>
+        <tr>
+          <th>Code</th><th>Discount</th><th>Min / Max</th><th>Usage</th><th>Expiry</th><th>Status</th><th style="text-align:right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for coupon in coupons %}
+        <tr>
+          <td><span class="code-chip">{{ coupon.code }}</span></td>
+          <td>
+            <div class="discount-val">{% if coupon.discount_type == 'percentage' %}{{ coupon.discount_value }}%{% else %}₹{{ coupon.discount_value }}{% endif %}</div>
+            <div class="discount-type">{{ coupon.get_discount_type_display }}</div>
+          </td>
+          <td style="font-size:.82rem;color:var(--text-muted)">
+            {% if coupon.min_amount %}<div><strong style="color:var(--text)">Min</strong> ₹{{ coupon.min_amount }}</div>{% endif %}
+            {% if coupon.max_discount %}<div><strong style="color:var(--text)">Max</strong> ₹{{ coupon.max_discount }}</div>{% endif %}
+            {% if not coupon.min_amount and not coupon.max_discount %}<span>—</span>{% endif %}
+          </td>
+          <td>
+            <div style="display:flex;align-items:baseline;gap:.25rem">
+              <span style="font-weight:700;font-size:.88rem">{{ coupon.used_count|default:0 }}</span>
+              <span style="font-size:.72rem;color:var(--text-muted)">/ {{ coupon.usage_limit|default:"∞" }}</span>
+            </div>
+            {% if coupon.usage_limit %}
+            <div class="usage-bar-track">
+              <div class="usage-bar-fill" style="width:{% widthratio coupon.used_count|default:0 coupon.usage_limit 100 %}%"></div>
+            </div>
+            {% endif %}
+          </td>
+          <td style="font-size:.82rem;font-weight:500;white-space:nowrap">{{ coupon.expiry_date|date:"M d, Y" }}</td>
+          <td>
+            {% if coupon.is_active %}<span class="badge badge-active">Active</span>
+            {% else %}<span class="badge badge-inactive">Inactive</span>{% endif %}
+          </td>
+          <td>
+            <div class="act-group" style="justify-content:flex-end">
+              <a href="{% url 'edit_coupon' coupon.id %}" class="act-btn edit" title="Edit"><span class="material-icons-outlined">edit</span></a>
+              <a href="{% url 'delete_coupon' coupon.id %}" class="act-btn del" title="Delete" onclick="return confirm('Delete this coupon?')"><span class="material-icons-outlined">delete_outline</span></a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr class="empty-row"><td colspan="7"><span class="material-icons-outlined empty-icon">confirmation_number</span>No coupons found. Create your first coupon.</td></tr>
         {% endfor %}
-        {% if coupons.has_next %}
-          <a href="?page={{ coupons.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-1.5 text-[12px] border border-[#e0dbd0] rounded-lg text-ink-3 hover:bg-cream transition-colors flex items-center gap-1">
-            Next <span class="material-icons-outlined" style="font-size:14px">chevron_right</span>
-          </a>
-        {% endif %}
-      </nav>
-      {% endif %}
-    </div>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card-footer">
+    <p class="showing">Showing {{ coupons.start_index }}–{{ coupons.end_index }} of {{ coupons.paginator.count }} coupon{{ coupons.paginator.count|pluralize }}</p>
+    {% if coupons.has_other_pages %}
+    <nav class="pg-wrap">
+      {% if coupons.has_previous %}<a class="pg-btn" href="?page={{ coupons.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"><span class="material-icons-outlined">chevron_left</span> Prev</a>
+      {% else %}<span class="pg-btn disabled"><span class="material-icons-outlined">chevron_left</span> Prev</span>{% endif %}
+      {% for num in coupons.paginator.page_range %}
+        {% if num == coupons.number %}<span class="pg-num active">{{ num }}</span>
+        {% elif num == 1 or num == coupons.paginator.num_pages or num >= coupons.number|add:"-2" and num <= coupons.number|add:"2" %}<a class="pg-num" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+        {% elif num == coupons.number|add:"-3" or num == coupons.number|add:"3" %}<span class="pg-dots">···</span>{% endif %}
+      {% endfor %}
+      {% if coupons.has_next %}<a class="pg-btn" href="?page={{ coupons.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next <span class="material-icons-outlined">chevron_right</span></a>
+      {% else %}<span class="pg-btn disabled">Next <span class="material-icons-outlined">chevron_right</span></span>{% endif %}
+    </nav>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
 
-{% block extra_js %}
-{% endblock %}
+{% block extra_js %}{% endblock %}

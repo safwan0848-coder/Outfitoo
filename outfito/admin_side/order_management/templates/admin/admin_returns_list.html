@@ -1,128 +1,122 @@
 {% extends 'admin_base.html' %}
-
 {% block title %}Outfito Admin – Return Requests{% endblock %}
-
 {% block extra_head %}
 <style>
-  :root {
-    --badge-green-bg:#def7ec; --badge-green-fg:#046c4e;
-    --badge-yellow-bg:#fdf6b2; --badge-yellow-fg:#8a4afe;
-    --badge-blue-bg:#e1effe; --badge-blue-fg:#1e429f;
-    --badge-red-bg:#fde8e8; --badge-red-fg:#9b1c1c;
-  }
-  [data-theme="dark"] {
-    --badge-green-bg:rgba(16,185,129,.15); --badge-green-fg:#6ee7b7;
-    --badge-yellow-bg:rgba(245,158,11,.15); --badge-yellow-fg:#fcd34d;
-    --badge-blue-bg:rgba(59,130,246,.15); --badge-blue-fg:#93c5fd;
-    --badge-red-bg:rgba(239,68,68,.15); --badge-red-fg:#fca5a5;
-  }
-  .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; }
-  .page-title { font-family:var(--font-display); font-size:2.4rem; font-weight:700; color:var(--text); margin:0; line-height:1; }
-  .filter-bar { background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius-xl) var(--radius-xl) 0 0; padding:1.25rem 1.5rem; display:flex; gap:1rem; align-items:center; border-bottom:none; }
-  .search-input-wrap { flex:1; position:relative; background:var(--bg); border-radius:var(--radius); border:1px solid var(--border); }
-  .search-input-wrap .material-icons-outlined { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:1.2rem; }
-  .search-input-wrap input { width:100%; border:none; background:transparent; padding:.8rem 1rem .8rem 2.8rem; font-family:var(--font-body); font-size:.9rem; color:var(--text); outline:none; }
-  .filter-select { border:1px solid var(--border); padding:.8rem 1rem; border-radius:var(--radius); background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:.85rem; font-weight:500; outline:none; cursor:pointer; }
-  .table-container { background:var(--card-bg); border:1px solid var(--border); border-radius:0 0 var(--radius-xl) var(--radius-xl); box-shadow:var(--shadow-sm); overflow-x:auto; }
-  .orders-table { width:100%; border-collapse:collapse; }
-  .orders-table th { padding:1rem 1.5rem; font-size:.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border); background:var(--bg); text-align:left; }
-  .orders-table td { padding:1.25rem 1.5rem; border-bottom:1px solid var(--border); font-size:.85rem; color:var(--text); vertical-align:middle; }
-  .orders-table tr:hover { background:var(--table-hover); }
-  .orders-table tr:last-child td { border-bottom:none; }
-  .user-cell { display:flex; align-items:center; gap:.75rem; }
-  .user-info .name { font-weight:600; color:var(--text); }
-  .user-info .email { font-size:.75rem; color:var(--text-muted); margin-top:2px; }
-  .order-id { font-weight:700; color:var(--text); font-family:'Courier New',Courier,monospace; }
-  .status-badge { display:inline-flex; align-items:center; padding:.3rem .8rem; border-radius:99px; font-size:.7rem; font-weight:700; letter-spacing:.02em; }
-  .status-delivered { background:var(--badge-green-bg); color:var(--badge-green-fg); }
-  .status-pending { background:var(--badge-yellow-bg); color:var(--badge-yellow-fg); }
-  .status-out { background:var(--badge-blue-bg); color:var(--badge-blue-fg); }
-  .status-cancelled { background:var(--badge-red-bg); color:var(--badge-red-fg); }
-  .action-view { font-weight:700; color:var(--primary); text-transform:uppercase; font-size:.75rem; letter-spacing:.05em; display:inline-block; transition:.2s; }
-  .action-view:hover { color:var(--accent); }
-  .pagination-footer { padding:1.5rem; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); }
-  .showing-text { font-size:.8rem; color:var(--text-muted); }
-  .page-controls { display:flex; align-items:center; gap:.5rem; }
-  .page-link { padding:.4rem .8rem; border-radius:var(--radius); font-size:.85rem; color:var(--text-muted); font-weight:600; cursor:pointer; border:none; background:transparent; }
-  .page-link:hover { background:var(--border); color:var(--text); }
-  .page-link.active { background:var(--primary); color:#fff; }
+  .page-header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;margin-bottom:2rem;gap:1rem}
+  .page-title{font-family:var(--font-display);font-size:2.4rem;font-weight:700;color:var(--text);margin:0 0 .3rem;line-height:1;letter-spacing:-.02em}
+  .title-sub{font-size:.875rem;color:var(--text-muted)}
+  .title-bar{width:48px;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:99px;margin-top:.5rem}
+  .listing-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+  .card-toolbar{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
+  .search-field{position:relative;flex:1;min-width:180px}
+  .search-field .material-icons-outlined{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);font-size:.95rem;color:var(--text-muted);pointer-events:none}
+  .search-input{padding:.52rem 1rem .52rem 2.4rem;background:var(--sidebar-bg);border:1px solid var(--border);border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);color:var(--text);width:100%;outline:none;transition:border-color .2s,box-shadow .2s}
+  .search-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(6,78,59,.12)}
+  .btn-search{padding:.52rem 1.1rem;background:var(--primary);color:#fff;border:none;border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);font-weight:600;cursor:pointer}
+  .btn-clear{padding:.52rem 1rem;background:var(--sidebar-bg);border:1px solid var(--border);border-radius:var(--radius);font-size:.82rem;font-family:var(--font-body);color:var(--text-muted);text-decoration:none;display:inline-flex;align-items:center}
+  .btn-clear:hover{color:var(--text)}
+  .table-scroll{overflow-x:auto}
+  .listing-table{width:100%;border-collapse:collapse;min-width:660px}
+  .listing-table thead tr{background:var(--sidebar-bg)}
+  .listing-table thead th{padding:.9rem 1.25rem;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+  .listing-table tbody tr{border-bottom:1px solid var(--border);transition:background .18s}
+  .listing-table tbody tr:last-child{border-bottom:none}
+  .listing-table tbody tr:hover{background:var(--table-hover)}
+  .listing-table td{padding:.9rem 1.25rem;font-size:.84rem;color:var(--text);vertical-align:middle}
+  .ref-id{font-weight:700;font-family:'Courier New',monospace;font-size:.8rem}
+  .user-name{font-weight:600;font-size:.84rem}
+  .user-email{font-size:.72rem;color:var(--text-muted);margin-top:1px}
+  .badge{display:inline-flex;align-items:center;padding:.28rem .75rem;border-radius:99px;font-size:.7rem;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+  .badge-green{background:#d1fae5;color:#065f46}
+  .badge-yellow{background:#fef9c3;color:#854d0e}
+  .badge-blue{background:#dbeafe;color:#1e40af}
+  .badge-red{background:#fee2e2;color:#991b1b}
+
+  .action-link{font-weight:700;color:var(--primary);text-transform:uppercase;font-size:.73rem;letter-spacing:.05em;text-decoration:none;display:inline-flex;align-items:center;gap:.25rem;transition:.2s}
+  .action-link:hover{color:var(--accent)}
+  .card-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.6rem}
+  .showing{font-size:.75rem;color:var(--text-muted)}
+  .pg-wrap{display:flex;align-items:center;gap:.3rem}
+  .pg-btn,.pg-num{height:32px;padding:0 .8rem;border:1px solid var(--border);background:var(--card-bg);color:var(--text-muted);border-radius:var(--radius);font-size:.78rem;font-weight:500;font-family:var(--font-body);cursor:pointer;display:inline-flex;align-items:center;gap:.2rem;text-decoration:none;transition:all .15s}
+  .pg-btn:hover,.pg-num:hover{background:var(--sidebar-bg);color:var(--text)}
+  .pg-btn.disabled{opacity:.4;pointer-events:none}
+  .pg-num{width:32px;padding:0;justify-content:center}
+  .pg-num.active{background:var(--primary);color:#fff;border-color:var(--primary);pointer-events:none}
+  .empty-row td{text-align:center;padding:4rem 1rem;color:var(--text-muted)}
+  .empty-icon{font-size:2.8rem;opacity:.35;display:block;margin-bottom:.6rem}
 </style>
 {% endblock %}
 
 {% block content %}
 <header class="page-header">
-  <h2 class="page-title">Return Requests</h2>
+  <div>
+    <h1 class="page-title">Return Requests</h1>
+    <p class="title-sub">Manage and process customer return requests</p>
+    <div class="title-bar"></div>
+  </div>
 </header>
 
-<!-- Toolbar -->
-<div class="filter-bar">
-  <form method="GET" style="display:flex; width:100%; gap:1rem;">
-    <div class="search-input-wrap">
-      <span class="material-icons-outlined">search</span>
-      <input type="text" name="search" value="{{ search_query }}" placeholder="Search returns...">
-    </div>
-    {% if search_query %}
-    <a href="{% url 'admin_returns_list' %}" class="filter-select" style="text-decoration:none; background:var(--bg); border:1px solid var(--border); display:flex; align-items:center;">Clear</a>
-    {% endif %}
-  </form>
-</div>
+<div class="listing-card">
+  <div class="card-toolbar">
+    <form method="GET" style="display:flex;flex-wrap:wrap;width:100%;gap:.65rem;align-items:center;">
+      <div class="search-field">
+        <span class="material-icons-outlined">search</span>
+        <input class="search-input" type="text" name="search" value="{{ search_query }}" placeholder="Search returns…">
+      </div>
+      <button type="submit" class="btn-search">Search</button>
+      {% if search_query %}
+      <a href="{% url 'admin_returns_list' %}" class="btn-clear">Clear</a>
+      {% endif %}
+    </form>
+  </div>
 
-<!-- Table -->
-<div class="table-container">
-  <table class="orders-table">
-    <thead>
-      <tr>
-        <th>Return ID</th><th>Order ID</th><th>Customer Name</th><th>Return Date</th><th>Reason</th><th>Status</th><th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for ret in returns %}
-      <tr>
-        <td style="font-weight:700; color:var(--text);">#RTN-{{ ret.id }}</td>
-        <td class="order-id">{{ ret.order.order_number }}</td>
-        <td>
-          <div class="user-cell">
-            <div class="user-info">
-              <div class="name">{{ ret.order.user.username }}</div>
-              <div class="email">{{ ret.order.user.email }}</div>
-            </div>
-          </div>
-        </td>
-        <td style="color:var(--text-muted); font-size:0.8rem;">{{ ret.created_at|date:"M d, Y" }}</td>
-        <td>{{ ret.reason|truncatechars:30 }}</td>
-        <td>
-          {% if ret.status == 'Pending' %}<span class="status-badge status-pending">Pending</span>
-          {% elif ret.status == 'Approved' %}<span class="status-badge status-out">Approved</span>
-          {% elif ret.status == 'Picked Up' %}<span class="status-badge status-delivered">Picked Up</span>
-          {% elif ret.status == 'Rejected' %}<span class="status-badge status-cancelled">Rejected</span>
-          {% endif %}
-        </td>
-        <td><a href="{% url 'admin_order_detail' ret.order.id %}" class="action-view">view</a></td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="7" style="text-align:center;padding:4rem 1rem;color:var(--text-muted);">
-          <div><span class="material-icons-outlined" style="font-size:3rem;opacity:0.4;">keyboard_return</span></div>
-          <p style="margin-top:1rem;">No return requests found.</p>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="table-scroll">
+    <table class="listing-table">
+      <thead>
+        <tr>
+          <th>Return ID</th><th>Order ID</th><th>Customer</th><th>Date</th><th>Reason</th><th>Status</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ret in returns %}
+        <tr>
+          <td><span class="ref-id">#RTN-{{ ret.id }}</span></td>
+          <td><span class="ref-id">{{ ret.order.order_number }}</span></td>
+          <td>
+            <div class="user-name">{{ ret.order.user.username }}</div>
+            <div class="user-email">{{ ret.order.user.email }}</div>
+          </td>
+          <td style="color:var(--text-muted);font-size:.8rem;white-space:nowrap">{{ ret.created_at|date:"M d, Y" }}</td>
+          <td style="max-width:180px;font-size:.82rem;color:var(--text-muted)">{{ ret.reason|truncatechars:40 }}</td>
+          <td>
+            {% if ret.status == 'Pending' %}<span class="badge badge-yellow">Pending</span>
+            {% elif ret.status == 'Approved' %}<span class="badge badge-blue">Approved</span>
+            {% elif ret.status == 'Picked Up' %}<span class="badge badge-green">Picked Up</span>
+            {% elif ret.status == 'Rejected' %}<span class="badge badge-red">Rejected</span>
+            {% else %}<span class="badge" style="background:var(--sidebar-bg);color:var(--text-muted)">{{ ret.status }}</span>{% endif %}
+          </td>
+          <td><a href="{% url 'admin_order_detail' ret.order.id %}" class="action-link"><span class="material-icons-outlined" style="font-size:.9rem">open_in_new</span> View</a></td>
+        </tr>
+        {% empty %}
+        <tr class="empty-row"><td colspan="7"><span class="material-icons-outlined empty-icon">keyboard_return</span>No return requests found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-  <div class="pagination-footer">
-    <div class="showing-text">Showing {{ returns.start_index|default:"0" }}-{{ returns.end_index|default:"0" }} of {{ returns.paginator.count }} returns</div>
-    <div class="page-controls">
-      {% if returns.has_previous %}<a href="?page={{ returns.previous_page_number }}&search={{ search_query }}" class="page-link">&lt; Previous</a>
-      {% else %}<span class="page-link" style="opacity:0.4;cursor:default;">&lt; Previous</span>{% endif %}
+  <div class="card-footer">
+    <p class="showing">Showing {{ returns.start_index|default:"0" }}–{{ returns.end_index|default:"0" }} of {{ returns.paginator.count }} returns</p>
+    <nav class="pg-wrap">
+      {% if returns.has_previous %}<a class="pg-btn" href="?page={{ returns.previous_page_number }}&search={{ search_query }}"><span class="material-icons-outlined">chevron_left</span> Prev</a>
+      {% else %}<span class="pg-btn disabled"><span class="material-icons-outlined">chevron_left</span> Prev</span>{% endif %}
       {% for num in returns.paginator.page_range %}
-        {% if returns.number == num %}<span class="page-link active">{{ num }}</span>
-        {% elif num > returns.number|add:'-3' and num < returns.number|add:'3' %}<a href="?page={{ num }}&search={{ search_query }}" class="page-link">{{ num }}</a>
+        {% if returns.number == num %}<span class="pg-num active">{{ num }}</span>
+        {% elif num > returns.number|add:'-3' and num < returns.number|add:'3' %}<a class="pg-num" href="?page={{ num }}&search={{ search_query }}">{{ num }}</a>
         {% endif %}
       {% endfor %}
-      {% if returns.has_next %}<a href="?page={{ returns.next_page_number }}&search={{ search_query }}" class="page-link">Next &gt;</a>
-      {% else %}<span class="page-link" style="opacity:0.4;cursor:default;">Next &gt;</span>{% endif %}
-    </div>
+      {% if returns.has_next %}<a class="pg-btn" href="?page={{ returns.next_page_number }}&search={{ search_query }}">Next <span class="material-icons-outlined">chevron_right</span></a>
+      {% else %}<span class="pg-btn disabled">Next <span class="material-icons-outlined">chevron_right</span></span>{% endif %}
+    </nav>
   </div>
 </div>
 {% endblock %}

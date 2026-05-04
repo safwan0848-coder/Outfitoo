@@ -34,7 +34,7 @@
 <div class="p-2 max-w-7xl mx-auto">
 
     <!-- Header -->
-    <header class="flex justify-between items-center mb-8">
+    <header class="flex flex-wrap justify-between items-center mb-8 gap-4">
         <h1 class="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
         <div class="flex items-center gap-4">
             <a href="{% url 'sales_report' %}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg transition-colors">
@@ -104,7 +104,7 @@
                     <h3 class="text-lg font-bold text-gray-800">Revenue Overview</h3>
                     <p class="text-sm text-gray-500">Revenue performance over time</p>
                 </div>
-                <form id="chartFilterForm" method="GET" class="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <form id="chartFilterForm" method="GET" class="flex flex-wrap items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-200">
                     <input type="hidden" name="period" id="periodInput" value="{{ request.GET.period|default:'yearly' }}">
                     <input type="number" name="year" value="{{ selected_year }}" min="2020" max="2100" class="text-xs font-semibold px-2 py-1.5 rounded-md border border-gray-200 w-20 text-center outline-none focus:border-brand-green mr-1" onchange="document.getElementById('chartFilterForm').submit()" placeholder="YYYY" title="Select Year">
                     <button type="button" onclick="document.getElementById('periodInput').value='daily'; document.getElementById('chartFilterForm').submit();" class="text-xs font-semibold px-3 py-1.5 rounded-md transition-colors {% if request.GET.period == 'daily' %}bg-brand-green text-white shadow-sm{% else %}text-gray-500 hover:text-gray-700{% endif %}">Daily</button>

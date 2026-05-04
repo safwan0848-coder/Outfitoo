@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,7 +13,7 @@
 
   <style>
     /* ══════════════════════════════════════════════
-       CSS VARIABLES
+       CSS VARIABLES — LIGHT MODE ONLY
     ══════════════════════════════════════════════ */
     :root {
       --primary:          #064e3b;
@@ -38,19 +38,6 @@
       --font-body:        'DM Sans', sans-serif;
       --tr:               .22s ease;
     }
-    [data-theme="dark"] {
-      --bg:               #121212;
-      --sidebar-bg:       #1e1e1e;
-      --card-bg:          #1e1e1e;
-      --border:           #2e2e2e;
-      --text:             #e7e5e4;
-      --text-muted:       #a8a29e;
-      --table-hover:      #252525;
-      --shadow-sm:        0 1px 3px rgba(0,0,0,.3);
-      --shadow-md:        0 4px 16px rgba(0,0,0,.4);
-      --shadow-lg:        0 10px 40px rgba(0,0,0,.5);
-      --primary-light:    rgba(6,78,59,.25);
-    }
 
     /* ══════════════════════════════════════════════
        RESET
@@ -61,7 +48,6 @@
       font-family: var(--font-body);
       background: var(--bg);
       color: var(--text);
-      transition: background var(--tr), color var(--tr);
     }
     a { text-decoration: none; color: inherit; }
 
@@ -87,7 +73,7 @@
       left: 0;
       height: 100vh;
       z-index: 200;
-      transition: transform 0.3s ease, background var(--tr), border-color var(--tr);
+      transition: transform 0.3s ease;
     }
 
     .sidebar-brand {
@@ -118,7 +104,6 @@
       margin: 0;
       line-height: 1;
     }
-    [data-theme="dark"] .sidebar-brand h1 { color: #6ee7b7; }
 
     .sidebar-nav {
       flex: 1;
@@ -154,19 +139,11 @@
       background: rgba(6,78,59,.08);
       color: var(--primary);
     }
-    [data-theme="dark"] .nav-link-item:hover {
-      background: rgba(110,231,183,.08);
-      color: #6ee7b7;
-    }
     .nav-link-item.active {
-      background: var(--card-bg);
+      background: #ffffff;
       color: var(--primary);
       box-shadow: var(--shadow-sm);
       border-left: 4px solid var(--primary);
-    }
-    [data-theme="dark"] .nav-link-item.active {
-      background: var(--primary);
-      color: #fff;
     }
     .nav-link-item .material-icons-outlined { font-size: 1.1rem; }
 
@@ -188,13 +165,10 @@
     }
     .nav-sublink:hover { color: var(--primary); background: rgba(6,78,59,.04); }
     .nav-sublink.active { color: var(--primary); font-weight: 700; }
-    [data-theme="dark"] .nav-sublink:hover { color: #6ee7b7; background: rgba(110,231,183,.1); }
-    [data-theme="dark"] .nav-sublink.active { color: #6ee7b7; }
 
     /* Logout */
     .nav-link-item.logout { color: #dc2626; }
     .nav-link-item.logout:hover { background: #fee2e2; color: #b91c1c; }
-    [data-theme="dark"] .nav-link-item.logout:hover { background: rgba(220,38,38,.15); }
 
     /* Sidebar Footer */
     .sidebar-footer {
@@ -208,16 +182,16 @@
       gap: .75rem;
       padding: .6rem .85rem;
       border-radius: var(--radius);
-      background: rgba(255,255,255,.55);
+      background: rgba(255,255,255,.8);
+      border: 1px solid var(--border);
     }
-    [data-theme="dark"] .user-card { background: rgba(0,0,0,.25); }
     .user-avatar {
       width: 38px; height: 38px;
       border-radius: 50%; object-fit: cover;
       border: 2px solid var(--border);
       flex-shrink: 0;
     }
-    .user-name  { font-size: .8rem; font-weight: 600; line-height: 1.2; }
+    .user-name  { font-size: .8rem; font-weight: 600; line-height: 1.2; color: var(--text); }
     .user-email { font-size: .7rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
 
     /* ══════════════════════════════════════════════
@@ -245,7 +219,6 @@
       justify-content: space-between;
       padding: 0 1.25rem;
       z-index: 300;
-      transition: background var(--tr);
     }
     #mobileTopBar .brand-name {
       font-family: var(--font-display);
@@ -253,7 +226,6 @@
       font-weight: 700;
       color: var(--primary);
     }
-    [data-theme="dark"] #mobileTopBar .brand-name { color: #6ee7b7; }
     #hamburgerBtn {
       display: flex;
       align-items: center;
@@ -279,34 +251,13 @@
       background: rgba(0,0,0,.5);
       backdrop-filter: blur(2px);
       z-index: 150;
-      transition: opacity 0.3s ease;
     }
     #sidebarOverlay.show { display: block; }
 
     /* ══════════════════════════════════════════════
-       THEME TOGGLE
-    ══════════════════════════════════════════════ */
-    .theme-toggle {
-      position: fixed; bottom: 1.75rem; right: 1.75rem;
-      width: 46px; height: 46px;
-      border-radius: 50%; border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      background: var(--text); color: var(--bg);
-      box-shadow: var(--shadow-lg); z-index: 999;
-      transition: background var(--tr), color var(--tr), transform .2s;
-    }
-    .theme-toggle:hover { transform: scale(1.1); }
-    .theme-toggle .material-icons-outlined { font-size: 1.2rem; }
-    .icon-dark  { display: block; }
-    .icon-light { display: none; }
-    [data-theme="dark"] .icon-dark  { display: none; }
-    [data-theme="dark"] .icon-light { display: block; }
-
-    /* ══════════════════════════════════════════════
-       RESPONSIVE — TABLET (900px)
+       RESPONSIVE — TABLET (1024px)
     ══════════════════════════════════════════════ */
     @media (max-width: 1024px) {
-      /* Sidebar slides off-screen by default on mobile */
       .sidebar {
         transform: translateX(-100%);
         box-shadow: none;
@@ -315,12 +266,10 @@
         transform: translateX(0);
         box-shadow: var(--shadow-lg);
       }
-      /* Main content takes full width */
       .main-content {
         margin-left: 0;
         padding-top: calc(var(--topbar-height) + 1.5rem);
       }
-      /* Show mobile top bar */
       #mobileTopBar { display: flex; }
     }
 
@@ -345,7 +294,7 @@
       align-items: center;
       gap: 12px;
       padding: 14px 20px;
-      background: var(--card-bg);
+      background: #ffffff;
       border-left: 4px solid var(--primary);
       box-shadow: var(--shadow-lg);
       border-radius: var(--radius);
@@ -357,17 +306,17 @@
       animation: toast-slide-in 0.3s ease-out forwards;
       transition: opacity 0.3s ease;
     }
-    .toast.toast-error { border-left-color: #ef4444; }
+    .toast.toast-error   { border-left-color: #ef4444; }
     .toast.toast-success { border-left-color: #10b981; }
     .toast.toast-warning { border-left-color: #f59e0b; }
     .toast.hiding { opacity: 0; }
-    
+
     @keyframes toast-slide-in {
       from { transform: translateX(120%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
+      to   { transform: translateX(0);    opacity: 1; }
     }
     .toast-icon { font-size: 1.2rem; }
-    .toast-error .toast-icon { color: #ef4444; }
+    .toast-error   .toast-icon { color: #ef4444; }
     .toast-success .toast-icon { color: #10b981; }
     .toast-warning .toast-icon { color: #f59e0b; }
   </style>
@@ -413,10 +362,7 @@
     <span class="material-icons-outlined" id="hamburgerIcon">menu</span>
   </button>
   <span class="brand-name">Outfito</span>
-  <button class="theme-toggle" style="position:static;width:36px;height:36px;box-shadow:none;" onclick="toggleTheme()" title="Toggle theme">
-    <span class="material-icons-outlined icon-dark" style="font-size:1rem;">dark_mode</span>
-    <span class="material-icons-outlined icon-light" style="font-size:1rem;">light_mode</span>
-  </button>
+  <div style="width:40px;"></div><!-- spacer to keep brand centered -->
 </div>
 
 <!-- ══════════════════════════════════════════════
@@ -535,28 +481,10 @@
 
 </div><!-- /app-wrapper -->
 
-<!-- ══ Desktop Theme Toggle ══ -->
-<button class="theme-toggle" id="desktopThemeToggle" onclick="toggleTheme()" title="Toggle theme">
-  <span class="material-icons-outlined icon-dark">dark_mode</span>
-  <span class="material-icons-outlined icon-light">light_mode</span>
-</button>
-
 <!-- ══════════════════════════════════════════════
      BASE SCRIPTS
 ══════════════════════════════════════════════ -->
 <script>
-  /* ── Theme ── */
-  (function() {
-    const saved = localStorage.getItem('adminTheme');
-    if (saved) document.documentElement.dataset.theme = saved;
-  })();
-
-  function toggleTheme() {
-    const html = document.documentElement;
-    html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('adminTheme', html.dataset.theme);
-  }
-
   /* ── Mobile Sidebar ── */
   const sidebar = document.getElementById('adminSidebar');
   const overlay = document.getElementById('sidebarOverlay');
@@ -586,12 +514,6 @@
     link.addEventListener('click', () => {
       if (window.innerWidth <= 1024) closeSidebar();
     });
-  });
-
-  /* Restore theme on load */
-  window.addEventListener('DOMContentLoaded', () => {
-    const saved = localStorage.getItem('adminTheme');
-    if (saved) document.documentElement.dataset.theme = saved;
   });
 </script>
 
