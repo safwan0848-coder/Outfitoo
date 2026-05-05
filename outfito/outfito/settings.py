@@ -70,7 +70,9 @@ INSTALLED_APPS = [
     'user_side.orders',
     'user_side.payment',
     'user_side.wallet',
-
+    
+    'cloudinary',
+    'cloudinary_storage',
 ]
 SITE_ID = 1
 
@@ -192,3 +194,27 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+
+import os
+import cloudinary
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv("CLOUD_NAME"),
+    'API_KEY': os.getenv("API_KEY"),
+    'API_SECRET': os.getenv("API_SECRET"),
+}
+
+cloudinary.config(
+    cloud_name=os.getenv("CLOUD_NAME"),
+    api_key=os.getenv("API_KEY"),
+    api_secret=os.getenv("API_SECRET"),
+)
+
+STORAGES = {
+    "default": {
+        "BACKEND": "outfito.storage.HybridMediaStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
