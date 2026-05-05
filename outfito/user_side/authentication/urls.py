@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+from django.views.generic import TemplateView
+
 urlpatterns = [
     path('',views.landing_view, name='landing'),
     path('login/', views.login_view, name='login'),
@@ -14,5 +16,5 @@ urlpatterns = [
     path('set-new-password/',views.set_new_password, name='set_new_password'),
     path('back-login/',views.back_to_login, name='back_to_login'),
     path('logout/', views.logout_view, name='logout'),
-    
+    path('about/', TemplateView.as_view(template_name='user/about.html'), name='about'),
 ]
