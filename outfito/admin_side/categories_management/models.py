@@ -10,3 +10,6 @@ class Category(models.Model):
 
     def __str__(self):
         return self.category_name
+
+    def active_products(self):
+        return self.products.filter(is_deleted=False)

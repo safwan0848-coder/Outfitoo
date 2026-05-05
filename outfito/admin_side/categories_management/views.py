@@ -45,7 +45,9 @@ def add_category(request):
 @user_passes_test(is_admin, login_url='login')
 def category_list(request):
     search_query=request.GET.get('search', '').strip()
-    categories=Category.objects.filter(is_deleted=False).annotate(product_count=Count('products'))
+    categories=Category.objects.filter(is_deleted=False).annotate(
+        product_count=Count('products', filter=Q(products__is_deleted=False))
+    )
     if search_query:
         categories=categories.filter(category_name__icontains=search_query)
 
@@ -117,13 +119,22 @@ def edit_category(request, id):
     return render(request, "admin/edit_category.html", {"category": category})
 
 
+from django.db import transaction
+
 def delete_category(request, category_id):
     if request.method=='POST':
-        category=get_object_or_404(Category, id=category_id)
+        category=get_object_or_404(Category, id=category_id, is_deleted=False)
         name=category.category_name
 
-        category.is_deleted=True
-        category.save(update_fields=['is_deleted'])
-
-        messages.success(request, f'Category "{name}" deleted successfully.')
+        try:
+            with transaction.atomic():
+                if category.products.filter(is_deleted=False).exists():
+                    messages.error(request, "Cannot delete category because it contains active products")
+                else:
+                    category.is_deleted=True
+                    category.save(update_fields=['is_deleted'])
+                    messages.success(request, f'Category "{name}" deleted successfully')
+        except Exception as e:
+            messages.error(request, "An error occurred during deletion.")
+            
     return redirect('category_list')

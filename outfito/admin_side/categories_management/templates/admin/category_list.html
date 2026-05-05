@@ -191,6 +191,22 @@
     {% endif %}
   </div>
 </div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-icon"><span class="material-icons-outlined">delete_outline</span></div>
+    <h4>Delete Category?</h4>
+    <p id="deleteModalMsg">This action cannot be undone.</p>
+    <div class="modal-btns">
+      <button type="button" class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <form method="POST" id="deleteForm" style="margin:0;">{% csrf_token %}
+        <button type="submit" class="btn-danger"><span class="material-icons-outlined" style="font-size:.9rem">delete</span> Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -204,18 +220,3 @@ function closeDeleteModal(){document.getElementById('deleteModal').classList.rem
 document.getElementById('deleteModal').addEventListener('click',function(e){if(e.target===this)closeDeleteModal();});
 </script>
 {% endblock %}
-
-<!-- Delete Modal -->
-<div class="modal-overlay" id="deleteModal">
-  <div class="modal-box">
-    <div class="modal-icon"><span class="material-icons-outlined">delete_outline</span></div>
-    <h4>Delete Category?</h4>
-    <p id="deleteModalMsg">This action cannot be undone.</p>
-    <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
-      <form method="POST" id="deleteForm" style="margin:0;">{% csrf_token %}
-        <button type="submit" class="btn-danger"><span class="material-icons-outlined" style="font-size:.9rem">delete</span> Delete</button>
-      </form>
-    </div>
-  </div>
-</div>

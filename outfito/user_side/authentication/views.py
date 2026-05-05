@@ -457,7 +457,7 @@ def set_new_password(request):
 def landing_view(request):
 
     categories = Category.objects.filter(
-        is_deleted=False
+        is_deleted=False,is_active=True
     ).order_by('-created_at')[:3]
 
     variant_qs = Variant.objects.filter(is_active=True)
