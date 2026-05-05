@@ -691,14 +691,14 @@
             </div>
 
             <!-- DANGER ZONE -->
-            <div class="danger-zone">
+            <div class="danger-zone" style="border-color:rgba(217,119,6,.25); background:rgba(254,243,199,.15);">
               <div class="danger-zone-text">
-                <h4><span class="material-icons-outlined">warning_amber</span>Danger Zone</h4>
-                <p>Deleting this product is permanent and cannot be undone.</p>
+                <h4 style="color:#d97706;"><span class="material-icons-outlined">inventory_2</span>Archive Product</h4>
+                <p>Archiving this product will remove it from the active store.</p>
               </div>
-              <button type="button" class="btn-delete" id="btnDeleteTrigger">
-                <span class="material-icons-outlined">delete_outline</span>
-                Delete Product
+              <button type="button" class="btn-delete" id="btnDeleteTrigger" style="border-color:#d97706; color:#d97706;">
+                <span class="material-icons-outlined">inventory_2</span>
+                Archive Product
               </button>
             </div>
 
@@ -781,20 +781,20 @@
 <!-- ══ DELETE CONFIRM MODAL ══ -->
 <div class="delete-overlay" id="deleteOverlay">
   <div class="delete-modal">
-    <div class="delete-modal-icon">
-      <span class="material-icons-outlined">delete_forever</span>
+    <div class="delete-modal-icon" style="background:#fef3c7; border-color:#fcd34d;">
+      <span class="material-icons-outlined" style="color:#d97706;">inventory_2</span>
     </div>
-    <h3>Delete Product?</h3>
+    <h3>Archive Product?</h3>
     <p>
-      You are about to permanently delete
+      You are about to archive
       <span class="delete-modal-product-name">{{ product.name|default:"this product" }}</span>.
-      This action <strong>cannot be undone</strong> and will remove all associated data.
+      It will be moved to the archives and removed from the active store.
     </p>
     <div class="delete-modal-actions">
-      <button type="button" class="btn-delete-cancel" id="btnDeleteCancel">Keep Product</button>
-      <form method="POST" action="{% url 'delete_product' product.id %}" style="flex:1;display:flex;">
+      <button type="button" class="btn-delete-cancel" id="btnDeleteCancel">Keep Active</button>
+      <form method="POST" action="{% url 'archive_product' product.id %}" style="flex:1;display:flex;">
         {% csrf_token %}
-        <button type="submit" class="btn-delete-confirm" style="width:100%;">Yes, Delete</button>
+        <button type="submit" class="btn-delete-confirm" style="width:100%; background:#d97706;">Yes, Archive</button>
       </form>
     </div>
   </div>

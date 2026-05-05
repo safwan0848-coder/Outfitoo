@@ -11,6 +11,7 @@ from decimal import Decimal, InvalidOperation
 from .utils import generate_sku
 from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.utils import timezone
 from .forms import ProductForm, VariantFormSet
 
 def is_admin(user):
@@ -243,19 +244,76 @@ def edit_product(request, pk):
         'old': request.POST if request.method == 'POST' else None,
     })
 
-def delete_product(request, pk):
+def archive_product(request, pk):
     product=get_object_or_404(Product, pk=pk)
     if request.method=='POST':
         name = product.name
         product.is_deleted=True
-        product.save()
-        messages.success(request, f'Product "{name}" has been deleted.')
+        product.archived_at=timezone.now()
+        product.save(update_fields=['is_deleted', 'archived_at'])
+        messages.success(request, f'Product "{name}" has been archived.')
         return redirect('product_list')
 
     return redirect('edit_product', pk=pk)
+
+@never_cache
+@login_required(login_url='login')
+@user_passes_test(is_admin, login_url='login')
+def restore_product(request, pk):
+    product=get_object_or_404(Product, pk=pk, is_deleted=True)
+    if request.method=='POST':
+        name = product.name
+        product.is_deleted=False
+        product.archived_at=None
+        product.save(update_fields=['is_deleted', 'archived_at'])
+        messages.success(request, f'Product "{name}" has been restored successfully.')
+    return redirect('archived_product_list')
+
+@never_cache
+@login_required(login_url='login')
+@user_passes_test(is_admin, login_url='login')
+def archived_product_list(request):
+    search=request.GET.get('search', '').strip()
+    category_id=request.GET.get('category', '')
+    products=Product.objects.filter(is_deleted=True).select_related('category')
+
+    if search:
+        products=products.filter(name__icontains=search)
+    if category_id:
+        products = products.filter(category_id=category_id)
+
+    products=products.order_by('-archived_at', '-created_at').distinct()
+
+    products=products.prefetch_related(
+        Prefetch('variants',queryset=Variant.objects.filter(is_default=True),to_attr='default_variant'))
+
+    paginator=Paginator(products, 10)
+    page_number=request.GET.get('page')
+    page_obj=paginator.get_page(page_number)
+
+    for product in page_obj:
+        dv=getattr(product, 'default_variant', [])
+        product.display_variant=dv[0] if dv else product.variants.first()
+
+    categories=Category.objects.filter(is_deleted=False)
+
+    context={
+        'products':page_obj,
+        'categories':categories,
+        'search':search,
+        'selected_category':category_id,
+    }
+
+    return render(request,'admin/archived_product_list.html', context)
+
 
 def toggle_product_status(request, pk):
     product = get_object_or_404(Product, pk=pk)
     product.is_listed = not product.is_listed
     product.save()
+    
+    # Check referer to redirect back to the correct list
+    referer = request.META.get('HTTP_REFERER', '')
+    if 'archived' in referer:
+        return redirect('archived_product_list')
     return redirect('product_list')

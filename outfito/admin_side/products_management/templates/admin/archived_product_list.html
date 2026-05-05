@@ -1,5 +1,5 @@
 {% extends 'admin_base.html' %}
-{% block title %}Outfito Admin – Product Management{% endblock %}
+{% block title %}Outfito Admin – Archived Products{% endblock %}
 {% block extra_head %}
 <style>
   .page-header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;margin-bottom:2rem;gap:1rem}
@@ -45,6 +45,7 @@
   .act-btn:hover{transform:scale(1.1)}
   .act-btn.edit:hover{background:var(--primary-light);color:var(--primary)}
   .act-btn.del:hover{background:#fee2e2;color:#dc2626}
+  .act-btn.restore:hover{background:#d1fae5;color:#065f46}
   .act-btn.tog-on{color:var(--accent)}
   .act-btn.tog-off{color:var(--text-muted)}
   .card-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.6rem}
@@ -62,14 +63,14 @@
   .modal-overlay.show{display:flex}
   .modal-box{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-xl);padding:2rem;width:min(96%,420px);box-shadow:0 20px 50px rgba(0,0,0,.18);animation:mup .22s ease}
   @keyframes mup{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
-  .modal-icon{width:52px;height:52px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
-  .modal-icon .material-icons-outlined{font-size:1.5rem;color:#dc2626}
+  .modal-icon{width:52px;height:52px;border-radius:50%;background:#d1fae5;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+  .modal-icon .material-icons-outlined{font-size:1.5rem;color:#065f46}
   .modal-box h4{font-family:var(--font-display);font-size:1.35rem;font-weight:700;margin:0 0 .4rem;text-align:center;color:var(--text)}
   .modal-box p{font-size:.83rem;color:var(--text-muted);margin:0 0 1.5rem;text-align:center;line-height:1.6}
   .modal-btns{display:flex;gap:.65rem;justify-content:center}
   .btn-cancel{padding:.6rem 1.25rem;border:1px solid var(--border);background:var(--sidebar-bg);color:var(--text);border-radius:var(--radius);font-family:var(--font-body);font-size:.83rem;font-weight:500;cursor:pointer}
-  .btn-danger{padding:.6rem 1.25rem;border:none;background:#dc2626;color:#fff;border-radius:var(--radius);font-family:var(--font-body);font-size:.83rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
-  .btn-danger:hover{background:#b91c1c}
+  .btn-success{padding:.6rem 1.25rem;border:none;background:#065f46;color:#fff;border-radius:var(--radius);font-family:var(--font-body);font-size:.83rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+  .btn-success:hover{background:#047857}
   .msg-item{display:flex;align-items:center;gap:.6rem;padding:.7rem 1rem;border-radius:var(--radius);font-size:.82rem;font-weight:500;margin-bottom:.5rem}
   .msg-success{background:#d1fae5;color:#065f46;border:1px solid rgba(16,185,129,.2)}
   .msg-error{background:#fee2e2;color:#991b1b;border:1px solid rgba(239,68,68,.2)}
@@ -80,18 +81,13 @@
 {% block content %}
 <header class="page-header">
   <div>
-    <h1 class="page-title">Product Management</h1>
-    <p class="title-sub">Manage your store's product catalogue</p>
+    <h1 class="page-title">Archived Products</h1>
+    <p class="title-sub">View, edit, and restore archived items</p>
     <div class="title-bar"></div>
   </div>
-  <div style="display:flex; gap:0.6rem;">
-    <a class="btn-primary" href="{% url 'archived_product_list' %}" style="background:var(--sidebar-bg); color:var(--text); border:1px solid var(--border);">
-      <span class="material-icons-outlined">inventory_2</span> Archived Products
-    </a>
-    <a class="btn-primary" href="{% url 'add_product' %}">
-      <span class="material-icons-outlined">add</span> Add Product
-    </a>
-  </div>
+  <a class="btn-primary" href="{% url 'product_list' %}" style="background:var(--sidebar-bg); color:var(--text); border:1px solid var(--border);">
+    <span class="material-icons-outlined">arrow_back</span> Back to Products
+  </a>
 </header>
 
 {% if messages %}
@@ -108,21 +104,16 @@
 
 <div class="listing-card">
   <div class="card-toolbar">
-    <h3 class="card-label">All Products</h3>
+    <h3 class="card-label">Archived Items</h3>
     <div class="toolbar-controls">
-      <form method="GET" action="{% url 'product_list' %}" id="filterForm" style="display:contents;">
+      <form method="GET" action="{% url 'archived_product_list' %}" id="filterForm" style="display:contents;">
         <div class="search-field">
           <span class="material-icons-outlined">search</span>
-          <input class="search-input" type="text" name="search" value="{{ search }}" placeholder="Search products…" oninput="submitFilter()"/>
+          <input class="search-input" type="text" name="search" value="{{ search }}" placeholder="Search archives…" oninput="submitFilter()"/>
         </div>
         <select class="filter-select" name="category" onchange="submitFilter()">
           <option value="">All Categories</option>
           {% for cat in categories %}<option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.category_name }}</option>{% endfor %}
-        </select>
-        <select class="filter-select" name="status" onchange="submitFilter()">
-          <option value="">All Status</option>
-          <option value="active" {% if selected_status == "active" %}selected{% endif %}>Active</option>
-          <option value="inactive" {% if selected_status == "inactive" %}selected{% endif %}>Inactive</option>
         </select>
         <input type="hidden" name="page" value="1" id="pageInput"/>
       </form>
@@ -133,8 +124,7 @@
     <table class="listing-table">
       <thead>
         <tr>
-          <th>#</th><th>Image</th><th>Product / SKU</th><th>Price</th>
-          <th>Category</th><th>Stock</th><th>Status</th><th>Actions</th>
+          <th>#</th><th>Image</th><th>Product / SKU</th><th>Category</th><th>Archived At</th><th>Status</th><th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -151,17 +141,12 @@
             <div class="pdt-name">{{ product.name }}</div>
             {% if variant %}<div class="pdt-sku">{{ variant.sku }}</div>{% endif %}
           </td>
-          <td style="font-weight:600">{% if variant %}₹{{ variant.price|floatformat:2 }}{% else %}<span style="color:var(--text-muted)">—</span>{% endif %}</td>
           <td style="color:var(--text-muted)">{% if product.category %}{{ product.category.category_name }}{% else %}—{% endif %}</td>
-          <td>
-            {% if variant %}
-            <span class="{% if variant.stock == 0 %}stock-zero{% elif variant.stock <= 5 %}stock-low{% else %}stock-ok{% endif %}">{{ variant.stock }}</span>
-            {% else %}<span style="color:var(--text-muted)">—</span>{% endif %}
-          </td>
+          <td style="color:var(--text-muted)">{{ product.archived_at|date:"M d, Y"|default:"-" }}</td>
           <td>{% if product.is_listed %}<span class="badge badge-active">Active</span>{% else %}<span class="badge badge-inactive">Inactive</span>{% endif %}</td>
           <td>
             <div class="act-group">
-              <button class="act-btn del" onclick="confirmArchive('{% url 'archive_product' product.pk %}','{{ product.name|escapejs }}')" title="Archive"><span class="material-icons-outlined">inventory_2</span></button>
+              <button class="act-btn restore" onclick="confirmRestore('{% url 'restore_product' product.pk %}','{{ product.name|escapejs }}')" title="Restore"><span class="material-icons-outlined">restore</span></button>
               <a class="act-btn edit" href="{% url 'edit_product' product.pk %}" title="Edit"><span class="material-icons-outlined">edit</span></a>
               <a class="act-btn" href="{% url 'variant_list' product.pk %}" title="Variants"><span class="material-icons-outlined">tune</span></a>
               <a class="act-btn {% if product.is_listed %}tog-on{% else %}tog-off{% endif %}" href="{% url 'toggle_product_status' product.pk %}" title="Toggle Status">
@@ -171,7 +156,7 @@
           </td>
         </tr>
         {% endwith %}{% empty %}
-        <tr class="empty-row"><td colspan="8"><span class="material-icons-outlined empty-icon">inventory_2</span>No products found</td></tr>
+        <tr class="empty-row"><td colspan="7"><span class="material-icons-outlined empty-icon">inventory_2</span>No archived products</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -180,28 +165,28 @@
   <div class="card-footer">
     <p class="showing">Showing {{ products.start_index }}–{{ products.end_index }} of {{ products.paginator.count }} product{{ products.paginator.count|pluralize }}</p>
     <nav class="pg-wrap">
-      {% if products.has_previous %}<a class="pg-btn" href="?page={{ products.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}"><span class="material-icons-outlined">chevron_left</span> Prev</a>
+      {% if products.has_previous %}<a class="pg-btn" href="?page={{ products.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}"><span class="material-icons-outlined">chevron_left</span> Prev</a>
       {% else %}<span class="pg-btn disabled"><span class="material-icons-outlined">chevron_left</span> Prev</span>{% endif %}
       {% for num in products.paginator.page_range %}
         {% if num == products.number %}<span class="pg-num active">{{ num }}</span>
-        {% elif num == 1 or num == products.paginator.num_pages or num >= products.number|add:"-2" and num <= products.number|add:"2" %}<a class="pg-num" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">{{ num }}</a>
+        {% elif num == 1 or num == products.paginator.num_pages or num >= products.number|add:"-2" and num <= products.number|add:"2" %}<a class="pg-num" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">{{ num }}</a>
         {% elif num == products.number|add:"-3" or num == products.number|add:"3" %}<span class="pg-dots">···</span>{% endif %}
       {% endfor %}
-      {% if products.has_next %}<a class="pg-btn" href="?page={{ products.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">Next <span class="material-icons-outlined">chevron_right</span></a>
+      {% if products.has_next %}<a class="pg-btn" href="?page={{ products.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Next <span class="material-icons-outlined">chevron_right</span></a>
       {% else %}<span class="pg-btn disabled">Next <span class="material-icons-outlined">chevron_right</span></span>{% endif %}
     </nav>
   </div>
 </div>
 
-<div class="modal-overlay" id="archiveModal">
+<div class="modal-overlay" id="restoreModal">
   <div class="modal-box">
-    <div class="modal-icon" style="background:#fef3c7;"><span class="material-icons-outlined" style="color:#d97706;">inventory_2</span></div>
-    <h4>Archive Product?</h4>
-    <p id="archiveModalMsg">This will archive the product and remove it from the store.</p>
+    <div class="modal-icon"><span class="material-icons-outlined">restore</span></div>
+    <h4>Restore Product?</h4>
+    <p id="restoreModalMsg">This will restore the product back to the active catalog.</p>
     <div class="modal-btns">
-      <button type="button" class="btn-cancel" onclick="closeArchiveModal()">Cancel</button>
-      <form method="POST" id="archiveForm" style="display:inline;">{% csrf_token %}
-        <button type="submit" class="btn-danger" style="background:#d97706;"><span class="material-icons-outlined" style="font-size:.9rem">inventory_2</span> Archive</button>
+      <button type="button" class="btn-cancel" onclick="closeRestoreModal()">Cancel</button>
+      <form method="POST" id="restoreForm" style="display:inline;">{% csrf_token %}
+        <button type="submit" class="btn-success"><span class="material-icons-outlined" style="font-size:.9rem">restore</span> Restore</button>
       </form>
     </div>
   </div>
@@ -212,9 +197,9 @@
 <script>
 let ft;
 function submitFilter(){clearTimeout(ft);ft=setTimeout(()=>{document.getElementById('pageInput').value=1;document.getElementById('filterForm').submit();},420);}
-function confirmArchive(url,name){document.getElementById('archiveForm').action=url;document.getElementById('archiveModalMsg').innerHTML=`Archive <strong>${name}</strong>? It will be moved to the archives.`;document.getElementById('archiveModal').classList.add('show');}
-function closeArchiveModal(){document.getElementById('archiveModal').classList.remove('show');}
-document.getElementById('archiveModal').addEventListener('click',function(e){if(e.target===this)closeArchiveModal();});
+function confirmRestore(url,name){document.getElementById('restoreForm').action=url;document.getElementById('restoreModalMsg').innerHTML=`Restore <strong>${name}</strong>? It will reappear in the store.`;document.getElementById('restoreModal').classList.add('show');}
+function closeRestoreModal(){document.getElementById('restoreModal').classList.remove('show');}
+document.getElementById('restoreModal').addEventListener('click',function(e){if(e.target===this)closeRestoreModal();});
 document.querySelectorAll('.msg-item').forEach(el=>{setTimeout(()=>{el.style.transition='opacity .4s';el.style.opacity='0';setTimeout(()=>el.remove(),400);},el.classList.contains('msg-error')?8000:4000);});
 </script>
 {% endblock %}
