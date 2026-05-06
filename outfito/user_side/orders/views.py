@@ -249,9 +249,6 @@ def cancel_order(request, order_id):
                     shipping_refunded = Decimal(str(order.delivery_charge or 0))
 
             active_items = order.items.exclude(item_status='cancelled')
-            
-            # The subtotal and total are dynamically computed using properties
-            # so we do not overwrite the original values.
             order.save()
 
             grand = total_refunded + shipping_refunded
@@ -302,9 +299,6 @@ def cancel_order(request, order_id):
                 description = f"Partial cancel ({cancel_qty} unit(s)) — order #{order.order_number}",
                 override_amount = net_refund,
             )
-
-            # The subtotal and total are dynamically computed using properties
-            # so we do not overwrite the original values.
 
             all_done = all(
                 i.remaining_quantity == 0 or i.item_status == 'cancelled'

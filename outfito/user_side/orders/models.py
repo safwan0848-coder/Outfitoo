@@ -130,13 +130,6 @@ class OrderItem(models.Model):
 
     @property
     def aggregated_return_status(self):
-        """
-        Computes the overall return status for this order item.
-        If any return is Pending -> 'Pending'
-        If all returns are Picked Up -> 'Picked Up'
-        If all returns are Approved/Picked Up (and none Pending) -> 'Approved'
-        If all returns are Rejected -> 'Rejected'
-        """
         if not self.return_requests.exists():
             return None
             
@@ -154,7 +147,6 @@ class OrderItem(models.Model):
         if statuses == {'Rejected'}:
             return 'Rejected'
             
-        # Fallback if mixed Picked Up and Rejected
         if 'Picked Up' in statuses:
             return 'Picked Up'
             
