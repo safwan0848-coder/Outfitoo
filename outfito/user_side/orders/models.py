@@ -121,11 +121,44 @@ class OrderItem(models.Model):
     refund_processed=models.BooleanField(default=False)   # ← prevents duplicate refunds
     cancelled_quantity=models.PositiveIntegerField(default=0)  # how many units have been cancelled
     returned_quantity=models.PositiveIntegerField(default=0)   # how many units have been returned
+    refunded_quantity=models.PositiveIntegerField(default=0)   # how many units have been refunded
 
     @property
     def remaining_quantity(self):
         """Units that are neither cancelled nor returned."""
         return max(self.quantity - self.cancelled_quantity - self.returned_quantity, 0)
+
+    @property
+    def aggregated_return_status(self):
+        """
+        Computes the overall return status for this order item.
+        If any return is Pending -> 'Pending'
+        If all returns are Picked Up -> 'Picked Up'
+        If all returns are Approved/Picked Up (and none Pending) -> 'Approved'
+        If all returns are Rejected -> 'Rejected'
+        """
+        if not self.return_requests.exists():
+            return None
+            
+        statuses = set(self.return_requests.values_list('status', flat=True))
+        
+        if 'Pending' in statuses:
+            return 'Pending'
+            
+        if 'Approved' in statuses:
+            return 'Approved'
+            
+        if statuses == {'Picked Up'}:
+            return 'Picked Up'
+            
+        if statuses == {'Rejected'}:
+            return 'Rejected'
+            
+        # Fallback if mixed Picked Up and Rejected
+        if 'Picked Up' in statuses:
+            return 'Picked Up'
+            
+        return 'Approved'
 
     def __str__(self):
         return f"{self.order.order_number} - {self.variant}"

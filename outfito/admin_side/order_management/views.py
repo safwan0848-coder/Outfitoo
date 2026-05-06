@@ -209,7 +209,10 @@ def approve_return_request(request, return_id):
     if still_pending:
         return_req.item.item_status = 'return_requested'
     else:
-        return_req.item.item_status = 'returned'
+        if return_req.item.returned_quantity + return_req.item.cancelled_quantity >= return_req.item.quantity:
+            return_req.item.item_status = 'returned'
+        else:
+            return_req.item.item_status = 'delivered'
     return_req.item.save(update_fields=['item_status'])
 
     messages.success(request, f"Return request #{return_req.id} approved. Item marked as returned.")
@@ -232,23 +235,53 @@ def pickup_return_request(request, return_id):
 
     item = return_req.item
     order= return_req.order
-    qty= return_req.quantity
-    net_refund = calculate_coupon_adjusted_refund(order, item.price, qty, order_item=item)
 
-    ok, credited = process_wallet_refund(
-        order_item = item,
-        refund_qty= qty,
-        description = f"Return refund — order #{order.order_number} (item picked up)",
-        override_amount = net_refund,
-    )
-    if ok:
-        messages.success(
-            request,
-            f"Return #{return_req.id} marked as Picked Up. "
-            f"₹{credited:.2f} has been credited to the customer's wallet."
+    # Aggregate total returned quantities (Picked Up)
+    total_returned_qty = ReturnRequest.objects.filter(
+        item=item,
+        status='Picked Up'
+    ).aggregate(total_returned=Sum('quantity'))['total_returned'] or 0
+
+    new_refund_qty = total_returned_qty - item.refunded_quantity
+
+    if new_refund_qty > 0:
+        # Calculate refund for the TOTAL returned quantity
+        net_refund_for_total = calculate_coupon_adjusted_refund(order, item.price, total_returned_qty, order_item=item)
+        
+        # Determine proportional refund for just the newly refunded quantity
+        if total_returned_qty > 0:
+            refund_amount = (net_refund_for_total * Decimal(str(new_refund_qty)) / Decimal(str(total_returned_qty))).quantize(Decimal('0.01'))
+        else:
+            refund_amount = Decimal('0.00')
+
+        ok, credited = process_wallet_refund(
+            order_item = item,
+            refund_qty= new_refund_qty,
+            description = f"Return refund — order #{order.order_number} (item picked up, qty {new_refund_qty})",
+            override_amount = refund_amount,
         )
+        if ok:
+            item.refunded_quantity += new_refund_qty
+            item.save(update_fields=['refunded_quantity'])
+            messages.success(
+                request,
+                f"Return #{return_req.id} marked as Picked Up. "
+                f"₹{credited:.2f} has been credited to the customer's wallet."
+            )
+        else:
+            messages.success(request, f"Return request #{return_req.id} marked as Picked Up (Refund failed or not required).")
     else:
-        messages.success(request, f"Return request #{return_req.id} marked as Picked Up.")
+        messages.success(request, f"Return request #{return_req.id} marked as Picked Up. (Already refunded)")
+
+    still_pending = item.return_requests.filter(status='Pending').exists()
+    if still_pending:
+        item.item_status = 'return_requested'
+    else:
+        if item.returned_quantity + item.cancelled_quantity >= item.quantity:
+            item.item_status = 'returned'
+        else:
+            item.item_status = 'delivered'
+    item.save(update_fields=['item_status'])
 
     return redirect('admin_order_detail', order_id=return_req.order.id)
 
@@ -264,11 +297,15 @@ def reject_return_request(request, return_id):
     return_req.save()
     return_req.item.returned_quantity = max(return_req.item.returned_quantity - return_req.quantity, 0)
     
-    if return_req.item.returned_quantity == 0 and return_req.item.cancelled_quantity == 0:
-        return_req.item.item_status='delivered'
-    elif return_req.item.returned_quantity > 0:
-        return_req.item.item_status='return_requested'
-        
+    still_pending = return_req.item.return_requests.filter(status='Pending').exists()
+    if still_pending:
+        return_req.item.item_status = 'return_requested'
+    else:
+        if return_req.item.returned_quantity + return_req.item.cancelled_quantity >= return_req.item.quantity:
+            return_req.item.item_status = 'returned'
+        else:
+            return_req.item.item_status = 'delivered'
+            
     return_req.item.save(update_fields=['returned_quantity', 'item_status'])
 
     messages.success(request,f"Return request #{return_req.id} has been rejected.")

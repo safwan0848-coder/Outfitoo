@@ -374,11 +374,11 @@
               <span style="font-size:11px;color:var(--muted);">Remaining: <strong style="color:var(--accent2);">{{ item.remaining_quantity }}</strong></span>
             </div>
 
-            {% if item.latest_return %}
+            {% if item.aggregated_return_status %}
             <div class="item-return-tracker">
               <div class="irt-header">
-                <strong>Return Status:</strong> 
-                {% with status=item.latest_return.status %}
+                <strong>Return Status (Total Return Qty: {{ item.returned_quantity }}):</strong> 
+                {% with status=item.aggregated_return_status %}
                 <span class="irt-status {{ status|lower|cut:' ' }}">{{ status }}</span>
                 {% if status == 'Rejected' %}
                   <span style="color:var(--muted); font-weight:normal; margin-left:5px;">(Declined)</span>
