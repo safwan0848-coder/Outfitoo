@@ -4,6 +4,8 @@ from .models import Address
 from django.contrib import messages
 import re
 from django.views.decorators.cache import never_cache
+from django.core.exceptions import ValidationError
+from outfito.validators import normalize_indian_phone, validate_indian_phone
 
 
 @never_cache
@@ -40,8 +42,11 @@ def add_address(request):
             messages.error(request, "Phone number is required")
             return redirect("add-address")
 
-        if not re.match(r'^[0-9]{10}$', phone):
-            messages.error(request, "Phone number must be 10 digits")
+        try:
+            validate_indian_phone(phone)
+            phone = normalize_indian_phone(phone)
+        except ValidationError as e:
+            messages.error(request, e.message)
             return redirect("add-address")
 
         if not line1:
@@ -139,8 +144,11 @@ def edit_address(request, id):
             messages.error(request, "Phone number is required")
             return redirect("edit-address", id=id)
 
-        if not re.match(r'^[6-9]\d{9}$', phone):
-            messages.error(request, "Invalid phone number")
+        try:
+            validate_indian_phone(phone)
+            phone = normalize_indian_phone(phone)
+        except ValidationError as e:
+            messages.error(request, e.message)
             return redirect("edit-address", id=id)
 
         if not line1:

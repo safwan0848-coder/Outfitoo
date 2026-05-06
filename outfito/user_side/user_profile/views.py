@@ -1,4 +1,4 @@
-﻿from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Profile
 from django.contrib import messages
@@ -21,6 +21,8 @@ from user_side.orders.models import Order
 from user_side.wallet.models import Wallet, WalletTransaction
 from admin_side.coupon_management.models import Coupon
 from django.db import models
+from django.core.exceptions import ValidationError
+from outfito.validators import normalize_indian_phone, validate_indian_phone
 
 @never_cache
 @login_required(login_url='login')
@@ -126,9 +128,13 @@ def edit_profile(request):
             messages.error(request, "Username already exists")
             return render(request, "user/edit_profile.html", context)
 
-        if phone and not re.match(r'^[0-9]{10}$', phone):
-            messages.error(request, "Phone must be 10 digits")
-            return render(request, "user/edit_profile.html", context)
+        if phone:
+            try:
+                validate_indian_phone(phone)
+                phone = normalize_indian_phone(phone)
+            except ValidationError as e:
+                messages.error(request, e.message)
+                return render(request, "user/edit_profile.html", context)
 
         if profile.google_image and email != request.user.email:
             messages.error(request, "Google users cannot change email address.")

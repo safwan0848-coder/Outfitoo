@@ -42,8 +42,8 @@
         <!-- Phone Number -->
         <div>
           <label class="block text-[13px] text-[#9ca3af] font-semibold mb-2 tracking-wide">Phone Number</label>
-          <input type="tel" name="phone" id="phone" value="{{ address.phone_number }}" class="w-full p-3.5 rounded-xl border border-[#161e2c] bg-[#0a1627] text-white text-sm focus:outline-none focus:border-[#10b981] focus:ring-1 focus:ring-[#10b981]/50 transition-all placeholder-[#161e2c]" placeholder="10-digit number" maxlength="10" required />
-          <p class="text-red-400 text-xs font-semibold mt-1.5 hidden" id="error-phone">Phone number must be exactly 10 digits.</p>
+          <input type="tel" name="phone" id="phone" value="{{ address.phone_number }}" class="w-full p-3.5 rounded-xl border border-[#161e2c] bg-[#0a1627] text-white text-sm focus:outline-none focus:border-[#10b981] focus:ring-1 focus:ring-[#10b981]/50 transition-all placeholder-[#161e2c]" placeholder="10-digit number starting with 6-9" maxlength="10" pattern="[6-9][0-9]{9}" title="Enter a valid Indian mobile number (10 digits starting with 6-9)" required />
+          <p class="text-red-400 text-xs font-semibold mt-1.5 hidden" id="error-phone">Phone number must be exactly 10 digits starting with 6-9.</p>
         </div>
 
         <!-- Address Type -->
@@ -232,10 +232,10 @@ document.addEventListener("DOMContentLoaded", function() {
       isValid = false;
     }
 
-    // Phone (10 digits)
+    // Phone (10 digits, starts with 6-9)
     const phone = document.getElementById("phone").value.trim();
-    if (!/^[0-9]{10}$/.test(phone)) {
-      showError("phone", "Phone number must be exactly 10 digits.");
+    if (!/^[6-9][0-9]{9}$/.test(phone)) {
+      showError("phone", "Phone number must be exactly 10 digits starting with 6-9.");
       isValid = false;
     }
 

@@ -69,7 +69,7 @@
         <label class="block text-[0.65rem] uppercase tracking-widest font-semibold text-gray-500 mb-2 pl-1">Phone Number</label>
         <div class="relative">
           <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">call</span>
-          <input type="text" name="phone" value="{{ profile.phone|default:'' }}" pattern="^[0-9]{10}$" title="Enter a valid 10 digit phone number"
+          <input type="tel" name="phone" value="{{ profile.phone|default:'' }}" maxlength="10" pattern="[6-9][0-9]{9}" title="Enter a valid Indian mobile number (10 digits starting with 6-9)"
                  class="w-full bg-white/[0.02] border border-white/5 text-gray-300 text-sm rounded-lg py-3 pl-12 pr-4 focus:outline-none focus:border-white/20 transition-colors">
         </div>
       </div>
