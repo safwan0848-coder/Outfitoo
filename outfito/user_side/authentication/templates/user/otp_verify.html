@@ -140,20 +140,35 @@ margin-top:10px;
 .otp-group{
 display:flex;
 justify-content:space-between;
-gap:12px;
+gap:8px;
+width:100%;
+margin:0 auto 24px;
+max-width:380px;
 }
 
 .otp-input{
-width:58px;
-height:70px;
+flex:1;
+min-width:0;
+height:60px;
 text-align:center;
-font-size:28px;
+font-size:24px;
 font-weight:700;
 background:#101622;
 border:2px solid #1f2937;
-border-radius:16px;
+border-radius:12px;
 color:#fff;
 transition:all .2s ease;
+}
+
+@media (min-width: 400px) {
+    .otp-input {
+        height:70px;
+        font-size:28px;
+        border-radius:16px;
+    }
+    .otp-group {
+        gap:12px;
+    }
 }
 
 .otp-input:hover{
