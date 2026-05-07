@@ -3,7 +3,7 @@ from django.core.paginator import Paginator
 from admin_side.products_management.models import Product
 from django.shortcuts import render, get_object_or_404, redirect
 from admin_side.variants_management.models import Variant
-from django.db.models import Q, Min, Max, Count, Avg
+from django.db.models import Q, Min, Max, Count, Avg, Case, When, Value, IntegerField
 from admin_side.categories_management.models import Category
 from user_side.cart.models import Cart
 from django.views.decorators.cache import never_cache
@@ -210,9 +210,18 @@ def search_products_ajax(request):
         is_deleted=False,
         is_listed=True,
         category__is_active=True
-    ).filter(
-        Q(name__icontains=query)
-    ).prefetch_related('variants').distinct()[:6]
+    ).annotate(
+        search_score=Case(
+            When(name__iexact=query, then=Value(100)),
+            When(name__istartswith=query, then=Value(80)),
+            When(name__icontains=query, then=Value(60)),
+            When(category__category_name__icontains=query, then=Value(40)),
+            When(product_type__icontains=query, then=Value(30)),
+            When(description__icontains=query, then=Value(10)),
+            default=Value(0),
+            output_field=IntegerField()
+        )
+    ).filter(search_score__gt=0).order_by('-search_score', '-id').prefetch_related('variants').distinct()[:9]
 
     results = []
     for product in products:
@@ -231,13 +240,14 @@ def search_products_ajax(request):
         results.append({
             'id': product.id,
             'name': product.name,
+            'category': product.category.category_name,
             'price': str(price),
             'image_url': image_url,
             'url': f"/products/products/{product.id}/"
         })
 
-    has_more = len(results) > 5
-    return JsonResponse({'products': results[:5], 'has_more': has_more, 'query': query})
+    has_more = len(results) > 8
+    return JsonResponse({'products': results[:8], 'has_more': has_more, 'query': query})
 
 
 @never_cache

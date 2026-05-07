@@ -29,20 +29,23 @@
     <div class="flex items-center gap-2 lg:gap-4 shrink-0">
 
       <!-- Search Bar (md+) -->
-      <div class="relative hidden md:flex items-center">
-        <div class="flex items-center gap-2.5 bg-white/6 border border-white/12 rounded-full px-4 py-2.5 focus-within:border-emerald-500/60 focus-within:bg-white/10 focus-within:shadow-[0_0_24px_rgba(52,211,153,0.1)] transition-all duration-300">
+      <div class="relative hidden md:flex items-center" id="desktop-search-wrapper">
+        <div class="flex items-center gap-2.5 bg-white/6 border border-white/12 rounded-full px-4 py-2.5 focus-within:border-emerald-500/60 focus-within:bg-white/10 focus-within:shadow-[0_0_24px_rgba(52,211,153,0.1)] transition-all duration-300 relative">
           <i class="fa-solid fa-magnifying-glass text-gray-500 text-sm shrink-0"></i>
           <input id="desktop-search-input" type="text" placeholder="Search outfits…" autocomplete="off"
-                 class="bg-transparent text-sm text-white w-36 lg:w-44 focus:w-52 focus:outline-none placeholder-gray-600 transition-all duration-300">
+                 class="bg-transparent text-sm text-white w-36 lg:w-44 focus:w-52 focus:outline-none placeholder-gray-600 transition-all duration-300 pr-8">
+          <button id="desktop-search-clear" type="button" class="absolute right-3 text-gray-400 hover:text-emerald-400 opacity-0 pointer-events-none transition-all duration-200">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
         </div>
         <!-- Results dropdown -->
         <div id="desktop-search-results"
-             class="absolute top-[calc(100%+12px)] right-0 w-[360px] bg-[#0d1117]/98 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.7)]
+             class="absolute top-[calc(100%+12px)] right-0 w-[380px] bg-[#0d1117]/98 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.7)]
                     opacity-0 pointer-events-none scale-95 transition-all duration-300 origin-top-right overflow-hidden z-[9999]"
-             style="max-height: 420px; display:flex; flex-direction:column;">
+             style="max-height: 440px; display:flex; flex-direction:column;">
           <!-- Scrollable list -->
-          <div id="desktop-search-content" class="overflow-y-auto flex-1" style="max-height:360px;"></div>
-          <!-- Sticky See All Results (injected by JS when has_more) -->
+          <div id="desktop-search-content" class="overflow-y-auto flex-1 custom-scrollbar" style="max-height:380px;"></div>
+          <!-- Sticky See All Results -->
           <div id="desktop-search-footer" style="display:none; flex-shrink:0;"></div>
         </div>
       </div>
@@ -171,17 +174,20 @@
   <div class="flex-1 overflow-y-auto px-5 py-7 flex flex-col gap-8">
 
     <!-- Search -->
-      <div class="relative">
-      <div class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 focus-within:border-emerald-500/60 transition-all duration-300">
+      <div class="relative" id="mobile-search-wrapper">
+      <div class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 focus-within:border-emerald-500/60 transition-all duration-300 relative">
         <i class="fa-solid fa-magnifying-glass text-emerald-500 text-sm shrink-0"></i>
         <input id="mobile-search-input" type="text" placeholder="Search the collection…" autocomplete="off"
-               class="bg-transparent text-sm text-white w-full focus:outline-none placeholder-gray-600">
+               class="bg-transparent text-sm text-white w-full focus:outline-none placeholder-gray-600 pr-8">
+        <button id="mobile-search-clear" type="button" class="absolute right-4 text-gray-400 hover:text-emerald-400 opacity-0 pointer-events-none transition-all duration-200">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
       </div>
       <div id="mobile-search-results-wrapper"
            class="absolute top-[calc(100%+8px)] w-full bg-[#111827] border border-white/10 rounded-2xl shadow-2xl
                   opacity-0 pointer-events-none transition-all duration-200 overflow-hidden z-[99]"
-           style="max-height:320px; display:flex; flex-direction:column;">
-        <div id="mobile-search-results" class="overflow-y-auto flex-1" style="max-height:270px;"></div>
+           style="max-height:340px; display:flex; flex-direction:column;">
+        <div id="mobile-search-results" class="overflow-y-auto flex-1 custom-scrollbar" style="max-height:290px;"></div>
         <div id="mobile-search-footer" style="display:none; flex-shrink:0;"></div>
       </div>
     </div>
@@ -433,6 +439,12 @@
   }
   #mobileMenu[data-open] .staggered-item { transform: translateX(0); opacity: 1; }
 
+  /* ── Scrollbar for dropdowns ────────────── */
+  .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+  
   /* ── Logout shake ───────────────────────── */
   .logout-btn:hover i { animation: shake 0.5s ease-in-out infinite; }
   @keyframes shake {
@@ -493,74 +505,240 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* ── AJAX Search ──────────────────────────────────── */
-  const setupSearch = (inputId, resultsWrapperId, contentId, footerId) => {
+  const TRENDING_SEARCHES = ['Shirt', 'Pant', 'Tees', 'Shorts', 'Coat'];
+  
+  const setupSearch = (inputId, resultsWrapperId, contentId, footerId, clearBtnId, wrapperId) => {
     const input      = document.getElementById(inputId);
     const resultsBox = document.getElementById(resultsWrapperId);
     const content    = document.getElementById(contentId);
     const footer     = footerId ? document.getElementById(footerId) : null;
+    const clearBtn   = document.getElementById(clearBtnId);
+    const wrapper    = document.getElementById(wrapperId);
     if (!input || !resultsBox || !content) return;
+    
     let timer;
+    let selectedIndex = -1;
+
+    // Local Storage for Recent Searches
+    const getRecent = () => JSON.parse(localStorage.getItem('outfito_recent_searches') || '[]');
+    const saveRecent = (term) => {
+      if(!term) return;
+      let recents = getRecent();
+      recents = recents.filter(t => t.toLowerCase() !== term.toLowerCase());
+      recents.unshift(term);
+      if(recents.length > 5) recents.pop();
+      localStorage.setItem('outfito_recent_searches', JSON.stringify(recents));
+    };
+    
+    const showRecentAndTrending = () => {
+      const recents = getRecent();
+      let html = '';
+      
+      if(recents.length > 0) {
+        html += `<div style="padding:12px 16px 8px;font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:1px">Recent Searches</div>`;
+        recents.forEach((r, idx) => {
+          html += `<a href="/products/?q=${encodeURIComponent(r)}" class="search-result-item" data-index="${idx}" style="display:flex;align-items:center;gap:12px;padding:8px 16px;text-decoration:none;color:#d1d5db;font-size:13px;transition:background 0.2s">
+                     <i class="fa-solid fa-clock-rotate-left" style="color:#6b7280;font-size:12px"></i> ${r}
+                     <i class="fa-solid fa-arrow-right search-item-arrow" style="margin-left:auto;font-size:10px;color:#10b981;opacity:0;transform:translateX(-5px);transition:all 0.2s;"></i>
+                   </a>`;
+        });
+      }
+      
+      html += `<div style="padding:16px 16px 8px;font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:1px">Trending Now</div>
+               <div style="padding:0 16px 16px;display:flex;flex-wrap:wrap;gap:8px;">`;
+      TRENDING_SEARCHES.forEach(t => {
+        html += `<a href="/products/?q=${encodeURIComponent(t)}" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#d1d5db;font-size:12px;padding:6px 12px;border-radius:20px;text-decoration:none;transition:all 0.2s" onmouseover="this.style.borderColor='#10b981';this.style.color='#10b981'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='#d1d5db'">
+                   <i class="fa-solid fa-fire text-[#10b981] mr-1 text-[10px]"></i> ${t}
+                 </a>`;
+      });
+      html += `</div>`;
+      
+      content.innerHTML = html;
+      resultsBox.classList.add('dropdown-show');
+      if (footer) footer.style.display = 'none';
+      selectedIndex = -1;
+    };
 
     const hide = () => {
       resultsBox.classList.remove('dropdown-show');
       content.innerHTML = '';
-      if (footer) { footer.style.display = 'none'; footer.innerHTML = ''; }
+      if (footer) footer.style.display = 'none';
+      selectedIndex = -1;
     };
 
+    const updateClearBtn = () => {
+      if(clearBtn) {
+        if(input.value.length > 0) {
+          clearBtn.style.opacity = '1';
+          clearBtn.style.pointerEvents = 'auto';
+        } else {
+          clearBtn.style.opacity = '0';
+          clearBtn.style.pointerEvents = 'none';
+        }
+      }
+    };
+    
+    if(clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        input.value = '';
+        updateClearBtn();
+        input.focus();
+        showRecentAndTrending();
+      });
+    }
+
+    input.addEventListener('focus', () => {
+      updateClearBtn();
+      if(input.value.trim().length < 2) showRecentAndTrending();
+    });
+
+    let lastQuery = '';
+
     input.addEventListener('input', () => {
+      updateClearBtn();
       const q = input.value.trim();
+      if (q === lastQuery) return;
+      
       clearTimeout(timer);
-      if (q.length < 2) { hide(); return; }
+      if (q.length < 2) { 
+        lastQuery = '';
+        showRecentAndTrending(); 
+        return; 
+      }
 
       timer = setTimeout(async () => {
+        lastQuery = q;
         resultsBox.classList.add('dropdown-show');
         content.innerHTML = '<div style="padding:24px;text-align:center"><i class="fa-solid fa-circle-notch fa-spin" style="color:#10b981;font-size:18px"></i></div>';
-        if (footer) { footer.style.display = 'none'; footer.innerHTML = ''; }
+        if (footer) footer.style.display = 'none';
 
         try {
           const data = await (await fetch(`/products/ajax/search/?q=${encodeURIComponent(q)}`)).json();
           const { products, has_more, query } = data;
 
           if (!products?.length) {
-            content.innerHTML = `<div style="padding:20px;text-align:center;font-size:12px;color:#6b7280">No results for "<strong style="color:#fff">${q}</strong>"</div>`;
+            content.innerHTML = `
+              <div style="padding:32px 20px;text-align:center;">
+                <div style="width:48px;height:48px;border-radius:50%;background:rgba(248,113,113,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                  <i class="fa-solid fa-magnifying-glass text-red-400 text-lg"></i>
+                </div>
+                <div style="font-size:14px;color:#d1d5db;font-weight:600">No products found</div>
+                <div style="font-size:12px;color:#6b7280;margin-top:4px">We couldn't find anything matching "<strong style="color:#fff">${q}</strong>". Try adjusting your search.</div>
+              </div>`;
             return;
           }
 
-          content.innerHTML = products.map(p => `
-            <a href="${p.url}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.2s;text-decoration:none"
-               onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
-              <img src="${p.image_url||'/static/images/placeholder.png'}" style="width:48px;height:52px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.08);flex-shrink:0" loading="lazy">
-              <div style="min-width:0;flex:1;">
-                <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
-                <div style="font-size:12px;font-weight:700;color:#10b981;margin-top:3px">&#8377;${p.price}</div>
+          content.innerHTML = products.map((p, i) => `
+            <a href="${p.url}" class="search-result-item" data-index="${i}" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.05);transition:all 0.2s;text-decoration:none">
+              <div style="width:48px;height:52px;border-radius:8px;background:rgba(255,255,255,0.02);overflow:hidden;flex-shrink:0;">
+                <img src="${p.image_url||'/static/images/placeholder.png'}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
               </div>
+              <div style="min-width:0;flex:1;">
+                <div style="font-size:13px;font-weight:700;color:#f3f4f6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+                  <span style="font-size:9px;font-weight:800;color:#10b981;text-transform:uppercase;background:rgba(16,185,129,0.1);padding:2px 6px;border-radius:4px;">${p.category || 'Product'}</span>
+                  <span style="font-size:12px;font-weight:800;color:#d1d5db;">&#8377;${p.price}</span>
+                </div>
+              </div>
+              <i class="fa-solid fa-arrow-right search-item-arrow" style="font-size:12px;color:#10b981;opacity:0;transform:translateX(-5px);transition:all 0.2s;"></i>
             </a>`).join('');
 
           if (has_more && footer) {
             footer.style.display = 'block';
             footer.innerHTML = `
-              <a href="/products/?q=${encodeURIComponent(query)}"
-                 style="display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 14px;
-                        font-size:12px;font-weight:800;color:#10b981;text-transform:uppercase;letter-spacing:1.5px;
+              <a href="/products/?q=${encodeURIComponent(query)}" class="search-result-item" data-index="${products.length}"
+                 style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;
+                        font-size:12px;font-weight:800;color:#10b981;text-transform:uppercase;letter-spacing:1px;
                         text-decoration:none;border-top:1px solid rgba(255,255,255,0.07);
-                        background:rgba(16,185,129,0.04);transition:background 0.2s"
-                 onmouseover="this.style.background='rgba(16,185,129,0.1)'" onmouseout="this.style.background='rgba(16,185,129,0.04)'">
-                See all results&nbsp;<i class="fa-solid fa-arrow-right" style="font-size:10px"></i>
+                        background:rgba(16,185,129,0.04);transition:all 0.2s">
+                See all results&nbsp;<i class="fa-solid fa-arrow-right search-item-arrow" style="font-size:10px;opacity:0;transform:translateX(-5px);transition:all 0.2s"></i>
               </a>`;
           }
+          selectedIndex = -1;
         } catch {
-          content.innerHTML = '<div style="padding:20px;text-align:center;font-size:12px;color:#6b7280">Something went wrong</div>';
+          content.innerHTML = '<div style="padding:20px;text-align:center;font-size:12px;color:#6b7280">An error occurred. Please try again.</div>';
         }
       }, 300);
     });
 
-    document.addEventListener('click', e => {
-      if (!input.closest('div').contains(e.target) && !resultsBox.contains(e.target))
+    // Keyboard Navigation & Enter handling
+    input.addEventListener('keydown', (e) => {
+      const items = resultsBox.querySelectorAll('.search-result-item');
+      
+      if(e.key === 'Escape') {
         hide();
+        input.blur();
+      } 
+      else if(e.key === 'Enter') {
+        const q = input.value.trim();
+        e.preventDefault();
+        
+        if (selectedIndex >= 0 && selectedIndex < items.length) {
+          if(q) saveRecent(q);
+          window.location.href = items[selectedIndex].getAttribute('href');
+        } else if (q.length > 0) {
+          saveRecent(q);
+          window.location.href = `/products/?q=${encodeURIComponent(q)}`;
+        }
+      } 
+      else if(e.key === 'ArrowDown') {
+        e.preventDefault();
+        if(items.length > 0) {
+          selectedIndex = (selectedIndex + 1) % items.length;
+          updateSelection(items);
+        }
+      } 
+      else if(e.key === 'ArrowUp') {
+        e.preventDefault();
+        if(items.length > 0) {
+          selectedIndex = selectedIndex <= 0 ? items.length - 1 : selectedIndex - 1;
+          updateSelection(items);
+        }
+      }
+    });
+
+    const updateSelection = (items) => {
+      items.forEach((item, idx) => {
+        if(idx === selectedIndex) {
+          item.style.background = 'rgba(255,255,255,0.08)';
+          const arrow = item.querySelector('.search-item-arrow');
+          if(arrow) { arrow.style.opacity = '1'; arrow.style.transform = 'translateX(0)'; }
+        } else {
+          item.style.background = (item.tagName === 'A' && item.innerText.includes('See all')) ? 'rgba(16,185,129,0.04)' : '';
+          const arrow = item.querySelector('.search-item-arrow');
+          if(arrow) { arrow.style.opacity = '0'; arrow.style.transform = 'translateX(-5px)'; }
+        }
+      });
+      // Scroll into view if needed
+      if(selectedIndex >= 0 && items[selectedIndex]) {
+        items[selectedIndex].scrollIntoView({block: 'nearest', behavior: 'smooth'});
+      }
+    };
+    
+    // Mouse hover logic for search items
+    const handleMouseOver = (e) => {
+      const item = e.target.closest('.search-result-item');
+      if(item) {
+        const idx = parseInt(item.getAttribute('data-index'));
+        if(!isNaN(idx)) {
+          selectedIndex = idx;
+          const items = resultsBox.querySelectorAll('.search-result-item');
+          updateSelection(items);
+        }
+      }
+    };
+    
+    content.addEventListener('mouseover', handleMouseOver);
+    if(footer) footer.addEventListener('mouseover', handleMouseOver);
+
+    document.addEventListener('click', e => {
+      if (wrapper && !wrapper.contains(e.target)) {
+        hide();
+      }
     });
   };
 
-  setupSearch('desktop-search-input', 'desktop-search-results', 'desktop-search-content', 'desktop-search-footer');
-  setupSearch('mobile-search-input',  'mobile-search-results-wrapper', 'mobile-search-results', 'mobile-search-footer');
+  setupSearch('desktop-search-input', 'desktop-search-results', 'desktop-search-content', 'desktop-search-footer', 'desktop-search-clear', 'desktop-search-wrapper');
+  setupSearch('mobile-search-input',  'mobile-search-results-wrapper', 'mobile-search-results', 'mobile-search-footer', 'mobile-search-clear', 'mobile-search-wrapper');
 });
 </script>
