@@ -22,36 +22,24 @@
     @media(max-width:1100px){ :root{ --orbit-r:240px; } }
     @media(max-width:600px){  :root{ --orbit-r:130px; } }
 
-    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     html.lenis, html.lenis body { height:auto; }
     .lenis.lenis-smooth { scroll-behavior:auto !important; }
     .lenis.lenis-stopped { overflow:hidden; }
 
     body {
-      font-family:'Syne', sans-serif;
       background:var(--bg);
       color:var(--ivory);
       overflow-x:hidden;
+    }
+    
+    #hero, #trending, #categories {
+      font-family:'Syne', sans-serif;
     }
     img { display:block; }
     a { text-decoration:none; color:inherit; }
     ::-webkit-scrollbar { width:3px; }
     ::-webkit-scrollbar-track { background:var(--bg); }
     ::-webkit-scrollbar-thumb { background:linear-gradient(to bottom,var(--gold),var(--accent2)); border-radius:2px; }
-
-    /* ── ANNOUNCEMENT BAR ── */
-    #announce-bar {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 1001;
-      background: linear-gradient(90deg, #0d1b3e 0%, #0a1628 50%, #0d1b3e 100%);
-      border-bottom: 1px solid rgba(0,212,255,.12);
-      padding: .42rem 1rem;
-      text-align: center;
-      font-size: .58rem; font-weight: 600; letter-spacing: .22em;
-      text-transform: uppercase; color: rgba(255,255,255,.5);
-    }
-    #announce-bar span { color: var(--gold); }
-    #announce-bar strong { color: var(--ivory); font-weight: 700; }
-
 
     /* ── HERO ── */
     #hero {
@@ -121,7 +109,7 @@
       background:rgba(11,18,32,.65); backdrop-filter:blur(18px) saturate(1.3);
       border:1px solid rgba(16,185,129,.22);
       border-radius:90px 90px 18px 18px; padding:7px;
-      will-change:transform; transition:border-color .4s;
+      will-change:transform, opacity; transition:border-color .4s;
     }
     .hero-card:hover { border-color:rgba(16,185,129,.55); }
     .hero-card::before {
@@ -185,7 +173,8 @@
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.05);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-      opacity: 0; transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+      opacity: 0; transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.5s, box-shadow 0.5s, border-color 0.5s, background 0.5s;
+      will-change: transform, opacity;
     }
     .product-card.visible { opacity: 1; }
     .product-card:hover {
@@ -248,8 +237,8 @@
       overflow:visible; pointer-events:none; z-index:500;
     }
     .clone-card {
-      position:absolute; will-change:left,top,width,height,border-radius,opacity;
-      background:rgba(11,18,32,.65); backdrop-filter:blur(18px) saturate(1.3);
+      position:absolute; will-change:transform, left, top, width, height, border-radius, opacity;
+      background:rgba(11,18,32,.9); /* removed heavy blur to optimize morph scroll */
       border:1px solid rgba(59,130,246,.22); padding:7px; overflow:hidden;
     }
     .clone-card .card-img-wrap { width:100%; height:100%; overflow:hidden; }
@@ -545,8 +534,6 @@ gsap.registerPlugin(ScrollTrigger);
 
 /* 1. LENIS */
 const lenis = new Lenis({ duration: 1.2, easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
-function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
-requestAnimationFrame(raf);
 lenis.on('scroll', ScrollTrigger.update);
 gsap.ticker.add(time => lenis.raf(time * 1000));
 gsap.ticker.lagSmoothing(0);
@@ -628,8 +615,14 @@ function initMorphAnim() {
     end:   'top 15%',
     scrub: false,
 
-    onEnter() {
-      document.querySelectorAll('.hero-card').forEach(c => c.style.animationPlayState = 'paused');
+    onEnter: () => {
+      // Pause CSS animations instantly before layout calculations
+      document.querySelectorAll('.hero-card').forEach(c => {
+        c.style.animationPlayState = 'paused';
+        c.style.backdropFilter = 'none'; // remove heavy blur during morph
+      });
+      
+      // Calculate immediately so coordinates perfectly match the exact ScrollTrigger enter threshold
       if (scrubTl) scrubTl.kill();
       scrubTl = gsap.timeline({ paused: true });
 
@@ -652,50 +645,59 @@ function initMorphAnim() {
           left: startCx - startW / 2, top: startCy - startH / 2,
           width: startW, height: startH,
           borderRadius: '83px 83px 13px 13px',
-          background: 'rgba(15,23,42,.65)',
-          border: '1px solid rgba(201,168,76,.22)',
+          background: 'rgba(15,23,42,.9)',
+          border: '1px solid rgba(16,185,129,.22)',
           padding: '7px', opacity: 1,
         });
         gsap.set(clone.querySelector('.card-img-wrap'), { borderRadius: '76px 76px 10px 10px' });
-        gsap.to(heroEl, { opacity: 0, duration: .3, overwrite: true });
+        gsap.to(heroEl, { opacity: 0, duration: .1, overwrite: true });
 
         scrubTl.to(clone, {
           left: endCx - endW / 2, top: endCy - endH / 2,
           width: endW, height: endH, borderRadius: '20px',
-          background: '#1E293B', border: '1px solid rgba(255,255,255,.07)',
-          padding: '0px', ease: 'power2.inOut', duration: 1,
+          background: '#0c1221', border: '1px solid rgba(255,255,255,.05)',
+          padding: '0px', ease: 'none', duration: 1,
         }, i * 0.05);
+        
         scrubTl.to(clone.querySelector('.card-img-wrap'), {
-          borderRadius: '20px', ease: 'power2.inOut', duration: 1,
+          borderRadius: '20px', ease: 'none', duration: 1,
         }, '<');
       });
+      
+      // Catch up immediately if scrolled fast past the threshold
+      scrubTl.progress(st.progress);
     },
 
-    onLeaveBack() {
+    onUpdate: (self) => {
+      if (scrubTl) {
+        gsap.to(scrubTl, { progress: self.progress, duration: 0.1, overwrite: 'auto', ease: 'none' });
+      }
+    },
+
+    onLeaveBack: () => {
       clones.forEach(({ clone, heroEl }) => {
-        gsap.to(clone,  { opacity: 0, duration: .3 });
-        gsap.to(heroEl, { opacity: 1, duration: .3 });
+        gsap.to(clone,  { opacity: 0, duration: .2 });
+        gsap.to(heroEl, { opacity: 1, duration: .2 });
       });
-      document.querySelectorAll('.hero-card').forEach(c => c.style.animationPlayState = 'running');
+      document.querySelectorAll('.hero-card').forEach(c => {
+        c.style.animationPlayState = 'running';
+        c.style.backdropFilter = 'blur(18px) saturate(1.3)'; // restore cinematic blur
+      });
       pairs.forEach(({ slotId }) => {
         const card = document.querySelector(`#${slotId} .product-card`);
         if (card) gsap.set(card, { opacity: 0, y: 20, scale: .97 });
       });
     },
 
-    onUpdate(self) {
-      if (scrubTl) gsap.to(scrubTl, { progress: self.progress, duration: .5, ease: 'power3.out', overwrite: true });
-    },
-
-    onLeave() {
+    onLeave: () => {
       clones.forEach(({ clone, slotEl }) => {
         gsap.set(clone, { opacity: 0 });
         const card = slotEl.querySelector('.product-card');
-        if (card) gsap.to(card, { opacity: 1, y: 0, scale: 1, duration: .5, ease: 'power2.out' });
+        if (card) gsap.to(card, { opacity: 1, y: 0, scale: 1, duration: .4, ease: 'power2.out' });
       });
     },
 
-    onEnterBack() {
+    onEnterBack: () => {
       clones.forEach(({ clone, slotEl }) => {
         gsap.set(clone, { opacity: 1 });
         const card = slotEl.querySelector('.product-card');
@@ -708,7 +710,7 @@ function initMorphAnim() {
 let resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => { ScrollTrigger.refresh(); initMorphAnim(); }, 200);
+  resizeTimer = setTimeout(() => { ScrollTrigger.refresh(); initMorphAnim(); }, 250);
 });
 window.addEventListener('load', () => { ScrollTrigger.refresh(); initMorphAnim(); });
 </script>
