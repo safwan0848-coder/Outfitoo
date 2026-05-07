@@ -361,6 +361,13 @@ A premium financial ecosystem crafted for modern professionals.
 
 <form method="POST" class="premium-form">
 {% csrf_token %}
+<input type="hidden" name="next" value="{{ request.GET.next }}">
+
+{% if request.GET.next %}
+<div class="form-message warning-text">
+  🔒 Please login to continue
+</div>
+{% endif %}
 
 {% if messages %}
     {% for message in messages %}

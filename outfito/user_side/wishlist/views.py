@@ -30,8 +30,24 @@ def wishlist_view(request):
     }
     return render(request, 'user/wishlist.html', context)
 
-@login_required
 def toggle_wishlist(request, pk):
+    # ── Auth guard ──
+    if not request.user.is_authenticated:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            from django.urls import reverse
+            referer = request.META.get('HTTP_REFERER', '/')
+            from urllib.parse import urlparse
+            parsed = urlparse(referer)
+            next_path = parsed.path + ('?' + parsed.query if parsed.query else '')
+            login_url = reverse('login') + '?next=' + next_path
+            return JsonResponse({'ok': False, 'auth_required': True, 'redirect': login_url}, status=401)
+        from django.urls import reverse
+        referer = request.META.get('HTTP_REFERER', '/')
+        from urllib.parse import urlparse
+        parsed = urlparse(referer)
+        next_path = parsed.path + ('?' + parsed.query if parsed.query else '')
+        return redirect(reverse('login') + '?next=' + next_path)
+
     product=get_object_or_404(Product, pk=pk)
     wishlist=get_or_create_wishlist(request.user)
     item = WishlistItem.objects.filter(wishlist=wishlist,product=product).first()

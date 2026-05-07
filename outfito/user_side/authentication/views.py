@@ -1,4 +1,4 @@
-﻿from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect
 from .models import OTP
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
@@ -298,6 +298,11 @@ def login_view(request):
 
         login(request, user)
         messages.success(request, "Login successful!")
+
+        # Honor ?next= redirect (security: only allow safe relative paths)
+        next_url = request.POST.get('next') or request.GET.get('next', '').strip()
+        if next_url and next_url.startswith('/') and not next_url.startswith('//'):
+            return redirect(next_url)
         return redirect('landing')
 
     return render(request, 'user/login.html')

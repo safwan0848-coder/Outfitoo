@@ -1085,7 +1085,7 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    /* ── COOKIE ── */
+    /* ─ COOKIE ─ */
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie) {
@@ -1099,6 +1099,20 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
         return cookieValue;
+    }
+
+    /* ─ AUTH GUARD ─ */
+    const IS_AUTHENTICATED = {% if request.user.is_authenticated %}true{% else %}false{% endif %};
+    const LOGIN_URL = "{% url 'login' %}";
+
+    function requireAuth() {
+        if (IS_AUTHENTICATED) return true;
+        const next = encodeURIComponent(window.location.pathname + window.location.search);
+        if (window.showToast) showToast("Please login to continue", 'warning');
+        setTimeout(function() {
+            window.location.href = LOGIN_URL + '?next=' + next;
+        }, 700);
+        return false;
     }
 
     /* ── SIDEBAR ── */
@@ -1282,15 +1296,24 @@ document.addEventListener("DOMContentLoaded", function () {
     window.toggleWish = async function (e, btn, id) {
         e.preventDefault();
         e.stopPropagation();
+        if (!requireAuth()) return;          // ← guest guard
+
         const url = "{% url 'toggle_wishlist' 0 %}".replace('0', id);
         
         try {
-            // Include CSRF token for security if the backend expects it, though GET might pass if the view isn't require_POST
             const response = await fetch(url, {
                 method: 'GET',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             const data = await response.json();
+
+            // Backend-level auth check (safety net for expired sessions)
+            if (data.auth_required) {
+                if (window.showToast) showToast("Please login to continue", 'warning');
+                setTimeout(function() { window.location.href = data.redirect; }, 700);
+                return;
+            }
+
             if (data.ok) {
                 const wishBadges = document.querySelectorAll('.ajax-wishlist-badge');
                 wishBadges.forEach(badge => {
@@ -1336,6 +1359,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             const data = await response.json();
+
+            // Backend-level auth check (safety net for expired sessions)
+            if (data.auth_required) {
+                if (window.showToast) showToast("Please login to continue", 'warning');
+                setTimeout(function() { window.location.href = data.redirect; }, 700);
+                return;
+            }
             
             if (data.ok) {
                 if (window.showToast) {

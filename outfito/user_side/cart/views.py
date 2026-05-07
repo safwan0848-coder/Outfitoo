@@ -83,9 +83,17 @@ def _variant_is_purchasable(variant):
 
     return True, ""
 
-@login_required
 @require_POST
 def add_to_cart(request, pk):
+    # ── Auth guard: handle guests for both AJAX and regular form submissions ──
+    if not request.user.is_authenticated:
+        if _is_ajax(request):
+            from django.urls import reverse
+            login_url = reverse('login') + '?next=' + request.build_absolute_uri().replace(request.build_absolute_uri('/'), '/')
+            return JsonResponse({'ok': False, 'auth_required': True, 'redirect': login_url}, status=401)
+        from django.urls import reverse
+        return redirect(reverse('login') + '?next=' + request.path)
+
     variant=get_object_or_404(Variant, pk=pk)
 
     try:

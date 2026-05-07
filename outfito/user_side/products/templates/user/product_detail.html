@@ -887,9 +887,26 @@ if(mzImg) {
     lastTap = currentTime;
   });
 }
+  // ── Auth guard ──────────────────────────────────────────────────────────
+  const IS_AUTHENTICATED = {% if request.user.is_authenticated %}true{% else %}false{% endif %};
+  const LOGIN_URL = "{% url 'login' %}";
+
+  function requireAuth() {
+      if (IS_AUTHENTICATED) return true;
+      const next = encodeURIComponent(window.location.pathname + window.location.search);
+      if (window.showToast) showToast("Please login to continue", 'warning');
+      setTimeout(function() {
+          window.location.href = LOGIN_URL + '?next=' + next;
+      }, 700);
+      return false;
+  }
+  // ────────────────────────────────────────────────────────────────────────
+
   /* AJAX Add to Cart */
   window.handleAddToCartAjax = async function(event) {
       event.preventDefault();
+      if (!requireAuth()) return;          // ← guest guard
+
       const form = event.target;
       const btn = form.querySelector('button[type="submit"]');
       const originalHtml = btn.innerHTML;
@@ -909,6 +926,13 @@ if(mzImg) {
           });
           const data = await response.json();
           
+          // Backend-level auth check (safety net for expired sessions)
+          if (data.auth_required) {
+              if (window.showToast) showToast("Please login to continue", 'warning');
+              setTimeout(function() { window.location.href = data.redirect; }, 700);
+              return;
+          }
+
           if (data.ok) {
               if (window.showToast) {
                   showToast(data.message, 'success');
@@ -943,6 +967,8 @@ if(mzImg) {
   /* AJAX Toggle Wishlist */
   window.handleWishlistAjax = async function(event, form) {
       event.preventDefault();
+      if (!requireAuth()) return;          // ← guest guard
+
       const btn = form.querySelector('button[type="submit"]');
       const originalHtml = btn.innerHTML;
       
@@ -956,6 +982,15 @@ if(mzImg) {
               headers: { 'X-Requested-With': 'XMLHttpRequest' }
           });
           const data = await response.json();
+
+          // Backend-level auth check (safety net for expired sessions)
+          if (data.auth_required) {
+              btn.innerHTML = originalHtml;
+              btn.disabled = false;
+              if (window.showToast) showToast("Please login to continue", 'warning');
+              setTimeout(function() { window.location.href = data.redirect; }, 700);
+              return;
+          }
           
           if (data.ok) {
               const wishBadges = document.querySelectorAll('.ajax-wishlist-badge');
