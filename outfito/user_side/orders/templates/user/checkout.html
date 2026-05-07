@@ -142,10 +142,15 @@
     transition: all 0.2s;
   }
   .payment-option:last-of-type { margin-bottom: 0; }
-  .payment-option:hover { border-color: rgba(59,223,176,0.3); }
+  .payment-option:hover:not(.disabled-option) { border-color: rgba(59,223,176,0.3); }
   .payment-option.selected { border-color: var(--accent); background: rgba(59,223,176,0.05); }
   .payment-option input[type="radio"] { accent-color: var(--accent); flex-shrink: 0; }
   .payment-error-border .payment-option { border-color: rgba(248,113,113,0.4) !important; }
+  .payment-option.disabled-option {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(255,255,255,0.02);
+  }
 
   .pay-icon {
     width: 36px; height: 36px;
@@ -821,6 +826,7 @@
           <div>
             <div class="pay-label">Cash on Delivery</div>
             <div class="pay-sub">Pay when you receive</div>
+            <div class="cod-error-msg" style="display:none; color:var(--error); font-size:11px; margin-top:4px;">Not available for orders over ₹1500</div>
           </div>
         </label>
 
@@ -1044,12 +1050,38 @@ document.querySelectorAll('input[name="payment_ui"]').forEach(function (radio) {
 });
 
 function setPayment(method) {
-  document.querySelectorAll('.payment-option').forEach(el => el.classList.remove('selected'));
   const opt = document.getElementById('pay-' + method);
+  if (opt && opt.classList.contains('disabled-option')) return;
+
+  document.querySelectorAll('.payment-option').forEach(el => el.classList.remove('selected'));
   if (opt) opt.classList.add('selected');
   document.getElementById('paymentMethodInput').value = method;
   document.getElementById('paymentError').classList.remove('show');
   document.getElementById('paymentCard').classList.remove('payment-error-border');
+}
+
+const COD_LIMIT = 1500;
+function updateCodAvailability(currentTotal) {
+  const codOption = document.getElementById('pay-cod');
+  if (!codOption) return;
+  const codRadio = codOption.querySelector('input[type="radio"]');
+  const errorMsg = codOption.querySelector('.cod-error-msg');
+  
+  if (currentTotal > COD_LIMIT) {
+    codOption.classList.add('disabled-option');
+    if (codRadio) codRadio.disabled = true;
+    if (errorMsg) errorMsg.style.display = 'block';
+    
+    if (codRadio && codRadio.checked) {
+      codRadio.checked = false;
+      codOption.classList.remove('selected');
+      document.getElementById('paymentMethodInput').value = '';
+    }
+  } else {
+    codOption.classList.remove('disabled-option');
+    if (codRadio) codRadio.disabled = false;
+    if (errorMsg) errorMsg.style.display = 'none';
+  }
 }
 
 /* ── COUPON STATE TRACKING ── */
@@ -1126,6 +1158,7 @@ async function processCoupon(code) {
       updateSummaryDOM(data);
       updateCouponUI(currentAppliedCoupon);
       syncModalCards(currentAppliedCoupon);
+      updateCodAvailability(data.new_total);
 
       // 1. Update the uses badge in the modal
       if (data.coupon_code && typeof data.remaining !== 'undefined') {
@@ -1220,7 +1253,11 @@ async function applySpecificCoupon(code) {
 }
 
 /* Sync cards on first paint */
-document.addEventListener('DOMContentLoaded', function() { syncModalCards(currentAppliedCoupon); });
+document.addEventListener('DOMContentLoaded', function() { 
+  syncModalCards(currentAppliedCoupon); 
+  const initialTotal = parseFloat("{{ total|default:'0' }}");
+  updateCodAvailability(initialTotal);
+});
 
 /* ── VALIDATE & SUBMIT ── */
 function validateAndSubmit() {

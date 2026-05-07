@@ -612,7 +612,14 @@ def place_order(request):
         if item.variant.stock < item.quantity:
             messages.error(request, f"Stock issue for {item.variant}")
             return redirect('cart_view')
- 
+
+    # ── COD restriction: only allowed for orders <= 1500 ──
+    COD_LIMIT = Decimal('1500.00')
+    if payment_method == "cod" and total > COD_LIMIT:
+        messages.error(request, "Cash on Delivery is available only for orders up to ₹1,500. Please choose a different payment method.")
+        return redirect('checkout')
+    # ──────────────────────────────────────────────────────
+
     if payment_method == "cod":
         with transaction.atomic():
             order = Order.objects.create(
