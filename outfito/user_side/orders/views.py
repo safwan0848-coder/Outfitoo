@@ -193,7 +193,7 @@ def cancel_order(request, order_id):
         return redirect('order_detail', order_id=order_id)
 
     order = get_object_or_404(Order, id=order_id, user=request.user)
-    item_id = request.POST.get('item_id', '').strip()   # empty = full-order cancel
+    item_id = request.POST.get('item_id', '').strip()  
     reason = request.POST.get('cancellation_reason', '').strip()
     custom = request.POST.get('custom_reason', '').strip()
     if reason == 'Other' and custom:
@@ -613,12 +613,10 @@ def place_order(request):
             messages.error(request, f"Stock issue for {item.variant}")
             return redirect('cart_view')
 
-    # ── COD restriction: only allowed for orders <= 1500 ──
     COD_LIMIT = Decimal('1500.00')
     if payment_method == "cod" and total > COD_LIMIT:
         messages.error(request, "Cash on Delivery is available only for orders up to ₹1,500. Please choose a different payment method.")
         return redirect('checkout')
-    # ──────────────────────────────────────────────────────
 
     if payment_method == "cod":
         with transaction.atomic():

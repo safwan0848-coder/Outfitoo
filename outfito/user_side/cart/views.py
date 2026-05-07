@@ -85,7 +85,6 @@ def _variant_is_purchasable(variant):
 
 @require_POST
 def add_to_cart(request, pk):
-    # ── Auth guard: handle guests for both AJAX and regular form submissions ──
     if not request.user.is_authenticated:
         if _is_ajax(request):
             from django.urls import reverse
@@ -157,7 +156,7 @@ def add_to_cart(request, pk):
                 wishlist=wishlist,
                 product=variant.product
             ).delete()
-            wishlist_count = wishlist.items.count()   # count AFTER delete
+            wishlist_count = wishlist.items.count() 
 
     except Exception:
         wishlist_count = 0

@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+﻿from django.shortcuts import render, redirect
 from .models import OTP
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
@@ -467,7 +467,6 @@ def landing_view(request):
 
     variant_qs = Variant.objects.filter(is_active=True)
 
-    # ✅ get all valid products
     all_products = Product.objects.filter(
         is_deleted=False,
         is_listed=True
@@ -475,7 +474,6 @@ def landing_view(request):
         Prefetch('variants', queryset=variant_qs, to_attr='active_variants')
     ).order_by('-created_at')
 
-    # ✅ split for Velour UI
     hero_products = all_products[:4]
     grid_products = all_products[4:]
 

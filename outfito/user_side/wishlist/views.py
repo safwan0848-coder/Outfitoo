@@ -31,7 +31,6 @@ def wishlist_view(request):
     return render(request, 'user/wishlist.html', context)
 
 def toggle_wishlist(request, pk):
-    # ── Auth guard ──
     if not request.user.is_authenticated:
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             from django.urls import reverse
