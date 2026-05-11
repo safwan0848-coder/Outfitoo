@@ -461,7 +461,7 @@
 
         <!-- Product info -->
         <div class="item-product">
-          <div class="item-img">
+          <div class="item-img"><a href="{% url 'product_detail' item.product.id %}">
             {% if item.variant.image %}
               <img src="{{ item.variant.image.url }}">
             {% elif item.product.image_side %}
@@ -472,9 +472,10 @@
               <span>Unavailable</span>
             </div>
             {% endif %}
+          </a>
           </div>
           <div>
-            <div class="item-name">{{ item.product.name }}</div>
+            <div class="item-name"> <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a></div>
             <div class="item-meta">
               <span>
                 <span class="color-dot" style="background:{{ item.variant.color }};"></span>
