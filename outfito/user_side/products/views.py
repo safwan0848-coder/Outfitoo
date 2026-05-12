@@ -243,7 +243,7 @@ def search_products_ajax(request):
             'category': product.category.category_name,
             'price': str(price),
             'image_url': image_url,
-            'url': f"/products/products/{product.id}/"
+            'url': f"/products/{product.id}/"
         })
 
     has_more = len(results) > 8
